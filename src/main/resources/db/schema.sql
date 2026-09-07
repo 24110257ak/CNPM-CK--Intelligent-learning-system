@@ -169,7 +169,7 @@ GO
 INSERT INTO users (username, password_hash, full_name, email, role, interests)
 VALUES (
     N'sinhvien01',
-    N'$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy',
+    N'$2a$12$d6StoKa670Vwar0ogOmb3uEZUysC5bS4lJB1fIaMkv0iSrfaukZ2i',
     N'Nguyễn Văn An',
     N'an.nguyen@student.edu.vn',
     N'student',
@@ -179,7 +179,7 @@ VALUES (
 INSERT INTO users (username, password_hash, full_name, email, role)
 VALUES (
     N'giangvien01',
-    N'$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy',
+    N'$2a$12$d6StoKa670Vwar0ogOmb3uEZUysC5bS4lJB1fIaMkv0iSrfaukZ2i',
     N'Trần Thị Mai',
     N'mai.tran@teacher.edu.vn',
     N'teacher'

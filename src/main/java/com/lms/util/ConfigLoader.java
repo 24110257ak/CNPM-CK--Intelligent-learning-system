@@ -13,9 +13,34 @@ public class ConfigLoader {
     private static final Dotenv dotenv;
 
     static {
-        dotenv = Dotenv.configure()
-                .ignoreIfMissing()     // Không crash nếu .env chưa tồn tại
-                .load();
+        Dotenv d = null;
+        String userDir = System.getProperty("user.dir", ".");
+        String[] candidateDirs = {
+            userDir,
+            userDir + java.io.File.separator + "Hệ thống học tập thông minh",
+            ".",
+            "Hệ thống học tập thông minh",
+            ".."
+        };
+
+        for (String dir : candidateDirs) {
+            try {
+                java.io.File envFile = new java.io.File(dir, ".env");
+                if (envFile.exists() && envFile.isFile()) {
+                    d = Dotenv.configure()
+                            .directory(envFile.getParent())
+                            .ignoreIfMissing()
+                            .load();
+                    System.out.println("[ConfigLoader] ✅ Đã tải file .env từ: " + envFile.getAbsolutePath());
+                    break;
+                }
+            } catch (Exception ignored) {}
+        }
+
+        if (d == null) {
+            d = Dotenv.configure().ignoreIfMissing().load();
+        }
+        dotenv = d;
     }
 
     /**

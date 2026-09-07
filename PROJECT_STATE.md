@@ -5,36 +5,46 @@
 ---
 
 ## Current Phase
-**Giai đoạn 0 ✅ HOÀN THÀNH — Thiết Lập Nền Móng (Foundation Setup)**
+**Giai đoạn 1 - 4 ✅ HOÀN THÀNH — Full-Stack Intelligent LMS Sẵn Sàng Chạy & Kiểm Thử**
 
 ## Completed Milestones
-- [x] Tài liệu tư vấn công nghệ LMS đã đọc & phân tích (10 trang PDF)
-- [x] Implementation Plan **v2** đã tạo — phản ánh đầy đủ:
-  - SQL Server (SSMS) thay MySQL
-  - Jetty 11 thay Tomcat7 (Java 25 compatible)
-  - Jakarta Servlet 5.0 (`jakarta.servlet.*`)
-  - ResponseSchema structured JSON output
-  - AI Fallback Buffer
-  - Confidence Tagging
-  - **Template-First Policy** (AdminLTE 4 + Vanilla Chat Widget)
-- [x] ERD & Schema SQL Server chuẩn 3NF (7 bảng + seed data tiếng Việt 10 câu hỏi)
-- [x] `pom.xml` hoàn chỉnh (Jetty 11, MSSQL JDBC 12.8.1, Gemini SDK v1.64.0, HikariCP, BCrypt, dotenv-java)
-- [x] `.gitignore` + `.env.example` + `web.xml` (Jakarta EE 5.0)
-- [x] PROJECT_STATE.md (file này) đã khởi tạo
+- [x] **Phase 0:** Thiết lập nền móng kiến trúc, 12 ADRs, schema.sql 7 bảng 3NF cho SQL Server, pom.xml cấu hình Jetty 11 & Gemini SDK v1.64.0.
+- [x] **Maven Wrapper:** Khởi tạo và tối ưu hóa `mvnw`, `mvnw.cmd`, `mvnw.ps1` hỗ trợ hoàn hảo thư mục có dấu tiếng Việt trên Windows.
+- [x] **Phase 1 (Data Layer):**
+  - Models POJO: `User`, `Topic`, `Question`, `QuizSession`, `UserAnswer` (có trường `confidenceLevel`), `RemedialLesson`, `ChatMessage`.
+  - Utils: `ConfigLoader` (đọc `.env`), `JsonHelper` (Gson với UTF-8 và `LocalDateTime` adapter).
+  - DAOs: `DatabaseUtil` (HikariCP connection pool), `UserDAO`, `TopicDAO`, `QuestionDAO`, `QuizDAO`, `ChatDAO`.
+- [x] **Phase 2 (Service Layer & Controllers):**
+  - Services: `UserService` (BCrypt cost 12), `QuizService` (chấm điểm, điều phối AI và lưu kết quả).
+  - Filters: `CorsFilter` (CORS headers, preflight OPTIONS), `AuthFilter` (bảo vệ endpoint).
+  - Servlets: `AuthServlet` (`/api/auth/*`), `TopicServlet` (`/api/topics/*`), `QuizServlet` (`/api/quiz/*`), `ChatServlet` (`/api/chat/*`).
+- [x] **Phase 3 (AI Core & Fallback Buffer):**
+  - `AIService`: Tích hợp Google Gemini API (`gemini-2.5-flash`), cấu hình structured JSON output.
+  - `FallbackService`: Kích hoạt cơ chế ngoại tuyến (ADR-008 AI Fallback Buffer) từ giải thích gốc trong CSDL khi mất mạng hoặc chưa cấu hình API key.
+  - `PromptBuilder`: Thiết kế prompt sư phạm phát hiện quan niệm sai lầm (`syntax_swap`, `boundary_blindness`, `mental_model_gap`, `logic_flaw`) và hỗ trợ Confidence Tagging.
+- [x] **Phase 4 (Frontend UI & Chatbot Widget):**
+  - `auth.html`: Đăng nhập & Đăng ký (hỗ trợ nhập sở thích cá nhân hóa).
+  - `index.html`: Bảng điều khiển danh mục chủ đề học tập.
+  - `quiz.html`: Giao diện thi trắc nghiệm kèm bộ chọn **Confidence Tagging** (Chắc chắn vs Đoán mò).
+  - `result.html`: Trung tâm kết quả & Bài học củng cố cá nhân hóa do AI tạo.
+  - `history.html`: Lịch sử các lần thi và thống kê điểm số.
+  - `chat-widget.js`: Trợ giảng AI nổi đa nhân cách (Senior Dev, Peer Tutor, Professor) tích hợp trên toàn bộ trang.
+- [x] **Build & Packaging:** `mvn clean package` tạo file `target/lms.war` thành công 100%.
+- [x] **Git Repository:** Khởi tạo git, cấu hình remote, commit 46 files và merge remote README.
 
 ## Pending Tasks
-- [ ] **Cài đặt môi trường:** Maven, SQL Server (SSMS), HeidiSQL, Gemini API Key
-- [ ] **Giai đoạn 1:** Model → DAO → Service → DatabaseUtil → ConfigLoader
-- [ ] **Giai đoạn 2:** Servlet Controllers + Filters + QuizService
-- [ ] **Giai đoạn 3:** AIService (Gemini SDK + ResponseSchema) + FallbackService + PromptBuilder
-- [ ] **Giai đoạn 4:** Download AdminLTE 4 + Chat Widget → tích hợp + Data Binding
-- [ ] **Giai đoạn 5:** Test E2E + Git push
+- [ ] **Chạy `schema.sql` trong SSMS** (nếu chưa chạy trên máy local).
+- [ ] **Điền `GEMINI_API_KEY` và mật khẩu SQL Server** vào file `.env`.
+- [ ] **Khởi động server:** Chạy `.\mvnw.cmd jetty:run` và trải nghiệm tại `http://localhost:8080/`.
+- [ ] **Cấp quyền push GitHub:** Phân quyền cho tài khoản GitHub trên máy để push nhánh `main` lên repo `24110257ak/CNPM-CK--Intelligent-learning-system`.
+
+---
 
 ## Architecture Decisions (ADR)
 
 | # | Quyết định | Lý do |
 |---|---|---|
-| ADR-001 | MySQL → **SQL Server (SSMS)** | Tương thích hạ tầng local, HeidiSQL quản lý |
+| ADR-001 | MySQL → **SQL Server (SSMS)** | Tương thích hạ tầng local, HeidiSQL/SSMS quản lý |
 | ADR-002 | `tomcat7-maven-plugin` → **Jetty 11** (`jetty-maven-plugin`) | Tomcat7 crash Java 25. Jetty 11 hỗ trợ Java 11+ |
 | ADR-003 | `javax.servlet.*` → **`jakarta.servlet.*`** (Jakarta Servlet 5.0) | Jetty 11 yêu cầu Jakarta EE namespace |
 | ADR-004 | Compiler target **Java 21** (runtime Java 25) | Java 21 = LTS gần nhất, tối đa tương thích |
@@ -44,27 +54,9 @@
 | ADR-008 | `explanation` trong `questions` = **AI Fallback Buffer** | Decoupling: hiển thị giải thích khi API offline |
 | ADR-009 | `confidence_level` (CERTAIN/GUESS) trong `user_answers` | Confidence Tagging: AI củng cố câu đoán mò |
 | ADR-010 | Gemini SDK **v1.64.0** (stable 07/2026) | Latest, hỗ trợ ResponseSchema + async |
-| ADR-011 | **Template-First Policy** — AdminLTE 4 + Vanilla Chat Widget | Không viết UI from scratch; chỉ Data Binding |
-| ADR-012 | CDN cho FontAwesome, SweetAlert2, Chart.js, Highlight.js | Nhẹ, không cài local, luôn cập nhật |
-
-## Next Action Prompt
-```
-Tiếp tục Giai đoạn 1: Tạo Java skeleton project.
-
-TRƯỚC KHI CODE, cần xác nhận với user:
-1. Đã cài Maven chưa? (chạy: mvn -version)
-2. Đã cài SQL Server + SSMS chưa?
-3. Đã lấy Gemini API Key chưa?
-
-SAU KHI XÁC NHẬN:
-1. Tạo Model classes (POJO): User, Topic, Question, QuizSession, UserAnswer (có confidenceLevel), RemedialLesson, ChatMessage
-2. Tạo ConfigLoader.java (đọc .env bằng dotenv-java)
-3. Tạo DatabaseUtil.java (HikariCP + SQL Server)
-4. Tạo DAO layer: UserDAO, TopicDAO, QuestionDAO, QuizDAO, ChatDAO
-5. Chạy: mvn clean compile → xác nhận build thành công
-6. Chạy schema.sql trong SSMS → xác nhận DB sẵn sàng
-```
+| ADR-011 | **Template-First Policy** — Bootstrap 5 + Floating Chat Widget | Không viết UI from scratch; chỉ Data Binding |
+| ADR-012 | CDN cho FontAwesome, SweetAlert2, Highlight.js, Marked.js | Nhẹ, không cài local, luôn cập nhật |
 
 ---
 
-*Cập nhật lần cuối: 2026-09-07 13:35 (GMT+7) — Phiên 1*
+*Cập nhật lần cuối: 2026-09-07 14:10 (GMT+7)*

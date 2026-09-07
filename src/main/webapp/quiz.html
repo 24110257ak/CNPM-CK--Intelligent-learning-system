@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Làm Bài Kiểm Tra — Hệ Thống Học Tập Thông Minh</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- SweetAlert2 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/app.css">
+</head>
+<body class="bg-light">
+
+    <!-- ── Top Header ── -->
+    <nav class="navbar navbar-custom sticky-top py-2">
+        <div class="container d-flex justify-content-between align-items-center">
+            <div class="d-flex align-items-center gap-3">
+                <a href="index.html" class="btn btn-sm btn-outline-secondary rounded-circle" title="Quay lại">
+                    <i class="fa-solid fa-arrow-left"></i>
+                </a>
+                <div>
+                    <h6 class="mb-0 fw-bold text-dark" id="quiz-topic-title">Đang tải chủ đề...</h6>
+                    <small class="text-muted" id="quiz-question-counter">Câu 1 / --</small>
+                </div>
+            </div>
+
+            <div class="d-flex align-items-center gap-3">
+                <!-- Đồng hồ đếm giờ -->
+                <div class="badge bg-light text-dark border px-3 py-2 rounded-pill fs-6 d-flex align-items-center gap-2">
+                    <i class="fa-regular fa-clock text-primary"></i>
+                    <span id="quiz-timer" class="fw-bold font-monospace">15:00</span>
+                </div>
+                <!-- Nút nộp bài -->
+                <button id="btn-submit-quiz" class="btn btn-success px-3 py-1 rounded-pill fw-semibold shadow-sm">
+                    <i class="fa-solid fa-cloud-arrow-up me-1"></i>Nộp Bài
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ── Progress Bar ── -->
+    <div class="progress rounded-0" style="height: 4px;">
+        <div id="quiz-progress-bar" class="progress-bar bg-primary" role="progressbar" style="width: 0%;"></div>
+    </div>
+
+    <!-- ── Main Quiz Container ── -->
+    <div class="container my-4">
+        <div class="row g-4">
+            <!-- Cột câu hỏi chính (Left) -->
+            <div class="col-lg-8">
+                <!-- Loading Card -->
+                <div id="quiz-loading" class="card border-0 shadow-sm rounded-4 p-5 text-center bg-white">
+                    <div class="spinner-border text-primary mx-auto mb-3" role="status"></div>
+                    <h5>Đang khởi tạo bài kiểm tra...</h5>
+                    <p class="text-muted small">AI đang chuẩn bị các câu hỏi phù hợp cho bạn.</p>
+                </div>
+
+                <!-- Active Question Card -->
+                <div id="quiz-question-card" class="card border-0 shadow-sm rounded-4 p-4 bg-white" style="display: none;">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="badge bg-primary text-white px-3 py-1 rounded-pill" id="question-index-badge">Câu 1</span>
+                        <span class="badge bg-light text-muted border" id="question-difficulty-badge">Mức độ: Dễ</span>
+                    </div>
+
+                    <!-- Nội dung câu hỏi -->
+                    <h5 class="fw-bold text-dark mb-4 lh-base" id="question-text">
+                        Đang tải câu hỏi...
+                    </h5>
+
+                    <!-- Danh sách lựa chọn A, B, C, D -->
+                    <div class="options-container mb-4" id="options-list">
+                        <!-- Rendered dynamically -->
+                    </div>
+
+                    <!-- ★ ADR-009 Confidence Tagging Selector -->
+                    <div class="confidence-box mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="fw-bold small text-dark d-flex align-items-center gap-1">
+                                <i class="fa-solid fa-shield-heart text-primary"></i>Mức độ tự tin khi chọn đáp án:
+                            </span>
+                            <small class="text-muted" style="font-size: 0.75rem;">
+                                <i class="fa-solid fa-circle-info me-1"></i>Hỗ trợ AI phân tích điểm yếu
+                            </small>
+                        </div>
+                        <div class="btn-group w-100" role="group">
+                            <input type="radio" class="btn-check" name="confidenceRadio" id="conf-certain" value="CERTAIN" checked>
+                            <label class="btn btn-outline-success btn-sm py-2 fw-semibold" for="conf-certain">
+                                <i class="fa-solid fa-check-double me-1"></i>1. Chắc Chắn (Certain)
+                            </label>
+
+                            <input type="radio" class="btn-check" name="confidenceRadio" id="conf-guess" value="GUESS">
+                            <label class="btn btn-outline-warning btn-sm py-2 fw-semibold" for="conf-guess">
+                                <i class="fa-solid fa-dice me-1"></i>2. Phân Vân / Đoán Mò (Guess)
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Navigation Action Buttons -->
+                    <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                        <button id="btn-prev-question" class="btn btn-outline-secondary px-3 rounded-pill" disabled>
+                            <i class="fa-solid fa-chevron-left me-1"></i>Câu Trước
+                        </button>
+                        <button id="btn-next-question" class="btn btn-primary px-4 rounded-pill fw-semibold">
+                            Câu Kế Tiếp<i class="fa-solid fa-chevron-right ms-1"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cột Bảng câu hỏi & Trạng thái (Right) -->
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm rounded-4 p-3 bg-white sticky-top" style="top: 80px;">
+                    <h6 class="fw-bold text-dark mb-3">
+                        <i class="fa-solid fa-table-cells me-2 text-primary"></i>Danh Sách Câu Hỏi
+                    </h6>
+                    
+                    <!-- Bảng các nút bấm câu hỏi -->
+                    <div class="d-flex flex-wrap gap-2 mb-3" id="question-palette">
+                        <!-- Rendered dynamically (1, 2, 3...) -->
+                    </div>
+
+                    <!-- Chú thích màu sắc -->
+                    <div class="border-top pt-3 small text-muted">
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <span class="badge bg-success rounded-circle p-1" style="width: 14px; height: 14px;"> </span>
+                            <span>Đã chọn (Chắc chắn)</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <span class="badge bg-warning rounded-circle p-1" style="width: 14px; height: 14px;"> </span>
+                            <span>Đã chọn (Đoán mò)</span>
+                        </div>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-light border rounded-circle p-1" style="width: 14px; height: 14px;"> </span>
+                            <span>Chưa trả lời</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/chat-widget.js"></script>
+
+    <script>
+        const currentUser = API.auth.requireAuth();
+        const urlParams = new URLSearchParams(window.location.search);
+        const topicId = parseInt(urlParams.get('topicId')) || 1;
+        const topicName = decodeURIComponent(urlParams.get('topicName') || 'Kiểm Tra Trắc Nghiệm');
+
+        document.getElementById('quiz-topic-title').textContent = topicName;
+
+        let sessionId = null;
+        let questions = [];
+        let currentIndex = 0;
+        let userAnswers = {}; // questionId -> { userAnswer: 'A', confidenceLevel: 'CERTAIN' }
+
+        // Timer
+        let secondsLeft = 15 * 60;
+        let timerInterval = null;
+
+        function startTimer() {
+            const timerEl = document.getElementById('quiz-timer');
+            timerInterval = setInterval(() => {
+                secondsLeft--;
+                if (secondsLeft <= 0) {
+                    clearInterval(timerInterval);
+                    Swal.fire('Hết giờ!', 'Thời gian làm bài đã kết thúc. Hệ thống sẽ tự động nộp bài.', 'warning')
+                        .then(() => submitQuiz(true));
+                    return;
+                }
+                const m = Math.floor(secondsLeft / 60).toString().padStart(2, '0');
+                const s = (secondsLeft % 60).toString().padStart(2, '0');
+                timerEl.textContent = `${m}:${s}`;
+            }, 1000);
+        }
+
+        // Bắt đầu bài quiz từ API
+        async function initQuiz() {
+            try {
+                const res = await API.quiz.start(topicId);
+                sessionId = res.data.sessionId;
+                questions = res.data.questions || [];
+
+                if (questions.length === 0) {
+                    Swal.fire('Lỗi', 'Chủ đề này chưa có câu hỏi nào.', 'error').then(() => {
+                        window.location.href = 'index.html';
+                    });
+                    return;
+                }
+
+                document.getElementById('quiz-loading').style.display = 'none';
+                document.getElementById('quiz-question-card').style.display = 'block';
+
+                renderPalette();
+                renderQuestion(0);
+                startTimer();
+            } catch (err) {
+                Swal.fire('Không thể tạo phiên làm bài', err.message, 'error').then(() => {
+                    window.location.href = 'index.html';
+                });
+            }
+        }
+
+        function renderPalette() {
+            const palette = document.getElementById('question-palette');
+            palette.innerHTML = questions.map((q, idx) => {
+                const ans = userAnswers[q.questionId];
+                let btnClass = 'btn-outline-secondary';
+                if (ans) {
+                    btnClass = ans.confidenceLevel === 'GUESS' ? 'btn-warning text-dark' : 'btn-success text-white';
+                }
+                if (idx === currentIndex) {
+                    btnClass += ' border-3 border-primary';
+                }
+                return `
+                    <button class="btn btn-sm ${btnClass} fw-bold" style="width: 42px; height: 42px;" onclick="renderQuestion(${idx})">
+                        ${idx + 1}
+                    </button>
+                `;
+            }).join('');
+        }
+
+        function renderQuestion(idx) {
+            saveCurrentSelection(); // lưu câu hiện tại trước khi chuyển
+            currentIndex = idx;
+
+            const q = questions[currentIndex];
+            document.getElementById('question-index-badge').textContent = `Câu ${currentIndex + 1} / ${questions.length}`;
+            document.getElementById('quiz-question-counter').textContent = `Câu ${currentIndex + 1} / ${questions.length}`;
+            document.getElementById('question-difficulty-badge').textContent = `Mức độ: ${q.difficulty || 'Bình thường'}`;
+            document.getElementById('question-text').textContent = q.questionText;
+
+            // Progress Bar
+            const percent = ((currentIndex + 1) / questions.length) * 100;
+            document.getElementById('quiz-progress-bar').style.width = `${percent}%`;
+
+            // Lấy câu trả lời đã chọn trước đó nếu có
+            const saved = userAnswers[q.questionId] || { userAnswer: null, confidenceLevel: 'CERTAIN' };
+
+            // Render 4 phương án A, B, C, D
+            const options = [
+                { key: 'A', text: q.optionA },
+                { key: 'B', text: q.optionB },
+                { key: 'C', text: q.optionC },
+                { key: 'D', text: q.optionD }
+            ];
+
+            const optionsList = document.getElementById('options-list');
+            optionsList.innerHTML = options.map(opt => `
+                <div class="position-relative">
+                    <input type="radio" class="btn-check option-input" name="optRadio" id="opt-${opt.key}" value="${opt.key}"
+                           ${saved.userAnswer === opt.key ? 'checked' : ''} onchange="onOptionSelected('${opt.key}')">
+                    <label class="option-label d-flex align-items-center" for="opt-${opt.key}">
+                        <span class="badge bg-light text-primary border me-3 fs-6 px-3 py-2 rounded-3">${opt.key}</span>
+                        <span class="fs-6">${opt.text}</span>
+                    </label>
+                </div>
+            `).join('');
+
+            // Set confidence radio
+            if (saved.confidenceLevel === 'GUESS') {
+                document.getElementById('conf-guess').checked = true;
+            } else {
+                document.getElementById('conf-certain').checked = true;
+            }
+
+            // Next / Prev buttons
+            document.getElementById('btn-prev-question').disabled = (currentIndex === 0);
+            const nextBtn = document.getElementById('btn-next-question');
+            if (currentIndex === questions.length - 1) {
+                nextBtn.innerHTML = '<i class="fa-solid fa-check me-1"></i>Xem lại hoàn tất';
+            } else {
+                nextBtn.innerHTML = 'Câu Kế Tiếp<i class="fa-solid fa-chevron-right ms-1"></i>';
+            }
+
+            renderPalette();
+        }
+
+        function saveCurrentSelection() {
+            if (questions.length === 0 || currentIndex < 0) return;
+            const q = questions[currentIndex];
+            const checkedOpt = document.querySelector('input[name="optRadio"]:checked');
+            const checkedConf = document.querySelector('input[name="confidenceRadio"]:checked');
+
+            if (checkedOpt) {
+                userAnswers[q.questionId] = {
+                    userAnswer: checkedOpt.value,
+                    confidenceLevel: checkedConf ? checkedConf.value : 'CERTAIN'
+                };
+            }
+        }
+
+        function onOptionSelected(optKey) {
+            saveCurrentSelection();
+            renderPalette();
+        }
+
+        // Listener cho Confidence radio change
+        document.querySelectorAll('input[name="confidenceRadio"]').forEach(r => {
+            r.addEventListener('change', () => {
+                saveCurrentSelection();
+                renderPalette();
+            });
+        });
+
+        // Nút Prev / Next
+        document.getElementById('btn-prev-question').addEventListener('click', () => {
+            if (currentIndex > 0) renderQuestion(currentIndex - 1);
+        });
+
+        document.getElementById('btn-next-question').addEventListener('click', () => {
+            if (currentIndex < questions.length - 1) {
+                renderQuestion(currentIndex + 1);
+            } else {
+                Swal.fire({
+                    title: 'Bạn đã xem hết các câu hỏi!',
+                    text: 'Bạn có muốn kiểm tra lại hay nộp bài ngay?',
+                    icon: 'info',
+                    showCancelButton: true,
+                    confirmButtonText: 'Nộp bài ngay',
+                    cancelButtonText: 'Kiểm tra lại'
+                }).then(res => {
+                    if (res.isConfirmed) submitQuiz(false);
+                });
+            }
+        });
+
+        // Nộp bài
+        document.getElementById('btn-submit-quiz').addEventListener('click', () => submitQuiz(false));
+
+        async function submitQuiz(force = false) {
+            saveCurrentSelection();
+            const answeredCount = Object.keys(userAnswers).length;
+            const total = questions.length;
+
+            if (!force && answeredCount < total) {
+                const confirm = await Swal.fire({
+                    title: 'Chưa làm hết câu hỏi!',
+                    text: `Bạn mới làm ${answeredCount}/${total} câu. Bạn có chắc chắn muốn nộp bài bây giờ không?`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Vẫn nộp bài',
+                    cancelButtonText: 'Tiếp tục làm'
+                });
+                if (!confirm.isConfirmed) return;
+            }
+
+            // Hiển thị loading AI đang chấm điểm và phân tích
+            Swal.fire({
+                title: 'Đang chấm điểm & phân tích AI...',
+                html: '<i class="fa-solid fa-brain fa-spin fa-2x text-primary my-3"></i><br>AI đang kiểm tra lỗ hổng tư duy và chuẩn bị bài học củng cố cho bạn...',
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading()
+            });
+
+            const answersPayload = questions.map(q => {
+                const ans = userAnswers[q.questionId];
+                return {
+                    questionId: q.questionId,
+                    userAnswer: ans ? ans.userAnswer : '',
+                    confidenceLevel: ans ? ans.confidenceLevel : 'CERTAIN'
+                };
+            });
+
+            try {
+                clearInterval(timerInterval);
+                const res = await API.quiz.submit(sessionId, answersPayload);
+                // Lưu kết quả vào sessionStorage để trang result.html hiển thị
+                sessionStorage.setItem('last_quiz_result', JSON.stringify(res.data));
+                window.location.href = `result.html?sessionId=${sessionId}`;
+            } catch (err) {
+                Swal.fire('Lỗi nộp bài', err.message || 'Không thể kết nối đến máy chủ.', 'error');
+            }
+        }
+
+        initQuiz();
+    </script>
+</body>
+</html>

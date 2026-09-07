@@ -1,0 +1,32 @@
+# ═══════════════════════════════════════════════════════════
+# Hệ Thống Học Tập Thông Minh — .gitignore
+# ═══════════════════════════════════════════════════════════
+
+# ── Bí mật & cấu hình local ──
+.env
+*.env.local
+
+# ── Maven build output ──
+target/
+*.class
+*.jar
+!/.mvn/wrapper/maven-wrapper.jar
+*.war
+
+# ── IDE (VS Code) ──
+.vscode/
+.settings/
+.classpath
+.project
+.factorypath
+*.iml
+.idea/
+
+# ── OS generated ──
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── Logs ──
+*.log
+logs/

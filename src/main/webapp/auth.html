@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng Nhập / Đăng Ký — Hệ Thống Học Tập Thông Minh</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- SweetAlert2 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/app.css">
+</head>
+<body class="d-flex align-items-center justify-content-center py-5" style="background: linear-gradient(135deg, #eef2ff 0%, #f8fafc 100%);">
+
+    <div class="container" style="max-width: 480px;">
+        <!-- Logo & Brand Header -->
+        <div class="text-center mb-4">
+            <div class="d-inline-flex align-items-center justify-content-center bg-primary text-white rounded-4 p-3 mb-3 shadow">
+                <i class="fa-solid fa-graduation-cap fa-2x"></i>
+            </div>
+            <h3 class="fw-bold text-dark mb-1">LMS Thông Minh</h3>
+            <p class="text-muted small">Nền tảng kiểm tra & cá nhân hóa bài học củng cố bằng AI</p>
+        </div>
+
+        <!-- Card Auth -->
+        <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+            <!-- Nav Tabs -->
+            <ul class="nav nav-pills nav-fill bg-light p-2 border-bottom" id="authTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active fw-bold py-2 rounded-3" id="login-tab" data-bs-toggle="pill" data-bs-target="#login-pane" type="button" role="tab">
+                        <i class="fa-solid fa-right-to-bracket me-2"></i>Đăng Nhập
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link fw-bold py-2 rounded-3" id="register-tab" data-bs-toggle="pill" data-bs-target="#register-pane" type="button" role="tab">
+                        <i class="fa-solid fa-user-plus me-2"></i>Đăng Ký
+                    </button>
+                </li>
+            </ul>
+
+            <div class="tab-content p-4" id="authTabsContent">
+                <!-- Tab Đăng Nhập -->
+                <div class="tab-pane fade show active" id="login-pane" role="tabpanel">
+                    <form id="login-form">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold small">Tên đăng nhập</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light text-muted"><i class="fa-solid fa-user"></i></span>
+                                <input type="text" id="login-username" class="form-control" placeholder="Nhập username" required>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold small">Mật khẩu</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light text-muted"><i class="fa-solid fa-lock"></i></span>
+                                <input type="password" id="login-password" class="form-control" placeholder="••••••••" required>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="rememberMe" checked>
+                                <label class="form-check-label small text-muted" for="rememberMe">Ghi nhớ</label>
+                            </div>
+                            <a href="#" class="text-decoration-none small text-primary" onclick="Swal.fire('Thông báo', 'Vui lòng liên hệ quản trị viên hoặc giáo viên bộ môn để đặt lại mật khẩu.', 'info'); return false;">Quên mật khẩu?</a>
+                        </div>
+
+                        <button type="submit" id="login-submit-btn" class="btn btn-primary w-100 py-2 fw-semibold rounded-3 shadow-sm">
+                            <i class="fa-solid fa-arrow-right-to-bracket me-2"></i>Đăng Nhập Ngay
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Tab Đăng Ký -->
+                <div class="tab-pane fade" id="register-pane" role="tabpanel">
+                    <form id="register-form">
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold small">Tên đăng nhập <span class="text-danger">*</span></label>
+                            <input type="text" id="reg-username" class="form-control" placeholder="Ít nhất 3 ký tự" minlength="3" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold small">Họ và tên <span class="text-danger">*</span></label>
+                            <input type="text" id="reg-fullname" class="form-control" placeholder="Ví dụ: Nguyễn Văn An" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold small">Email (tùy chọn)</label>
+                            <input type="email" id="reg-email" class="form-control" placeholder="an.nguyen@email.com">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold small">Mật khẩu <span class="text-danger">*</span></label>
+                            <input type="password" id="reg-password" class="form-control" placeholder="Ít nhất 6 ký tự" minlength="6" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold small">Sở thích cá nhân <span class="text-muted">(để AI tạo ẩn dụ thân thuộc)</span></label>
+                            <input type="text" id="reg-interests" class="form-control" placeholder="Ví dụ: bóng đá, anime, game kiếm hiệp, nấu ăn">
+                        </div>
+
+                        <button type="submit" id="reg-submit-btn" class="btn btn-success w-100 py-2 fw-semibold rounded-3 shadow-sm">
+                            <i class="fa-solid fa-user-check me-2"></i>Tạo Tài Khoản
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center mt-4">
+            <small class="text-muted">&copy; 2026 Đồ Án CNPM — Hệ Thống Học Tập Thông Minh Tích Hợp AI</small>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="js/api.js"></script>
+    <script>
+        // Kiểm tra nếu đã đăng nhập thì chuyển vào trang chủ
+        if (API.auth.getUser()) {
+            window.location.href = 'index.html';
+        }
+
+        // Xử lý Login
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('login-submit-btn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i>Đang kiểm tra...';
+
+            const username = document.getElementById('login-username').value.trim();
+            const password = document.getElementById('login-password').value;
+
+            try {
+                await API.auth.login(username, password);
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Đăng nhập thành công!',
+                    text: 'Chào mừng bạn quay trở lại với hệ thống.',
+                    timer: 1200,
+                    showConfirmButton: false
+                }).then(() => {
+                    window.location.href = 'index.html';
+                });
+            } catch (err) {
+                Swal.fire('Lỗi đăng nhập', err.message || 'Tài khoản hoặc mật khẩu không đúng.', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-arrow-right-to-bracket me-2"></i>Đăng Nhập Ngay';
+            }
+        });
+
+        // Xử lý Register
+        document.getElementById('register-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('reg-submit-btn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i>Đang tạo tài khoản...';
+
+            const username = document.getElementById('reg-username').value.trim();
+            const fullName = document.getElementById('reg-fullname').value.trim();
+            const email = document.getElementById('reg-email').value.trim();
+            const password = document.getElementById('reg-password').value;
+            const interests = document.getElementById('reg-interests').value.trim();
+
+            try {
+                await API.auth.register(username, password, fullName, email, interests);
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Đăng ký thành công!',
+                    text: 'Tài khoản đã sẵn sàng. Đang chuyển hướng vào hệ thống...',
+                    timer: 1500,
+                    showConfirmButton: false
+                }).then(() => {
+                    window.location.href = 'index.html';
+                });
+            } catch (err) {
+                Swal.fire('Lỗi đăng ký', err.message || 'Không thể tạo tài khoản.', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-user-check me-2"></i>Tạo Tài Khoản';
+            }
+        });
+    </script>
+</body>
+</html>

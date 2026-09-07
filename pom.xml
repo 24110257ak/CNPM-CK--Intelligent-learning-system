@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                             http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         PROJECT METADATA
+         ═══════════════════════════════════════════════════════════════════ -->
+    <groupId>com.lms</groupId>
+    <artifactId>intelligent-learning-system</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <packaging>war</packaging>
+
+    <name>Hệ Thống Học Tập Thông Minh</name>
+    <description>
+        Intelligent Learning Management System with AI-powered error analysis,
+        remedial lesson generation, and adaptive chatbot mentor.
+    </description>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         PROPERTIES
+         Java 25 runtime, nhưng compile target 21 để tối đa tương thích.
+         Jetty 11 (jakarta.servlet 5.0) thay cho Tomcat7 plugin (crash Java 25).
+         ═══════════════════════════════════════════════════════════════════ -->
+    <properties>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <jetty.version>11.0.24</jetty.version>
+    </properties>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         DEPENDENCIES
+         ═══════════════════════════════════════════════════════════════════ -->
+    <dependencies>
+
+        <!-- ─── Jakarta Servlet API 5.0 (Jetty 11 compatible) ─── -->
+        <dependency>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
+            <version>5.0.0</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <!-- ─── SQL Server JDBC Driver ─── -->
+        <dependency>
+            <groupId>com.microsoft.sqlserver</groupId>
+            <artifactId>mssql-jdbc</artifactId>
+            <version>12.8.1.jre11</version>
+        </dependency>
+
+        <!-- ─── HikariCP Connection Pool (hiệu năng cao) ─── -->
+        <dependency>
+            <groupId>com.zaxxer</groupId>
+            <artifactId>HikariCP</artifactId>
+            <version>6.2.1</version>
+        </dependency>
+
+        <!-- ─── Google Gemini AI SDK (chính thức) ─── -->
+        <dependency>
+            <groupId>com.google.genai</groupId>
+            <artifactId>google-genai</artifactId>
+            <version>1.64.0</version>
+        </dependency>
+
+        <!-- ─── Gson JSON Processing ─── -->
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>2.12.1</version>
+        </dependency>
+
+        <!-- ─── SLF4J Simple Logger ─── -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-simple</artifactId>
+            <version>2.0.16</version>
+        </dependency>
+
+        <!-- ─── BCrypt Password Hashing ─── -->
+        <dependency>
+            <groupId>at.favre.lib</groupId>
+            <artifactId>bcrypt</artifactId>
+            <version>0.10.2</version>
+        </dependency>
+
+        <!-- ─── Dotenv for Java (đọc file .env) ─── -->
+        <dependency>
+            <groupId>io.github.cdimascio</groupId>
+            <artifactId>dotenv-java</artifactId>
+            <version>3.1.0</version>
+        </dependency>
+
+    </dependencies>
+
+    <!-- ═══════════════════════════════════════════════════════════════════
+         BUILD CONFIGURATION
+         ═══════════════════════════════════════════════════════════════════ -->
+    <build>
+        <finalName>lms</finalName>
+
+        <plugins>
+
+            <!-- ─── Maven Compiler Plugin ─── -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.13.0</version>
+                <configuration>
+                    <release>21</release>
+                    <encoding>UTF-8</encoding>
+                </configuration>
+            </plugin>
+
+            <!-- ─── Maven WAR Plugin ─── -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-war-plugin</artifactId>
+                <version>3.4.0</version>
+                <configuration>
+                    <failOnMissingWebXml>false</failOnMissingWebXml>
+                </configuration>
+            </plugin>
+
+            <!-- ─── Jetty Maven Plugin (Dev Server) ───
+                 Chạy: mvn jetty:run
+                 Truy cập: http://localhost:8080
+                 Auto-reload mỗi 5 giây khi file thay đổi.
+                 ──────────────────────────────────────── -->
+            <plugin>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-maven-plugin</artifactId>
+                <version>${jetty.version}</version>
+                <configuration>
+                    <httpConnector>
+                        <port>8080</port>
+                    </httpConnector>
+                    <webApp>
+                        <contextPath>/</contextPath>
+                    </webApp>
+                    <scan>5</scan>
+                </configuration>
+            </plugin>
+
+        </plugins>
+    </build>
+
+</project>

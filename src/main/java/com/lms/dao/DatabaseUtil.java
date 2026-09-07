@@ -23,14 +23,24 @@ public class DatabaseUtil {
         try {
             HikariConfig config = new HikariConfig();
 
-            // ── MSSQL JDBC Driver ──
-            config.setDriverClassName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
+            // ── Tự động nhận diện Driver: PostgreSQL (Neon.tech) hoặc SQL Server ──
+            String dbUrl = ConfigLoader.get("DB_URL",
+                    "jdbc:postgresql://ep-mute-queen-b3xtkksd-pooler.c-4.ap-southeast-1.aws.neon.tech/lms_db?sslmode=require");
+            String username = ConfigLoader.get("DB_USERNAME", "lms_db_owner");
+            String password = ConfigLoader.get("DB_PASSWORD", "npg_r4vyIfJa9tSX");
+
+            if (dbUrl.contains("postgresql")) {
+                Class.forName("org.postgresql.Driver");
+                config.setDriverClassName("org.postgresql.Driver");
+            } else {
+                Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
+                config.setDriverClassName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
+            }
 
             // ── Connection String từ .env ──
-            config.setJdbcUrl(ConfigLoader.get("DB_URL",
-                    "jdbc:sqlserver://localhost:1433;databaseName=lms_db;trustServerCertificate=true;encrypt=true"));
-            config.setUsername(ConfigLoader.get("DB_USERNAME", "sa"));
-            config.setPassword(ConfigLoader.get("DB_PASSWORD", ""));
+            config.setJdbcUrl(dbUrl);
+            config.setUsername(username);
+            config.setPassword(password);
 
             // ── Pool Settings ──
             config.setMaximumPoolSize(ConfigLoader.getInt("DB_POOL_SIZE", 10));
@@ -51,8 +61,8 @@ public class DatabaseUtil {
 
             System.out.println("[DatabaseUtil] ✅ HikariCP Pool khởi tạo thành công: " + config.getJdbcUrl());
 
-            // Tự động kiểm tra và nâng cấp schema nếu cần
-            checkAndMigrateSchema();
+            // Tự động kiểm tra và nâng cấp/khởi tạo schema nếu cần
+            checkAndInitializeSchema();
 
         } catch (Exception e) {
             System.err.println("[DatabaseUtil] ❌ Lỗi khởi tạo HikariCP Pool!");
@@ -61,39 +71,113 @@ public class DatabaseUtil {
     }
 
     /**
-     * Tự động kiểm tra và thêm cột [misconception_tag] nếu CSDL chưa có.
-     * Gắn nhãn phân loại lỗi tư duy cho các câu hỏi hiện có.
+     * Tự động khởi tạo schema.sql nếu CSDL hoàn toàn mới,
+     * sau đó kiểm tra và nâng cấp schema (Auto-Migration).
      */
-    private static void checkAndMigrateSchema() {
-        String checkColumnSql = "IF NOT EXISTS (\n"
-                + "    SELECT * FROM sys.columns \n"
-                + "    WHERE object_id = OBJECT_ID('questions') AND name = 'misconception_tag'\n"
-                + ")\n"
-                + "BEGIN\n"
-                + "    ALTER TABLE questions ADD misconception_tag NVARCHAR(50) NULL;\n"
-                + "END";
-
-        String seedTagsSql = "UPDATE questions SET misconception_tag = CASE (question_id % 4) "
-                + "    WHEN 0 THEN N'syntax_swap' "
-                + "    WHEN 1 THEN N'boundary_blindness' "
-                + "    WHEN 2 THEN N'mental_model_gap' "
-                + "    ELSE N'logic_flaw' END "
-                + "WHERE misconception_tag IS NULL";
-
-        String checkConstraintSql = "IF EXISTS (SELECT * FROM sys.check_constraints WHERE name = 'CK_user_answers_answer')\n"
-                + "BEGIN\n"
-                + "    ALTER TABLE user_answers DROP CONSTRAINT CK_user_answers_answer;\n"
-                + "    ALTER TABLE user_answers ADD CONSTRAINT CK_user_answers_answer CHECK (user_answer IN (N'A', N'B', N'C', N'D', N'', N' '));\n"
-                + "END";
-
+    private static void checkAndInitializeSchema() {
         try (Connection conn = dataSource.getConnection();
              Statement stmt = conn.createStatement()) {
-            stmt.execute(checkColumnSql);
-            stmt.execute(seedTagsSql);
-            try {
-                stmt.execute(checkConstraintSql);
-            } catch (Exception ignored) {}
-            System.out.println("[DatabaseUtil] ✅ Auto-Migration: Cột [misconception_tag] đã sẵn sàng!");
+
+            String dbProductName = conn.getMetaData().getDatabaseProductName().toLowerCase();
+            boolean isPostgres = dbProductName.contains("postgres");
+
+            boolean tablesExist = false;
+            String checkTableSql = isPostgres
+                    ? "SELECT 1 FROM information_schema.tables WHERE table_name = 'topics'"
+                    : "SELECT 1 FROM sys.tables WHERE name = 'topics'";
+
+            try (var rs = stmt.executeQuery(checkTableSql)) {
+                if (rs.next()) {
+                    tablesExist = true;
+                }
+            }
+
+            if (!tablesExist) {
+                System.out.println("[DatabaseUtil] 📦 CSDL mới chưa có bảng. Đang tự động nạp cấu trúc từ schema.sql...");
+                try (var in = DatabaseUtil.class.getResourceAsStream("/db/schema.sql")) {
+                    if (in != null) {
+                        String fullSql = new String(in.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
+                        stmt.execute(fullSql);
+                        System.out.println("[DatabaseUtil] 🎉 Tự động nạp CSDL thành công từ schema.sql!");
+                    }
+                }
+            }
+
+            // Tiếp tục chạy auto-migration nếu cần
+            checkAndMigrateSchema();
+
+        } catch (Exception e) {
+            System.err.println("[DatabaseUtil] ⚠️ Cảnh báo khởi tạo CSDL: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Tự động kiểm tra và thêm cột [misconception_tag] nếu CSDL chưa có.
+     * Hỗ trợ PostgreSQL (Neon.tech) và SQL Server.
+     */
+    private static void checkAndMigrateSchema() {
+        try (Connection conn = dataSource.getConnection();
+             Statement stmt = conn.createStatement()) {
+
+            String dbProductName = conn.getMetaData().getDatabaseProductName().toLowerCase();
+
+            if (dbProductName.contains("postgres")) {
+                // PostgreSQL / Neon.tech migration
+                String pgCheckColumnSql = "DO $$ "
+                        + "BEGIN "
+                        + "    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name='questions') THEN "
+                        + "        IF NOT EXISTS ( "
+                        + "            SELECT 1 FROM information_schema.columns "
+                        + "            WHERE table_name='questions' AND column_name='misconception_tag' "
+                        + "        ) THEN "
+                        + "            ALTER TABLE questions ADD COLUMN misconception_tag VARCHAR(50); "
+                        + "        END IF; "
+                        + "    END IF; "
+                        + "END $$;";
+
+                String pgSeedTagsSql = "UPDATE questions SET misconception_tag = CASE (question_id % 4) "
+                        + "    WHEN 0 THEN 'syntax_swap' "
+                        + "    WHEN 1 THEN 'boundary_blindness' "
+                        + "    WHEN 2 THEN 'mental_model_gap' "
+                        + "    ELSE 'logic_flaw' END "
+                        + "WHERE misconception_tag IS NULL";
+
+                stmt.execute(pgCheckColumnSql);
+                try {
+                    stmt.execute(pgSeedTagsSql);
+                } catch (Exception ignored) {}
+                System.out.println("[DatabaseUtil] ✅ PostgreSQL Auto-Migration: Cột [misconception_tag] đã sẵn sàng!");
+
+            } else {
+                // SQL Server migration
+                String checkColumnSql = "IF NOT EXISTS (\n"
+                        + "    SELECT * FROM sys.columns \n"
+                        + "    WHERE object_id = OBJECT_ID('questions') AND name = 'misconception_tag'\n"
+                        + ")\n"
+                        + "BEGIN\n"
+                        + "    ALTER TABLE questions ADD misconception_tag NVARCHAR(50) NULL;\n"
+                        + "END";
+
+                String seedTagsSql = "UPDATE questions SET misconception_tag = CASE (question_id % 4) "
+                        + "    WHEN 0 THEN N'syntax_swap' "
+                        + "    WHEN 1 THEN N'boundary_blindness' "
+                        + "    WHEN 2 THEN N'mental_model_gap' "
+                        + "    ELSE N'logic_flaw' END "
+                        + "WHERE misconception_tag IS NULL";
+
+                String checkConstraintSql = "IF EXISTS (SELECT * FROM sys.check_constraints WHERE name = 'CK_user_answers_answer')\n"
+                        + "BEGIN\n"
+                        + "    ALTER TABLE user_answers DROP CONSTRAINT CK_user_answers_answer;\n"
+                        + "    ALTER TABLE user_answers ADD CONSTRAINT CK_user_answers_answer CHECK (user_answer IN (N'A', N'B', N'C', N'D', N'', N' '));\n"
+                        + "END";
+
+                stmt.execute(checkColumnSql);
+                stmt.execute(seedTagsSql);
+                try {
+                    stmt.execute(checkConstraintSql);
+                } catch (Exception ignored) {}
+                System.out.println("[DatabaseUtil] ✅ SQL Server Auto-Migration: Cột [misconception_tag] đã sẵn sàng!");
+            }
         } catch (Exception e) {
             System.err.println("[DatabaseUtil] ⚠️ Cảnh báo Auto-Migration: " + e.getMessage());
         }

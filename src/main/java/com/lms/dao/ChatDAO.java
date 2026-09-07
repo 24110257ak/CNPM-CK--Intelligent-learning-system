@@ -26,9 +26,9 @@ public class ChatDAO {
             } else {
                 ps.setNull(2, Types.INTEGER);
             }
-            ps.setNString(3, message.getUserMessage());
-            ps.setNString(4, message.getAiResponse());
-            ps.setNString(5, message.getPersona() != null ? message.getPersona() : "peer_tutor");
+            ps.setString(3, message.getUserMessage());
+            ps.setString(4, message.getAiResponse());
+            ps.setString(5, message.getPersona() != null ? message.getPersona() : "peer_tutor");
             ps.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -57,15 +57,15 @@ public class ChatDAO {
 
     /**
      * Lấy N tin nhắn gần nhất của user (cho context chatbot).
-     * Dùng TOP (SQL Server) thay vì LIMIT (MySQL).
+     * Dùng LIMIT theo chuẩn PostgreSQL / ANSI SQL.
      */
     public List<ChatMessage> getRecentByUser(int userId, int limit) {
         List<ChatMessage> messages = new ArrayList<>();
-        String sql = "SELECT TOP (?) * FROM chat_history WHERE user_id = ? ORDER BY created_at DESC";
+        String sql = "SELECT * FROM chat_history WHERE user_id = ? ORDER BY created_at DESC LIMIT ?";
         try (Connection conn = DatabaseUtil.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setInt(1, limit);
-            ps.setInt(2, userId);
+            ps.setInt(1, userId);
+            ps.setInt(2, limit);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     messages.add(mapChatMessage(rs));
@@ -106,9 +106,9 @@ public class ChatDAO {
         m.setUserId(rs.getInt("user_id"));
         int sessionId = rs.getInt("session_id");
         m.setSessionId(rs.wasNull() ? null : sessionId);
-        m.setUserMessage(rs.getNString("user_message"));
-        m.setAiResponse(rs.getNString("ai_response"));
-        m.setPersona(rs.getNString("persona"));
+        m.setUserMessage(rs.getString("user_message"));
+        m.setAiResponse(rs.getString("ai_response"));
+        m.setPersona(rs.getString("persona"));
         Timestamp createdAt = rs.getTimestamp("created_at");
         m.setCreatedAt(createdAt != null ? createdAt.toLocalDateTime() : null);
         return m;

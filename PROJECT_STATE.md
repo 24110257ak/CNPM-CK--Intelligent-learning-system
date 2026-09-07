@@ -5,7 +5,7 @@
 ---
 
 ## Current Phase
-**Giai đoạn 1 - 5B ✅ HOÀN THÀNH — Tối Ưu Chi Tiết UX & Triển Khai Adaptive Remediation Sẵn Sàng Chạy & Kiểm Thử**
+**Giai đoạn 6 ✅ HOÀN THÀNH — Chuyển Đổi PostgreSQL (Neon.tech Cloud) & Đóng Gói Docker Sẵn Sàng Triển Khai Cloud**
 
 ## Completed Milestones
 - [x] **Phase 0:** Thiết lập nền móng kiến trúc, 12 ADRs, schema.sql 7 bảng 3NF cho SQL Server, pom.xml cấu hình Jetty 11 & Gemini SDK v1.64.0.
@@ -33,29 +33,25 @@
   - UI Quiz: Sửa hover đáp án `#252a36`, viền `#6366f1`, transition `0.12s`, chữ luôn trắng `#fff`.
   - Định dạng Code: Tích hợp Marked.js + Highlight.js (Atom One Dark theme) tự động định dạng mã nguồn `pre`/`code` trong câu hỏi và bài học.
   - Phân quyền & Điều hướng: `AuthServlet` trả role, tự động chuyển hướng Giảng viên sang `teacher-dashboard.html`, chặn sinh viên truy cập.
-  - Giao diện Giảng viên (`teacher-dashboard.html` & `js/teacher.js`):
-    * 4 Thẻ KPI: Sinh viên làm bài, Ngân hàng câu hỏi, Điểm trung bình, Tỷ lệ đoán mò (GUESS rate).
-    * Tab 1: Quản lý ngân hàng câu hỏi (CRUD câu hỏi, bộ lọc Topic, tìm kiếm, modal thêm câu hỏi có markdown/code).
-    * Tab 2: AI Pedagogical Insight (thống kê 4 dạng lỗ hổng nhận thức: `syntax_swap`, `boundary_blindness`, `mental_model_gap`, `logic_flaw` và bảng bài nộp gần nhất).
+  - Giao diện Giảng viên (`teacher-dashboard.html` & `js/teacher.js`): 4 Thẻ KPI, Quản lý ngân hàng câu hỏi, AI Pedagogical Insight.
   - Backend APIs: Bật `QuestionServlet.java` (`/api/questions`) và `TeacherServlet.java` (`/api/teacher/stats`).
 - [x] **Phase 5B (Tối Ưu Chi Tiết UX & Adaptive Remediation):**
-  - **Auto-Migration CSDL (`DatabaseUtil.java`):** Tự động kiểm tra `sys.columns` và thêm cột `misconception_tag NVARCHAR(50) NULL`, seed nhãn nhận thức mẫu, và nới lỏng `CK_user_answers_answer` cho phép nộp bài chưa làm hết.
-  - **Tự động lưu tiến độ (Autosave Progress):** Lưu trạng thái làm bài vào `localStorage` key `quiz_progress_{topicId}`. Hiển thị thông báo khôi phục bài làm dở dang khi reload trang và dọn dẹp triệt để `localStorage` khi nộp bài thi hoặc mini-quiz.
-  - **Fullscreen AI Loading Overlay:** Modal toàn màn hình với hiệu ứng vòng tròn phát sáng (`ai-pulse-circle`, `@keyframes pulseGlow`) và chu kỳ thông điệp 1.5s tạo trải nghiệm suy nghĩ trực quan khi nộp bài.
-  - **Guard Routes & SweetAlert2 Toasts:** Chặn truy cập không hợp lệ (`quiz.html` thiếu `topicId`, `result.html` thiếu `sessionId`/kết quả) điều hướng về `index.html`. Thay thế toàn bộ alert/confirm bằng Toast dark-mode mượt mà.
-  - **Teacher Dashboard Nâng Cao:** Tích hợp ô nhập `misconceptionTag` trong Question Modal, bộ tìm kiếm realtime theo từ khóa câu hỏi, và phân trang client-side 10 câu/trang.
-  - **Adaptive Remediation Engine:**
-    * API `GET /api/remediation?topicId=X&misconception=Y` (lọc câu hỏi theo tag với 3 tầng fallback).
-    * API `POST /api/remediation/submit` (chấm điểm mini-quiz, phản hồi giải thích).
-    * UI Kết quả: Thẻ Khắc Phục Lỗi Nhận Thức, Modal Mini-Quiz 3 câu hỏi ôn tập, hiệu ứng pháo hoa Confetti (`canvas-confetti`) và huy hiệu "ĐÃ PHỤC HỒI KIẾN THỨC".
-- [x] **Build & Packaging:** Biên dịch toàn bộ mã nguồn Java thành công 100% không lỗi.
-- [x] **Kiểm thử tự động End-to-End:** Subagent hoàn tất kiểm thử trình duyệt tất cả 6 hạng mục và lưu video bằng chứng.
-- [x] **Server Dev:** Jetty 11 đang chạy nền ổn định trên cổng 8080 với `useFileMappedBuffer=false` hỗ trợ tối ưu trên Windows.
+  - Tự động lưu tiến độ (Autosave Progress) vào `localStorage`, Fullscreen AI Loading Overlay, Guard Routes & SweetAlert2 Toasts.
+  - Teacher Dashboard Nâng Cao (tìm kiếm realtime, phân trang 10 câu/trang).
+  - Adaptive Remediation Engine (Mini-Quiz 3 câu, Confetti, huy hiệu "ĐÃ PHỤC HỒI KIẾN THỨC").
+- [x] **Phase 6 (Chuyển Đổi PostgreSQL Neon.tech & Đóng Gói Docker):**
+  - `pom.xml`: Chuyển compile target sang Java 17 LTS, thêm `org.postgresql:postgresql:42.7.2`.
+  - `DatabaseUtil.java`: Tự động nhận diện Driver (PostgreSQL/MSSQL), PL/pgSQL `DO $$` auto-migration, auto-seed từ `schema.sql` nếu CSDL trống.
+  - DAOs (`QuestionDAO`, `QuizDAO`, `UserDAO`, `TopicDAO`, `ChatDAO`): Thay thế toàn bộ `SELECT TOP (?)` -> `LIMIT ?`, `GETDATE()` -> `CURRENT_TIMESTAMP`, `is_correct = 0` -> `NOT is_correct`, và thay thế 100% `getNString`/`setNString` sang `getString`/`setString`.
+  - `schema.sql`: Chuẩn hóa PostgreSQL DDL (`SERIAL PRIMARY KEY`, `VARCHAR`, `TEXT`, `BOOLEAN`, `TIMESTAMP DEFAULT CURRENT_TIMESTAMP`, `CREATE TABLE IF NOT EXISTS`, `ON CONFLICT DO NOTHING`, Sequence setval an toàn).
+  - `Dockerfile` & `.dockerignore`: Multi-stage build (`maven:3.9.6-eclipse-temurin-17-alpine` -> `jetty:11-jre17-alpine` port 8080).
+  - Kiểm thử trực tiếp CSDL Neon.tech Cloud: Login, Lấy danh sách Topic, Câu hỏi kèm Markdown, Bắt đầu thi, Nộp bài chấm điểm 100%, Lấy Teacher Stats thành công 100%.
+  - Cập nhật tài liệu: `.env`, `.env.example`, `README.md`.
 
 ## Pending Tasks (Các bước tiếp theo mở rộng)
 - [ ] Export báo cáo thống kê kết quả học tập ra Excel/PDF cho Giảng viên.
 - [ ] Bổ sung thêm nhiều câu hỏi phân loại chi tiết theo từng chủ đề mới.
-- [ ] Triển khai container hóa Docker hoặc đưa lên cloud nếu người dùng yêu cầu.
+- [ ] Triển khai CI/CD pipeline tự động build và push image lên Docker Hub / GitHub Packages.
 
 ---
 

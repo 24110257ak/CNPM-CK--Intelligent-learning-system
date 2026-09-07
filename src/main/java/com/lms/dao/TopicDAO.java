@@ -74,8 +74,8 @@ public class TopicDAO {
     private Topic mapTopic(ResultSet rs) throws SQLException {
         Topic t = new Topic();
         t.setTopicId(rs.getInt("topic_id"));
-        t.setTopicName(rs.getNString("topic_name"));
-        t.setDescription(rs.getNString("description"));
+        t.setTopicName(rs.getString("topic_name"));
+        t.setDescription(rs.getString("description"));
         int parentId = rs.getInt("parent_topic_id");
         t.setParentTopicId(rs.wasNull() ? null : parentId);
         t.setDisplayOrder(rs.getInt("display_order"));

@@ -18,7 +18,7 @@ public class UserDAO {
         String sql = "SELECT * FROM users WHERE username = ?";
         try (Connection conn = DatabaseUtil.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setNString(1, username);
+            ps.setString(1, username);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     return Optional.of(mapUser(rs));
@@ -57,12 +57,12 @@ public class UserDAO {
                    + "VALUES (?, ?, ?, ?, ?, ?)";
         try (Connection conn = DatabaseUtil.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            ps.setNString(1, user.getUsername());
-            ps.setNString(2, user.getPasswordHash());
-            ps.setNString(3, user.getFullName());
-            ps.setNString(4, user.getEmail());
-            ps.setNString(5, user.getRole() != null ? user.getRole() : "student");
-            ps.setNString(6, user.getInterests());
+            ps.setString(1, user.getUsername());
+            ps.setString(2, user.getPasswordHash());
+            ps.setString(3, user.getFullName());
+            ps.setString(4, user.getEmail());
+            ps.setString(5, user.getRole() != null ? user.getRole() : "student");
+            ps.setString(6, user.getInterests());
             ps.executeUpdate();
 
             try (ResultSet keys = ps.getGeneratedKeys()) {
@@ -83,7 +83,7 @@ public class UserDAO {
         String sql = "SELECT COUNT(1) FROM users WHERE username = ?";
         try (Connection conn = DatabaseUtil.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setNString(1, username);
+            ps.setString(1, username);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     return rs.getInt(1) > 0;
@@ -99,13 +99,13 @@ public class UserDAO {
      * Cập nhật thông tin user (interests, full_name, email).
      */
     public void update(User user) {
-        String sql = "UPDATE users SET full_name = ?, email = ?, interests = ?, updated_at = GETDATE() "
+        String sql = "UPDATE users SET full_name = ?, email = ?, interests = ?, updated_at = CURRENT_TIMESTAMP "
                    + "WHERE user_id = ?";
         try (Connection conn = DatabaseUtil.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-            ps.setNString(1, user.getFullName());
-            ps.setNString(2, user.getEmail());
-            ps.setNString(3, user.getInterests());
+            ps.setString(1, user.getFullName());
+            ps.setString(2, user.getEmail());
+            ps.setString(3, user.getInterests());
             ps.setInt(4, user.getUserId());
             ps.executeUpdate();
         } catch (SQLException e) {
@@ -118,12 +118,12 @@ public class UserDAO {
     private User mapUser(ResultSet rs) throws SQLException {
         User u = new User();
         u.setUserId(rs.getInt("user_id"));
-        u.setUsername(rs.getNString("username"));
-        u.setPasswordHash(rs.getNString("password_hash"));
-        u.setFullName(rs.getNString("full_name"));
-        u.setEmail(rs.getNString("email"));
-        u.setRole(rs.getNString("role"));
-        u.setInterests(rs.getNString("interests"));
+        u.setUsername(rs.getString("username"));
+        u.setPasswordHash(rs.getString("password_hash"));
+        u.setFullName(rs.getString("full_name"));
+        u.setEmail(rs.getString("email"));
+        u.setRole(rs.getString("role"));
+        u.setInterests(rs.getString("interests"));
         Timestamp createdAt = rs.getTimestamp("created_at");
         u.setCreatedAt(createdAt != null ? createdAt.toLocalDateTime() : null);
         Timestamp updatedAt = rs.getTimestamp("updated_at");

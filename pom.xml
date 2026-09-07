@@ -25,8 +25,8 @@
          Jetty 11 (jakarta.servlet 5.0) thay cho Tomcat7 plugin (crash Java 25).
          ═══════════════════════════════════════════════════════════════════ -->
     <properties>
-        <maven.compiler.source>21</maven.compiler.source>
-        <maven.compiler.target>21</maven.compiler.target>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <jetty.version>11.0.24</jetty.version>
@@ -45,7 +45,14 @@
             <scope>provided</scope>
         </dependency>
 
-        <!-- ─── SQL Server JDBC Driver ─── -->
+        <!-- ─── PostgreSQL JDBC Driver (Neon.tech Cloud) ─── -->
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>42.7.2</version>
+        </dependency>
+
+        <!-- ─── SQL Server JDBC Driver (Tương thích ngược) ─── -->
         <dependency>
             <groupId>com.microsoft.sqlserver</groupId>
             <artifactId>mssql-jdbc</artifactId>
@@ -110,7 +117,7 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.13.0</version>
                 <configuration>
-                    <release>21</release>
+                    <release>17</release>
                     <encoding>UTF-8</encoding>
                 </configuration>
             </plugin>

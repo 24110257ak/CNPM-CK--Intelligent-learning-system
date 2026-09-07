@@ -69,7 +69,7 @@ public class QuestionDAO {
             ps.setInt(1, questionId);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
-                    return rs.getNString("explanation");
+                    return rs.getString("explanation");
                 }
             }
         } catch (SQLException e) {
@@ -102,7 +102,7 @@ public class QuestionDAO {
             }
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
-                    result.put(rs.getInt("question_id"), rs.getNString("explanation"));
+                    result.put(rs.getInt("question_id"), rs.getString("explanation"));
                 }
             }
         } catch (SQLException e) {
@@ -162,15 +162,15 @@ public class QuestionDAO {
         try (Connection conn = DatabaseUtil.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setInt(1, q.getTopicId());
-            ps.setNString(2, q.getQuestionText());
-            ps.setNString(3, q.getOptionA());
-            ps.setNString(4, q.getOptionB());
-            ps.setNString(5, q.getOptionC());
-            ps.setNString(6, q.getOptionD());
-            ps.setNString(7, q.getCorrectAnswer());
-            ps.setNString(8, q.getExplanation());
-            ps.setNString(9, q.getDifficulty() != null ? q.getDifficulty() : "medium");
-            ps.setNString(10, q.getMisconceptionTag());
+            ps.setString(2, q.getQuestionText());
+            ps.setString(3, q.getOptionA());
+            ps.setString(4, q.getOptionB());
+            ps.setString(5, q.getOptionC());
+            ps.setString(6, q.getOptionD());
+            ps.setString(7, q.getCorrectAnswer());
+            ps.setString(8, q.getExplanation());
+            ps.setString(9, q.getDifficulty() != null ? q.getDifficulty() : "medium");
+            ps.setString(10, q.getMisconceptionTag());
 
             int affected = ps.executeUpdate();
             if (affected > 0) {
@@ -196,15 +196,15 @@ public class QuestionDAO {
         try (Connection conn = DatabaseUtil.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, q.getTopicId());
-            ps.setNString(2, q.getQuestionText());
-            ps.setNString(3, q.getOptionA());
-            ps.setNString(4, q.getOptionB());
-            ps.setNString(5, q.getOptionC());
-            ps.setNString(6, q.getOptionD());
-            ps.setNString(7, q.getCorrectAnswer());
-            ps.setNString(8, q.getExplanation());
-            ps.setNString(9, q.getDifficulty() != null ? q.getDifficulty() : "medium");
-            ps.setNString(10, q.getMisconceptionTag());
+            ps.setString(2, q.getQuestionText());
+            ps.setString(3, q.getOptionA());
+            ps.setString(4, q.getOptionB());
+            ps.setString(5, q.getOptionC());
+            ps.setString(6, q.getOptionD());
+            ps.setString(7, q.getCorrectAnswer());
+            ps.setString(8, q.getExplanation());
+            ps.setString(9, q.getDifficulty() != null ? q.getDifficulty() : "medium");
+            ps.setString(10, q.getMisconceptionTag());
             ps.setInt(11, q.getQuestionId());
 
             return ps.executeUpdate() > 0;
@@ -223,12 +223,12 @@ public class QuestionDAO {
         int maxLimit = (limit > 0) ? limit : 3;
 
         // 1. Ưu tiên: Câu hỏi cùng chủ đề + đúng loại lỗi tư duy
-        String sql1 = "SELECT TOP (?) * FROM questions WHERE topic_id = ? AND misconception_tag = ? ORDER BY question_id ASC";
+        String sql1 = "SELECT * FROM questions WHERE topic_id = ? AND misconception_tag = ? ORDER BY question_id ASC LIMIT ?";
         try (Connection conn = DatabaseUtil.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql1)) {
-            ps.setInt(1, maxLimit);
-            ps.setInt(2, topicId);
-            ps.setNString(3, misconceptionTag);
+            ps.setInt(1, topicId);
+            ps.setString(2, misconceptionTag);
+            ps.setInt(3, maxLimit);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     questions.add(mapQuestion(rs));
@@ -243,11 +243,11 @@ public class QuestionDAO {
             List<Integer> existingIds = new ArrayList<>();
             for (Question q : questions) existingIds.add(q.getQuestionId());
 
-            String sql2 = "SELECT TOP (?) * FROM questions WHERE misconception_tag = ? ORDER BY question_id ASC";
+            String sql2 = "SELECT * FROM questions WHERE misconception_tag = ? ORDER BY question_id ASC LIMIT ?";
             try (Connection conn = DatabaseUtil.getConnection();
                  PreparedStatement ps = conn.prepareStatement(sql2)) {
-                ps.setInt(1, maxLimit);
-                ps.setNString(2, misconceptionTag);
+                ps.setString(1, misconceptionTag);
+                ps.setInt(2, maxLimit);
                 try (ResultSet rs = ps.executeQuery()) {
                     while (rs.next() && questions.size() < maxLimit) {
                         int qId = rs.getInt("question_id");
@@ -267,11 +267,11 @@ public class QuestionDAO {
             List<Integer> existingIds = new ArrayList<>();
             for (Question q : questions) existingIds.add(q.getQuestionId());
 
-            String sql3 = "SELECT TOP (?) * FROM questions WHERE topic_id = ? ORDER BY question_id ASC";
+            String sql3 = "SELECT * FROM questions WHERE topic_id = ? ORDER BY question_id ASC LIMIT ?";
             try (Connection conn = DatabaseUtil.getConnection();
                  PreparedStatement ps = conn.prepareStatement(sql3)) {
-                ps.setInt(1, maxLimit);
-                ps.setInt(2, topicId);
+                ps.setInt(1, topicId);
+                ps.setInt(2, maxLimit);
                 try (ResultSet rs = ps.executeQuery()) {
                     while (rs.next() && questions.size() < maxLimit) {
                         int qId = rs.getInt("question_id");
@@ -332,18 +332,18 @@ public class QuestionDAO {
         Question q = new Question();
         q.setQuestionId(rs.getInt("question_id"));
         q.setTopicId(rs.getInt("topic_id"));
-        q.setQuestionText(rs.getNString("question_text"));
-        q.setOptionA(rs.getNString("option_a"));
-        q.setOptionB(rs.getNString("option_b"));
-        q.setOptionC(rs.getNString("option_c"));
-        q.setOptionD(rs.getNString("option_d"));
-        String answer = rs.getNString("correct_answer");
+        q.setQuestionText(rs.getString("question_text"));
+        q.setOptionA(rs.getString("option_a"));
+        q.setOptionB(rs.getString("option_b"));
+        q.setOptionC(rs.getString("option_c"));
+        q.setOptionD(rs.getString("option_d"));
+        String answer = rs.getString("correct_answer");
         q.setCorrectAnswer(answer != null ? answer.trim() : null);
-        q.setExplanation(rs.getNString("explanation"));
-        String diff = rs.getNString("difficulty");
+        q.setExplanation(rs.getString("explanation"));
+        String diff = rs.getString("difficulty");
         q.setDifficulty(diff != null ? diff.trim() : null);
         try {
-            String tag = rs.getNString("misconception_tag");
+            String tag = rs.getString("misconception_tag");
             q.setMisconceptionTag(tag != null ? tag.trim() : null);
         } catch (SQLException ignored) {}
         Timestamp createdAt = rs.getTimestamp("created_at");

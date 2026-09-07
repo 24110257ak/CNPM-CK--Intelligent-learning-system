@@ -42,28 +42,39 @@
 
 ## 🛠️ Yêu Cầu Môi Trường (Prerequisites)
 
-Trước khi cài đặt, hãy đảm bảo máy tính của bạn đã cài đặt các phần mềm sau:
+Dự án hỗ trợ 2 hình thức khởi chạy linh hoạt: **Chạy trực tiếp (Local)** hoặc **Chạy qua Docker (Cloud-ready)**:
 
 1. **Java Development Kit (JDK):**
-   - Phiên bản: **JDK 17, JDK 21 trở lên** (Khuyên dùng Java 21 LTS hoặc Java 25).
-   - Kiểm tra bằng lệnh:
-     ```powershell
-     java -version
-     ```
-2. **Hệ Quản Trị Cơ Sở Dữ Liệu:**
-   - **Microsoft SQL Server** (bản 2017, 2019, 2022 hoặc Developer / Express).
-   - Công cụ quản lý: **SQL Server Management Studio (SSMS)** hoặc **Azure Data Studio**.
-3. **Không cần cài đặt sẵn Maven:**
-   - Dự án đã tích hợp sẵn **Maven Wrapper** (`mvnw`, `mvnw.cmd`, `mvnw.ps1`), tự động tải đúng phiên bản Maven khi chạy lần đầu.
-4. **Git:** Đã cài Git để clone repository.
+   - Phiên bản: **JDK 17 LTS, JDK 21 LTS trở lên** (Khuyên dùng Java 17 hoặc 21).
+   - Kiểm tra bằng lệnh: `java -version`
+2. **Cơ Sở Dữ Liệu:**
+   - **Khuyên dùng:** **PostgreSQL Cloud (Neon.tech / Render / Supabase)** — Cực kỳ nhẹ, không cần cài đặt phần mềm CSDL nặng vào máy, tự động khởi tạo bảng khi chạy!
+   - Hoặc **Microsoft SQL Server** (2017 - 2022 / SSMS).
+3. **Docker (Tùy chọn):** Docker Desktop nếu muốn chạy container hóa chỉ với 1 câu lệnh.
+4. **Không cần cài đặt sẵn Maven:** Đã tích hợp sẵn **Maven Wrapper** (`mvnw.cmd`).
 
 ---
 
-## 🚀 Hướng Dẫn Cài Đặt & Khởi Chạy Local (Từng Bước)
+## 🚀 Cách 1: Khởi Chạy Nhanh Bằng Docker (Khuyên Dùng)
+
+Dự án đã được cấu hình sẵn **Multi-stage Dockerfile** (`maven:3.9.6-eclipse-temurin-17-alpine` -> `jetty:11-jre17-alpine`).
+
+```bash
+# 1. Đóng gói Docker image
+docker build -t lms-ai:latest .
+
+# 2. Khởi chạy container gắn biến môi trường .env
+docker run -d -p 8080:8080 --env-file .env --name lms-app lms-ai:latest
+
+# 3. Mở trình duyệt truy cập:
+# http://localhost:8080
+```
+
+---
+
+## 💻 Cách 2: Cài Đặt & Khởi Chạy Local (Chi Tiết)
 
 ### Bước 1: Clone Repository Về Máy
-
-Mở Terminal / PowerShell trên máy tính của bạn và thực hiện lệnh:
 
 ```bash
 git clone https://github.com/24110257ak/CNPM-CK--Intelligent-learning-system.git
@@ -72,45 +83,21 @@ cd "CNPM-CK--Intelligent-learning-system/Hệ thống học tập thông minh"
 
 ---
 
-### Bước 2: Khởi Tạo Cơ Sở Dữ Liệu SQL Server
+### Bước 2: Cấu Hình Biến Môi Trường (`.env`)
 
-1. Mở **SQL Server Management Studio (SSMS)** và đăng nhập vào SQL Server local của bạn (bằng tài khoản `sa` hoặc Windows Authentication).
-2. Nhấn `Ctrl + O` (hoặc vào File -> Open -> File) và mở file script tại đường dẫn:
-   ```
-   src/main/resources/db/schema.sql
-   ```
-3. Nhấn **Execute (F5)** để thực thi script. Script này sẽ tự động:
-   - Tạo cơ sở dữ liệu `lms_db` (nếu chưa có).
-   - Tạo 7 bảng dữ liệu quan hệ chuẩn 3NF: `users`, `topics`, `questions`, `quiz_sessions`, `user_answers`, `remedial_lessons`, `chat_messages`.
-   - Nạp sẵn các chủ đề học tập, ngân hàng câu hỏi lập trình có định dạng Markdown code và các tài khoản thử nghiệm.
-4. *(Tùy chọn nâng cao)*: Ứng dụng có cơ chế **Auto-Migration** (`DatabaseUtil.java`) tự động kiểm tra và thêm cột `misconception_tag` cũng như tối ưu hóa ràng buộc CSDL ngay khi khởi chạy máy chủ, người dùng không cần can thiệp thủ công.
+Tạo file `.env` bằng cách copy từ file `.env.example`:
 
----
+- **Trên Windows PowerShell:** `Copy-Item .env.example .env`
+- **Trên Windows CMD:** `copy .env.example .env`
+- **Trên Linux / macOS:** `cp .env.example .env`
 
-### Bước 3: Cấu Hình Biến Môi Trường (`.env`)
-
-Tại thư mục `Hệ thống học tập thông minh`, tạo file `.env` bằng cách copy từ file mẫu `.env.example`:
-
-- **Trên Windows PowerShell:**
-  ```powershell
-  Copy-Item .env.example .env
-  ```
-- **Trên Windows Command Prompt (CMD):**
-  ```cmd
-  copy .env.example .env
-  ```
-- **Trên Linux / macOS:**
-  ```bash
-  cp .env.example .env
-  ```
-
-Mở file `.env` vừa tạo bằng VS Code hoặc Notepad và điều chỉnh mật khẩu SQL Server của bạn:
+Mở file `.env` và cấu hình thông số CSDL của bạn (mặc định đã hỗ trợ Neon.tech PostgreSQL):
 
 ```ini
-# ── CSDL Microsoft SQL Server Local ──
-DB_URL=jdbc:sqlserver://localhost:1433;databaseName=lms_db;trustServerCertificate=true;encrypt=true;
-DB_USERNAME=sa
-DB_PASSWORD=Điền_mật_khẩu_SQL_Server_của_bạn_ở_đây
+# ── CSDL PostgreSQL Cloud (Neon.tech) ──
+DB_URL=jdbc:postgresql://ep-mute-queen-b3xtkksd-pooler.c-4.ap-southeast-1.aws.neon.tech/lms_db?sslmode=require
+DB_USERNAME=lms_db_owner
+DB_PASSWORD=npg_r4vyIfJa9tSX
 DB_POOL_SIZE=10
 
 # ── Google Gemini API (Tùy chọn) ──
@@ -118,44 +105,42 @@ DB_POOL_SIZE=10
 GEMINI_API_KEY=your_gemini_api_key_here
 GEMINI_MODEL=gemini-2.5-flash
 
-# ── Cổng chạy máy chủ Web (Jetty Dev Server) ──
+# ── Cổng Web Server ──
 PORT=8080
 ```
 
-> 💡 **MẸO QUAN TRỌNG VỀ GEMINI API KEY:**  
-> Nếu bạn chưa có API Key hoặc chưa muốn cấu hình ngay, hãy giữ nguyên giá trị mặc định. Nhờ kiến trúc **ADR-008 (AI Fallback Buffer)**, hệ thống sẽ tự động dùng bộ đệm ngoại tuyến thông minh từ CSDL để tạo bài học củng cố cho sinh viên mà **không hề bị gián đoạn hay báo lỗi**!
+> 💡 **CƠ CHẾ AUTO-SEED & AUTO-MIGRATION:**  
+> Hệ thống tích hợp tính năng **tự động phát hiện CSDL trống** và nạp toàn bộ cấu trúc bảng từ `schema.sql` kèm 10 câu hỏi mẫu khi khởi chạy lần đầu! Bạn không cần phải mở công cụ tạo bảng thủ công.
 
 ---
 
-### Bước 4: Khởi Động Máy Chủ Web (Jetty 11)
+### Bước 3: Khởi Động Máy Chủ Web (Jetty 11)
 
-Tại thư mục `Hệ thống học tập thông minh`, chạy lệnh sau để khởi động:
+Tại thư mục `Hệ thống học tập thông minh`, chạy lệnh:
 
 - **Trên Windows (PowerShell hoặc CMD):**
   ```powershell
   .\mvnw.cmd jetty:run
   ```
-  *(Nếu sử dụng PowerShell gặp chính sách script, bạn có thể chạy: `.\mvnw.ps1 jetty:run`)*
-
 - **Trên Linux / macOS:**
   ```bash
   ./mvnw jetty:run
   ```
 
-Lần chạy đầu tiên, Maven Wrapper sẽ tự động tải các dependencies cần thiết (khoảng 30 giây - 1 phút). Khi màn hình xuất hiện thông báo:
-
+Khi màn hình xuất hiện:
 ```
-[DatabaseUtil] ✅ Auto-Migration: Cột [misconception_tag] đã sẵn sàng!
+[DatabaseUtil] ✅ HikariCP Pool khởi tạo thành công: jdbc:postgresql:...
+[DatabaseUtil] ✅ PostgreSQL Auto-Migration: Cột [misconception_tag] đã sẵn sàng!
 [INFO] Started Server@...
 ```
 
-👉 Nghĩa là máy chủ đã khởi động thành công và đang lắng nghe tại cổng `8080`!
+👉 Máy chủ đã khởi động thành công và đang lắng nghe tại cổng `8080`!
 
 ---
 
-### Bước 5: Mở Trình Duyệt & Trải Nghiệm
+### Bước 4: Mở Trình Duyệt & Trải Nghiệm
 
-Mở trình duyệt (Chrome, Edge, Firefox) và truy cập vào địa chỉ:
+Mở trình duyệt truy cập địa chỉ:
 
 👉 **`http://localhost:8080/auth.html`** (hoặc **`http://localhost:8080/`**)
 

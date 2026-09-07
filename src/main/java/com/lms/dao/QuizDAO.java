@@ -47,7 +47,7 @@ public class QuizDAO {
      * Hoàn thành phiên: cập nhật điểm và thời gian kết thúc.
      */
     public void completeSession(int sessionId, int correctCount, double score) {
-        String sql = "UPDATE quiz_sessions SET correct_count = ?, score = ?, completed_at = GETDATE() "
+        String sql = "UPDATE quiz_sessions SET correct_count = ?, score = ?, completed_at = CURRENT_TIMESTAMP "
                    + "WHERE session_id = ?";
         try (Connection conn = DatabaseUtil.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -74,7 +74,7 @@ public class QuizDAO {
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     QuizSession s = mapQuizSession(rs);
-                    s.setTopicName(rs.getNString("topic_name"));
+                    s.setTopicName(rs.getString("topic_name"));
                     sessions.add(s);
                 }
             }
@@ -99,9 +99,9 @@ public class QuizDAO {
              PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setInt(1, answer.getSessionId());
             ps.setInt(2, answer.getQuestionId());
-            ps.setNString(3, answer.getUserAnswer());
+            ps.setString(3, answer.getUserAnswer());
             ps.setBoolean(4, answer.isCorrect());
-            ps.setNString(5, answer.getConfidenceLevel() != null ? answer.getConfidenceLevel() : "CERTAIN");
+            ps.setString(5, answer.getConfidenceLevel() != null ? answer.getConfidenceLevel() : "CERTAIN");
             ps.executeUpdate();
 
             try (ResultSet keys = ps.getGeneratedKeys()) {
@@ -143,7 +143,7 @@ public class QuizDAO {
     public List<UserAnswer> getAnswersNeedingAI(int sessionId) {
         List<UserAnswer> answers = new ArrayList<>();
         String sql = "SELECT * FROM user_answers WHERE session_id = ? "
-                   + "AND (is_correct = 0 OR confidence_level = N'GUESS') "
+                   + "AND (NOT is_correct OR confidence_level = 'GUESS') "
                    + "ORDER BY answer_id";
         try (Connection conn = DatabaseUtil.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -173,10 +173,10 @@ public class QuizDAO {
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, lesson.getAnswerId());
             ps.setInt(2, lesson.getUserId());
-            ps.setNString(3, lesson.getErrorReason());
-            ps.setNString(4, lesson.getLessonContent());
-            ps.setNString(5, lesson.getPracticeQuestion());
-            ps.setNString(6, lesson.getMisconceptionType());
+            ps.setString(3, lesson.getErrorReason());
+            ps.setString(4, lesson.getLessonContent());
+            ps.setString(5, lesson.getPracticeQuestion());
+            ps.setString(6, lesson.getMisconceptionType());
             ps.executeUpdate();
         } catch (SQLException e) {
             e.printStackTrace();
@@ -284,7 +284,7 @@ public class QuizDAO {
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
-                String type = rs.getNString("misconception_type");
+                String type = rs.getString("misconception_type");
                 int count = rs.getInt("count_val");
                 if (type != null) {
                     type = type.trim();
@@ -302,14 +302,15 @@ public class QuizDAO {
      */
     public List<Map<String, Object>> getRecentSessions(int limit) {
         List<Map<String, Object>> list = new ArrayList<>();
-        String sql = "SELECT TOP (?) qs.session_id, qs.user_id, qs.topic_id, qs.total_questions, "
+        String sql = "SELECT qs.session_id, qs.user_id, qs.topic_id, qs.total_questions, "
                    + "       qs.correct_count, qs.score, qs.started_at, qs.completed_at, "
                    + "       u.full_name, u.username, t.topic_name "
                    + "FROM quiz_sessions qs "
                    + "JOIN users u ON qs.user_id = u.user_id "
                    + "JOIN topics t ON qs.topic_id = t.topic_id "
                    + "WHERE qs.completed_at IS NOT NULL "
-                   + "ORDER BY qs.completed_at DESC";
+                   + "ORDER BY qs.completed_at DESC "
+                   + "LIMIT ?";
         try (Connection conn = DatabaseUtil.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, limit > 0 ? limit : 20);
@@ -318,9 +319,9 @@ public class QuizDAO {
                     Map<String, Object> item = new HashMap<>();
                     item.put("sessionId", rs.getInt("session_id"));
                     item.put("userId", rs.getInt("user_id"));
-                    item.put("studentName", rs.getNString("full_name"));
-                    item.put("username", rs.getNString("username"));
-                    item.put("topicName", rs.getNString("topic_name"));
+                    item.put("studentName", rs.getString("full_name"));
+                    item.put("username", rs.getString("username"));
+                    item.put("topicName", rs.getString("topic_name"));
                     item.put("totalQuestions", rs.getInt("total_questions"));
                     item.put("correctCount", rs.getInt("correct_count"));
                     item.put("score", rs.getDouble("score"));
@@ -359,10 +360,10 @@ public class QuizDAO {
         a.setAnswerId(rs.getInt("answer_id"));
         a.setSessionId(rs.getInt("session_id"));
         a.setQuestionId(rs.getInt("question_id"));
-        String answer = rs.getNString("user_answer");
+        String answer = rs.getString("user_answer");
         a.setUserAnswer(answer != null ? answer.trim() : null);
         a.setCorrect(rs.getBoolean("is_correct"));
-        String confidence = rs.getNString("confidence_level");
+        String confidence = rs.getString("confidence_level");
         a.setConfidenceLevel(confidence != null ? confidence.trim() : "CERTAIN");
         Timestamp answeredAt = rs.getTimestamp("answered_at");
         a.setAnsweredAt(answeredAt != null ? answeredAt.toLocalDateTime() : null);
@@ -374,10 +375,10 @@ public class QuizDAO {
         l.setLessonId(rs.getInt("lesson_id"));
         l.setAnswerId(rs.getInt("answer_id"));
         l.setUserId(rs.getInt("user_id"));
-        l.setErrorReason(rs.getNString("error_reason"));
-        l.setLessonContent(rs.getNString("lesson_content"));
-        l.setPracticeQuestion(rs.getNString("practice_question"));
-        l.setMisconceptionType(rs.getNString("misconception_type"));
+        l.setErrorReason(rs.getString("error_reason"));
+        l.setLessonContent(rs.getString("lesson_content"));
+        l.setPracticeQuestion(rs.getString("practice_question"));
+        l.setMisconceptionType(rs.getString("misconception_type"));
         Timestamp createdAt = rs.getTimestamp("created_at");
         l.setCreatedAt(createdAt != null ? createdAt.toLocalDateTime() : null);
         return l;

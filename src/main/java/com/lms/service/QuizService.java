@@ -133,7 +133,7 @@ public class QuizService {
             gradedAnswers.add(graded);
 
             // ★ Confidence Tagging & Error Detection: Kích hoạt AI nếu SAI hoặc ĐÚNG nhưng GUESS
-            if (ua.needsAIAnalysis()) {
+            if (answerId > 0 && ua.needsAIAnalysis()) {
                 RemedialLesson lesson = aiService.analyzeError(q, ua, userInterests);
                 lesson.setUserId(userId);
                 lesson.setAnswerId(answerId);

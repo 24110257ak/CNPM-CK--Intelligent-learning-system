@@ -157,8 +157,8 @@ public class QuestionDAO {
      * @return ID câu hỏi vừa tạo, hoặc -1 nếu thất bại
      */
     public int create(Question q) {
-        String sql = "INSERT INTO questions (topic_id, question_text, option_a, option_b, option_c, option_d, correct_answer, explanation, difficulty) "
-                   + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO questions (topic_id, question_text, option_a, option_b, option_c, option_d, correct_answer, explanation, difficulty, misconception_tag) "
+                   + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = DatabaseUtil.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setInt(1, q.getTopicId());
@@ -170,6 +170,7 @@ public class QuestionDAO {
             ps.setNString(7, q.getCorrectAnswer());
             ps.setNString(8, q.getExplanation());
             ps.setNString(9, q.getDifficulty() != null ? q.getDifficulty() : "medium");
+            ps.setNString(10, q.getMisconceptionTag());
 
             int affected = ps.executeUpdate();
             if (affected > 0) {
@@ -190,7 +191,7 @@ public class QuestionDAO {
      */
     public boolean update(Question q) {
         String sql = "UPDATE questions SET topic_id = ?, question_text = ?, option_a = ?, option_b = ?, "
-                   + "option_c = ?, option_d = ?, correct_answer = ?, explanation = ?, difficulty = ? "
+                   + "option_c = ?, option_d = ?, correct_answer = ?, explanation = ?, difficulty = ?, misconception_tag = ? "
                    + "WHERE question_id = ?";
         try (Connection conn = DatabaseUtil.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -203,13 +204,89 @@ public class QuestionDAO {
             ps.setNString(7, q.getCorrectAnswer());
             ps.setNString(8, q.getExplanation());
             ps.setNString(9, q.getDifficulty() != null ? q.getDifficulty() : "medium");
-            ps.setInt(10, q.getQuestionId());
+            ps.setNString(10, q.getMisconceptionTag());
+            ps.setInt(11, q.getQuestionId());
 
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
         }
         return false;
+    }
+
+    /**
+     * Lấy danh sách câu hỏi luyện tập thích ứng theo chủ đề và loại lỗi tư duy.
+     * Tự động fallback nếu chủ đề chưa có đủ câu hỏi đúng tag.
+     */
+    public List<Question> findRemediationQuestions(int topicId, String misconceptionTag, int limit) {
+        List<Question> questions = new ArrayList<>();
+        int maxLimit = (limit > 0) ? limit : 3;
+
+        // 1. Ưu tiên: Câu hỏi cùng chủ đề + đúng loại lỗi tư duy
+        String sql1 = "SELECT TOP (?) * FROM questions WHERE topic_id = ? AND misconception_tag = ? ORDER BY question_id ASC";
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql1)) {
+            ps.setInt(1, maxLimit);
+            ps.setInt(2, topicId);
+            ps.setNString(3, misconceptionTag);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    questions.add(mapQuestion(rs));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        // 2. Fallback 1: Nếu chưa đủ, tìm câu hỏi đúng misconception_tag ở các chủ đề khác
+        if (questions.size() < maxLimit && misconceptionTag != null) {
+            List<Integer> existingIds = new ArrayList<>();
+            for (Question q : questions) existingIds.add(q.getQuestionId());
+
+            String sql2 = "SELECT TOP (?) * FROM questions WHERE misconception_tag = ? ORDER BY question_id ASC";
+            try (Connection conn = DatabaseUtil.getConnection();
+                 PreparedStatement ps = conn.prepareStatement(sql2)) {
+                ps.setInt(1, maxLimit);
+                ps.setNString(2, misconceptionTag);
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next() && questions.size() < maxLimit) {
+                        int qId = rs.getInt("question_id");
+                        if (!existingIds.contains(qId)) {
+                            questions.add(mapQuestion(rs));
+                            existingIds.add(qId);
+                        }
+                    }
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+
+        // 3. Fallback 2: Nếu vẫn chưa đủ, lấy câu hỏi bất kỳ cùng chủ đề
+        if (questions.size() < maxLimit) {
+            List<Integer> existingIds = new ArrayList<>();
+            for (Question q : questions) existingIds.add(q.getQuestionId());
+
+            String sql3 = "SELECT TOP (?) * FROM questions WHERE topic_id = ? ORDER BY question_id ASC";
+            try (Connection conn = DatabaseUtil.getConnection();
+                 PreparedStatement ps = conn.prepareStatement(sql3)) {
+                ps.setInt(1, maxLimit);
+                ps.setInt(2, topicId);
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next() && questions.size() < maxLimit) {
+                        int qId = rs.getInt("question_id");
+                        if (!existingIds.contains(qId)) {
+                            questions.add(mapQuestion(rs));
+                            existingIds.add(qId);
+                        }
+                    }
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return questions;
     }
 
     /**
@@ -265,6 +342,10 @@ public class QuestionDAO {
         q.setExplanation(rs.getNString("explanation"));
         String diff = rs.getNString("difficulty");
         q.setDifficulty(diff != null ? diff.trim() : null);
+        try {
+            String tag = rs.getNString("misconception_tag");
+            q.setMisconceptionTag(tag != null ? tag.trim() : null);
+        } catch (SQLException ignored) {}
         Timestamp createdAt = rs.getTimestamp("created_at");
         q.setCreatedAt(createdAt != null ? createdAt.toLocalDateTime() : null);
         return q;

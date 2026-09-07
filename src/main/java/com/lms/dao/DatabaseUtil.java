@@ -6,6 +6,7 @@ import com.zaxxer.hikari.HikariDataSource;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.sql.Statement;
 
 /**
  * Quản lý Connection Pool kết nối SQL Server bằng HikariCP.
@@ -50,9 +51,51 @@ public class DatabaseUtil {
 
             System.out.println("[DatabaseUtil] ✅ HikariCP Pool khởi tạo thành công: " + config.getJdbcUrl());
 
+            // Tự động kiểm tra và nâng cấp schema nếu cần
+            checkAndMigrateSchema();
+
         } catch (Exception e) {
             System.err.println("[DatabaseUtil] ❌ Lỗi khởi tạo HikariCP Pool!");
             e.printStackTrace();
+        }
+    }
+
+    /**
+     * Tự động kiểm tra và thêm cột [misconception_tag] nếu CSDL chưa có.
+     * Gắn nhãn phân loại lỗi tư duy cho các câu hỏi hiện có.
+     */
+    private static void checkAndMigrateSchema() {
+        String checkColumnSql = "IF NOT EXISTS (\n"
+                + "    SELECT * FROM sys.columns \n"
+                + "    WHERE object_id = OBJECT_ID('questions') AND name = 'misconception_tag'\n"
+                + ")\n"
+                + "BEGIN\n"
+                + "    ALTER TABLE questions ADD misconception_tag NVARCHAR(50) NULL;\n"
+                + "END";
+
+        String seedTagsSql = "UPDATE questions SET misconception_tag = CASE (question_id % 4) "
+                + "    WHEN 0 THEN N'syntax_swap' "
+                + "    WHEN 1 THEN N'boundary_blindness' "
+                + "    WHEN 2 THEN N'mental_model_gap' "
+                + "    ELSE N'logic_flaw' END "
+                + "WHERE misconception_tag IS NULL";
+
+        String checkConstraintSql = "IF EXISTS (SELECT * FROM sys.check_constraints WHERE name = 'CK_user_answers_answer')\n"
+                + "BEGIN\n"
+                + "    ALTER TABLE user_answers DROP CONSTRAINT CK_user_answers_answer;\n"
+                + "    ALTER TABLE user_answers ADD CONSTRAINT CK_user_answers_answer CHECK (user_answer IN (N'A', N'B', N'C', N'D', N'', N' '));\n"
+                + "END";
+
+        try (Connection conn = dataSource.getConnection();
+             Statement stmt = conn.createStatement()) {
+            stmt.execute(checkColumnSql);
+            stmt.execute(seedTagsSql);
+            try {
+                stmt.execute(checkConstraintSql);
+            } catch (Exception ignored) {}
+            System.out.println("[DatabaseUtil] ✅ Auto-Migration: Cột [misconception_tag] đã sẵn sàng!");
+        } catch (Exception e) {
+            System.err.println("[DatabaseUtil] ⚠️ Cảnh báo Auto-Migration: " + e.getMessage());
         }
     }
 

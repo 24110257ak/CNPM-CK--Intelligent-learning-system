@@ -71,6 +71,7 @@ CREATE TABLE questions (
     explanation     NVARCHAR(MAX)  NULL,       -- ★ AI Fallback Buffer: giải thích cơ bản khi API offline
     difficulty      NVARCHAR(10)   NOT NULL DEFAULT N'medium'
                     CONSTRAINT CK_questions_difficulty CHECK (difficulty IN (N'easy', N'medium', N'hard')),
+    misconception_tag NVARCHAR(50) NULL,       -- ★ Phân loại lỗi: syntax_swap, boundary_blindness, mental_model_gap, logic_flaw
     created_at      DATETIME2      NOT NULL DEFAULT GETDATE(),
 
     CONSTRAINT FK_questions_topic FOREIGN KEY (topic_id) REFERENCES topics(topic_id)

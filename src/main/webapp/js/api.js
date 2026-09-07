@@ -7,6 +7,20 @@
 
 const API_BASE = window.location.origin + (window.location.pathname.startsWith('/lms') ? '/lms' : '') + '/api';
 
+// ── Global Dark Toast Notification (SweetAlert2) ──
+if (typeof Swal !== 'undefined') {
+    window.Toast = Swal.mixin({
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+        background: '#1e293b',
+        color: '#ffffff',
+        iconColor: '#38bdf8'
+    });
+}
+
 const API = {
     async request(endpoint, options = {}) {
         const url = `${API_BASE}${endpoint}`;
@@ -100,8 +114,18 @@ const API = {
             }
             const role = (user.role || '').toUpperCase();
             if (role !== 'TEACHER' && role !== 'ADMIN') {
-                alert('Truy cập bị từ chối: Trang này dành riêng cho Giảng viên.');
-                window.location.href = 'index.html';
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Từ chối truy cập',
+                        text: 'Trang này dành riêng cho Giảng viên hoặc Quản trị viên.',
+                        confirmButtonText: 'Quay lại'
+                    }).then(() => {
+                        window.location.href = 'index.html';
+                    });
+                } else {
+                    window.location.href = 'index.html';
+                }
                 return null;
             }
             return user;
@@ -179,6 +203,20 @@ const API = {
 
         async session(sessionId) {
             return API.request(`/quiz/session/${sessionId}`);
+        }
+    },
+
+    remediation: {
+        async get(topicId, misconception) {
+            const query = `?topicId=${topicId}&misconception=${encodeURIComponent(misconception || '')}`;
+            return API.request(`/remediation${query}`);
+        },
+
+        async submit(payload) {
+            return API.request('/remediation/submit', {
+                method: 'POST',
+                body: JSON.stringify(payload)
+            });
         }
     },
 

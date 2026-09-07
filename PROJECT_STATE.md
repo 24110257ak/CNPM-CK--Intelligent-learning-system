@@ -5,7 +5,7 @@
 ---
 
 ## Current Phase
-**Giai đoạn 1 - 5A ✅ HOÀN THÀNH — Tối Ưu Quiz UI & Triển Khai Teacher Dashboard Sẵn Sàng Chạy & Kiểm Thử**
+**Giai đoạn 1 - 5B ✅ HOÀN THÀNH — Tối Ưu Chi Tiết UX & Triển Khai Adaptive Remediation Sẵn Sàng Chạy & Kiểm Thử**
 
 ## Completed Milestones
 - [x] **Phase 0:** Thiết lập nền móng kiến trúc, 12 ADRs, schema.sql 7 bảng 3NF cho SQL Server, pom.xml cấu hình Jetty 11 & Gemini SDK v1.64.0.
@@ -38,14 +38,24 @@
     * Tab 1: Quản lý ngân hàng câu hỏi (CRUD câu hỏi, bộ lọc Topic, tìm kiếm, modal thêm câu hỏi có markdown/code).
     * Tab 2: AI Pedagogical Insight (thống kê 4 dạng lỗ hổng nhận thức: `syntax_swap`, `boundary_blindness`, `mental_model_gap`, `logic_flaw` và bảng bài nộp gần nhất).
   - Backend APIs: Bật `QuestionServlet.java` (`/api/questions`) và `TeacherServlet.java` (`/api/teacher/stats`).
-- [x] **Build & Packaging:** Biên dịch 28 source files thành công 100% qua `.\mvnw.cmd compile`.
-- [x] **Kiểm thử tự động:** Browser Subagent kiểm thử thành công toàn bộ luồng Giảng viên (Đăng nhập -> Xem KPI -> Thêm câu hỏi code Markdown -> Xem AI Insight -> Điều hướng về LMS).
-- [x] **Server Dev:** Jetty 11 đang chạy nền ổn định trên cổng 8080, phục vụ các trang UI và REST API.
+- [x] **Phase 5B (Tối Ưu Chi Tiết UX & Adaptive Remediation):**
+  - **Auto-Migration CSDL (`DatabaseUtil.java`):** Tự động kiểm tra `sys.columns` và thêm cột `misconception_tag NVARCHAR(50) NULL`, seed nhãn nhận thức mẫu, và nới lỏng `CK_user_answers_answer` cho phép nộp bài chưa làm hết.
+  - **Tự động lưu tiến độ (Autosave Progress):** Lưu trạng thái làm bài vào `localStorage` key `quiz_progress_{topicId}`. Hiển thị thông báo khôi phục bài làm dở dang khi reload trang và dọn dẹp triệt để `localStorage` khi nộp bài thi hoặc mini-quiz.
+  - **Fullscreen AI Loading Overlay:** Modal toàn màn hình với hiệu ứng vòng tròn phát sáng (`ai-pulse-circle`, `@keyframes pulseGlow`) và chu kỳ thông điệp 1.5s tạo trải nghiệm suy nghĩ trực quan khi nộp bài.
+  - **Guard Routes & SweetAlert2 Toasts:** Chặn truy cập không hợp lệ (`quiz.html` thiếu `topicId`, `result.html` thiếu `sessionId`/kết quả) điều hướng về `index.html`. Thay thế toàn bộ alert/confirm bằng Toast dark-mode mượt mà.
+  - **Teacher Dashboard Nâng Cao:** Tích hợp ô nhập `misconceptionTag` trong Question Modal, bộ tìm kiếm realtime theo từ khóa câu hỏi, và phân trang client-side 10 câu/trang.
+  - **Adaptive Remediation Engine:**
+    * API `GET /api/remediation?topicId=X&misconception=Y` (lọc câu hỏi theo tag với 3 tầng fallback).
+    * API `POST /api/remediation/submit` (chấm điểm mini-quiz, phản hồi giải thích).
+    * UI Kết quả: Thẻ Khắc Phục Lỗi Nhận Thức, Modal Mini-Quiz 3 câu hỏi ôn tập, hiệu ứng pháo hoa Confetti (`canvas-confetti`) và huy hiệu "ĐÃ PHỤC HỒI KIẾN THỨC".
+- [x] **Build & Packaging:** Biên dịch toàn bộ mã nguồn Java thành công 100% không lỗi.
+- [x] **Kiểm thử tự động End-to-End:** Subagent hoàn tất kiểm thử trình duyệt tất cả 6 hạng mục và lưu video bằng chứng.
+- [x] **Server Dev:** Jetty 11 đang chạy nền ổn định trên cổng 8080 với `useFileMappedBuffer=false` hỗ trợ tối ưu trên Windows.
 
 ## Pending Tasks (Các bước tiếp theo mở rộng)
-- [ ] Trải nghiệm làm bài thi ở góc độ sinh viên và kiểm tra AI giải thích các câu hỏi vừa thêm.
-- [ ] Export báo cáo thống kê kết quả học tập ra Excel/PDF cho Giảng viên (nếu cần).
-- [ ] Nâng cấp thêm các chủ đề và dạng bài trắc nghiệm nâng cao.
+- [ ] Export báo cáo thống kê kết quả học tập ra Excel/PDF cho Giảng viên.
+- [ ] Bổ sung thêm nhiều câu hỏi phân loại chi tiết theo từng chủ đề mới.
+- [ ] Triển khai container hóa Docker hoặc đưa lên cloud nếu người dùng yêu cầu.
 
 ---
 

@@ -227,10 +227,14 @@
                             </table>
                         </div>
 
-                        <!-- Question Counter -->
-                        <div class="d-flex justify-content-between align-items-center mt-3 text-muted small">
+                        <!-- Question Counter & Pagination (1.5) -->
+                        <div class="d-flex justify-content-between align-items-center mt-3 text-muted small flex-wrap gap-2">
                             <div id="questions-count-text">Hiển thị 0 câu hỏi</div>
-                            <div><i class="fa-solid fa-circle-info me-1"></i>Hỗ trợ Markdown & highlight code tự động</div>
+                            <nav aria-label="Questions pagination">
+                                <ul class="pagination pagination-sm mb-0 shadow-sm" id="questions-pagination">
+                                    <!-- Rendered dynamically -->
+                                </ul>
+                            </nav>
                         </div>
                     </div>
                 </div>
@@ -433,6 +437,16 @@
                                     <option value="B">Phương án B</option>
                                     <option value="C">Phương án C</option>
                                     <option value="D">Phương án D</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="modal-misconception-tag" class="form-label fw-semibold small">Phân loại lỗi tư duy (AI Tag)</label>
+                                <select class="form-select text-dark" id="modal-misconception-tag">
+                                    <option value="">-- Không phân loại / Chung --</option>
+                                    <option value="syntax_swap">syntax_swap (Nhầm lẫn cú pháp)</option>
+                                    <option value="boundary_blindness">boundary_blindness (Lỗi biên vòng lặp / mảng)</option>
+                                    <option value="mental_model_gap">mental_model_gap (Hổng mô hình tư duy OOP)</option>
+                                    <option value="logic_flaw">logic_flaw (Sai sót logic điều kiện)</option>
                                 </select>
                             </div>
                         </div>

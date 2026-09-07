@@ -8,6 +8,8 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- FontAwesome 6 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- SweetAlert2 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <!-- Highlight.js CSS for Code syntax -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
     <!-- Custom CSS -->
@@ -87,6 +89,30 @@
             </div>
         </div>
 
+        <!-- ── Thẻ Khắc Phục Lỗi (Adaptive Remediation Card - 2.3) ── -->
+        <div id="adaptive-remediation-wrapper" class="mb-4 d-none">
+            <div class="card border-0 shadow-sm rounded-4 p-4 text-white position-relative overflow-hidden" style="background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);">
+                <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 position-relative" style="z-index: 2;">
+                    <div class="flex-grow-1" style="max-width: 680px;">
+                        <span class="badge bg-warning text-dark px-3 py-2 rounded-pill fw-bold mb-2 shadow-sm" id="remediation-tag-badge">
+                            <i class="fa-solid fa-triangle-exclamation me-1"></i>Phát hiện lỗ hổng tư duy
+                        </span>
+                        <h4 class="fw-bold text-white mb-2" id="remediation-title">
+                            Lộ Trình Khắc Phục Lỗ Hổng Tư Duy
+                        </h4>
+                        <p class="text-light opacity-75 small mb-0" id="remediation-desc">
+                            Hệ thống AI nhận thấy bạn đang gặp vướng mắc ở dạng này. Hãy hoàn thành 3 câu hỏi nhanh dưới đây để làm chủ kiến thức và nhận huy hiệu phục hồi!
+                        </p>
+                    </div>
+                    <div id="remediation-action-container" class="align-self-center">
+                        <button class="btn btn-warning text-dark fw-bold px-4 py-2 rounded-pill shadow" id="btn-start-remediation" onclick="startAdaptiveRemediation()">
+                            <i class="fa-solid fa-bolt me-1"></i>Bắt đầu bài tập phục hồi (3 phút)
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- ── Chi Tiết Toàn Bộ Đề & Đáp Án ── -->
         <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
             <h5 class="fw-bold text-dark mb-3">
@@ -105,199 +131,39 @@
         </div>
     </div>
 
+    <!-- ── Modal Mini-Quiz Hồi Quy Thích Ứng (Adaptive Remediation Modal - 2.3) ── -->
+    <div class="modal fade" id="remediationModal" tabindex="-1" aria-labelledby="remediationModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header bg-dark text-white border-0 py-3">
+                    <h5 class="modal-title fw-bold" id="remediationModalLabel">
+                        <i class="fa-solid fa-wrench me-2 text-warning"></i>Bài Tập Phục Hồi Lỗ Hổng Tư Duy
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4" id="remediation-modal-body">
+                    <!-- Dynamic mini-quiz questions -->
+                </div>
+                <div class="modal-footer bg-light border-0 py-3">
+                    <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Đóng</button>
+                    <button type="button" class="btn btn-primary rounded-pill px-4 fw-bold" id="btn-submit-remediation">
+                        <i class="fa-solid fa-paper-plane me-1"></i>Nộp Bài Vá Lỗi
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Canvas Confetti CDN (2.3) -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     <script src="js/api.js"></script>
     <script src="js/chat-widget.js"></script>
-
-    <script>
-        const currentUser = API.auth.requireAuth();
-        const urlParams = new URLSearchParams(window.location.search);
-        const sessionId = urlParams.get('sessionId');
-
-        async function initResult() {
-            let resultData = null;
-
-            // Thử lấy từ sessionStorage trước để hiển thị ngay lập tức
-            const cached = sessionStorage.getItem('last_quiz_result');
-            if (cached) {
-                try {
-                    const parsed = JSON.parse(cached);
-                    if (parsed && parsed.sessionId == sessionId) {
-                        resultData = parsed;
-                    }
-                } catch (e) {}
-            }
-
-            // Nếu không có cache, tải từ API
-            if (!resultData && sessionId) {
-                try {
-                    const res = await API.quiz.session(sessionId);
-                    resultData = res.data;
-                } catch (err) {
-                    console.error('Không thể tải chi tiết phiên:', err);
-                }
-            }
-
-            if (!resultData) {
-                document.getElementById('result-headline').textContent = 'Không tìm thấy dữ liệu bài kiểm tra.';
-                return;
-            }
-
-            renderResult(resultData);
-        }
-
-        function renderResult(data) {
-            const score = data.score !== undefined ? data.score : 0;
-            const total = data.totalQuestions || 0;
-            const correct = data.correctCount || 0;
-            const wrong = total - correct;
-
-            // Tính số câu đoán mò (GUESS)
-            const graded = data.gradedAnswers || [];
-            const guessCount = graded.filter(a => a.confidenceLevel === 'GUESS').length;
-
-            document.getElementById('score-value').textContent = `${Math.round(score)}%`;
-            document.getElementById('correct-count').textContent = correct;
-            document.getElementById('wrong-count').textContent = wrong;
-            document.getElementById('guess-count').textContent = guessCount;
-
-            // Tiêu đề khen thưởng / nhận xét
-            const headlineEl = document.getElementById('result-headline');
-            if (score >= 90) {
-                headlineEl.textContent = 'Xuất Sắc! Bạn đã nắm rất vững kiến thức!';
-            } else if (score >= 70) {
-                headlineEl.textContent = 'Rất Tốt! Tuy nhiên vẫn còn một số điểm cần củng cố.';
-            } else {
-                headlineEl.textContent = 'Cố Gắng Lên! Hãy đọc kỹ bài học củng cố bên dưới nhé.';
-            }
-
-            // Render Bài Học Củng Cố AI (Remedial Lessons)
-            const remedialList = data.remedialLessons || [];
-            document.getElementById('remedial-badge').textContent = `${remedialList.length} bài học`;
-
-            const remedialContainer = document.getElementById('remedial-container');
-            if (remedialList.length === 0) {
-                remedialContainer.innerHTML = `
-                    <div class="alert alert-success border-0 shadow-sm rounded-4 p-4 text-center">
-                        <i class="fa-solid fa-circle-check fa-2x mb-2 text-success"></i>
-                        <h6 class="fw-bold">Chúc mừng! Bạn đã trả lời đúng tất cả các câu hỏi và không câu nào đoán mò!</h6>
-                        <p class="small mb-0 text-muted">Bạn có một nền tảng tư duy rất vững chắc trong chủ đề này.</p>
-                    </div>
-                `;
-            } else {
-                remedialContainer.innerHTML = remedialList.map((lesson, idx) => {
-                    const badgeClass = getMisconceptionBadgeClass(lesson.misconceptionType);
-                    const typeLabel = getMisconceptionLabel(lesson.misconceptionType);
-
-                    const renderedLesson = typeof marked !== 'undefined' ? marked.parse(lesson.lessonContent || '') : lesson.lessonContent;
-
-                    return `
-                        <div class="card remedial-card border-0 p-4">
-                            <div class="d-flex justify-content-between align-items-start mb-2 flex-wrap gap-2">
-                                <span class="badge ${badgeClass} misconception-badge">
-                                    <i class="fa-solid fa-tag me-1"></i>${typeLabel}
-                                </span>
-                                <button class="btn btn-outline-primary btn-sm rounded-pill px-3" onclick="askAITutor('${encodeURIComponent(lesson.errorReason || '')}')">
-                                    <i class="fa-solid fa-comments me-1"></i>Hỏi Trợ Giảng Về Lỗi Này
-                                </button>
-                            </div>
-
-                            <!-- Chẩn đoán nguyên nhân -->
-                            <div class="mb-3">
-                                <h6 class="fw-bold text-dark mb-1">🔍 Chẩn Đoán Của AI:</h6>
-                                <p class="text-muted small mb-0">${lesson.errorReason || 'Chưa có thông tin chẩn đoán.'}</p>
-                            </div>
-
-                            <!-- Nội dung bài học củng cố -->
-                            <div class="bg-light p-3 rounded-3 mb-3 border">
-                                <div class="text-dark markdown-body small">
-                                    ${renderedLesson}
-                                </div>
-                            </div>
-
-                            <!-- Câu hỏi thực hành (Practice Question) -->
-                            ${lesson.practiceQuestion ? `
-                                <div class="p-3 bg-primary-subtle border border-primary-subtle rounded-3">
-                                    <div class="fw-bold text-primary small mb-1">
-                                        <i class="fa-solid fa-pen-nib me-1"></i>Thực Hành Nhanh (Làm Lại Kiến Thức):
-                                    </div>
-                                    <div class="small text-dark mb-2">${lesson.practiceQuestion}</div>
-                                </div>
-                            ` : ''}
-                        </div>
-                    `;
-                }).join('');
-
-                // Highlight code blocks
-                if (typeof hljs !== 'undefined') {
-                    document.querySelectorAll('pre code').forEach((el) => {
-                        hljs.highlightElement(el);
-                    });
-                }
-            }
-
-            // Render Danh Sách Câu Hỏi Đã Làm
-            const reviewList = document.getElementById('questions-review-list');
-            if (graded.length > 0) {
-                reviewList.innerHTML = graded.map((ans, idx) => `
-                    <div class="p-3 border rounded-3 ${ans.isCorrect ? 'border-success-subtle bg-success-subtle bg-opacity-10' : 'border-danger-subtle bg-danger-subtle bg-opacity-10'}">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="fw-bold text-dark">Câu ${idx + 1}: ${ans.questionText || ''}</span>
-                            <span class="badge ${ans.isCorrect ? 'bg-success' : 'bg-danger'} rounded-pill">
-                                ${ans.isCorrect ? 'ĐÚNG' : 'SAI'}
-                            </span>
-                        </div>
-                        <div class="small d-flex flex-wrap gap-3 mb-2">
-                            <span>Lựa chọn của bạn: <strong>${ans.chosenAnswer || '(Bỏ trống)'}</strong></span>
-                            <span>Đáp án đúng: <strong class="text-success">${ans.correctAnswer}</strong></span>
-                            <span>Mức độ tự tin: <strong class="${ans.confidenceLevel === 'GUESS' ? 'text-warning' : 'text-success'}">${ans.confidenceLevel}</strong></span>
-                        </div>
-                        ${ans.explanation ? `
-                            <div class="text-muted small pt-2 border-top">
-                                <strong>Giải thích gốc:</strong> ${ans.explanation}
-                            </div>
-                        ` : ''}
-                    </div>
-                `).join('');
-            }
-        }
-
-        function getMisconceptionBadgeClass(type) {
-            switch (type) {
-                case 'syntax_swap': return 'bg-danger text-white';
-                case 'boundary_blindness': return 'bg-warning text-dark';
-                case 'mental_model_gap': return 'bg-info text-dark';
-                default: return 'bg-secondary text-white';
-            }
-        }
-
-        function getMisconceptionLabel(type) {
-            switch (type) {
-                case 'syntax_swap': return 'Nhầm lẫn cú pháp (Syntax Swap)';
-                case 'boundary_blindness': return 'Bỏ quên biên/Null (Boundary Blindness)';
-                case 'mental_model_gap': return 'Lỗ hổng tư duy (Mental Model Gap)';
-                case 'logic_flaw': return 'Lỗi luồng logic (Logic Flaw)';
-                default: return type || 'Quan niệm sai lầm';
-            }
-        }
-
-        function askAITutor(encodedReason) {
-            const reason = decodeURIComponent(encodedReason);
-            const launcher = document.getElementById('chatbot-launcher');
-            const windowEl = document.getElementById('chatbot-window');
-            const input = document.getElementById('chat-input');
-
-            if (!windowEl.classList.contains('active')) {
-                launcher.click();
-            }
-            input.value = `Thầy/bạn ơi, mình vừa làm sai câu hỏi với chẩn đoán: "${reason}". Giúp mình giải thích sâu hơn được không?`;
-            input.focus();
-        }
-
-        initResult();
-    </script>
+    <!-- Externalized Result Module (1.3, 2.3) -->
+    <script src="js/result.js"></script>
 </body>
 </html>

@@ -17,4 +17,18 @@
         <session-timeout>30</session-timeout>
     </session-config>
 
+    <!-- Tránh khóa file trên Windows khi Jetty đang chạy -->
+    <servlet>
+        <servlet-name>default</servlet-name>
+        <servlet-class>org.eclipse.jetty.servlet.DefaultServlet</servlet-class>
+        <init-param>
+            <param-name>useFileMappedBuffer</param-name>
+            <param-value>false</param-value>
+        </init-param>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>default</servlet-name>
+        <url-pattern>/</url-pattern>
+    </servlet-mapping>
+
 </web-app>

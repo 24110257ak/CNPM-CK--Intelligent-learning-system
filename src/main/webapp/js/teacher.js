@@ -11,6 +11,9 @@ let allQuestions = [];
 let allTopics = [];
 let topicsMap = {};
 let questionModal = null;
+let currentPage = 1;
+const pageSize = 10;
+let searchKeyword = '';
 
 document.addEventListener('DOMContentLoaded', () => {
     // Khởi tạo Bootstrap Modal
@@ -59,15 +62,18 @@ function setupEventListeners() {
     const filterTopic = document.getElementById('filter-topic');
     if (filterTopic) {
         filterTopic.addEventListener('change', () => {
+            currentPage = 1;
             loadQuestions();
         });
     }
 
-    // Tìm kiếm từ khóa câu hỏi
+    // 1.5. Tìm kiếm từ khóa câu hỏi realtime
     const searchInput = document.getElementById('search-question');
     if (searchInput) {
         searchInput.addEventListener('input', (e) => {
-            renderQuestionsTable(filterQuestions(e.target.value));
+            searchKeyword = e.target.value;
+            currentPage = 1;
+            renderQuestionsView();
         });
     }
 
@@ -224,28 +230,45 @@ async function loadQuestions() {
     try {
         const res = await API.questions.list(topicId);
         allQuestions = res.data || [];
-        renderQuestionsTable(allQuestions);
+        currentPage = 1;
+        renderQuestionsView();
     } catch (err) {
         tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-danger"><i class="fa-solid fa-triangle-exclamation me-1"></i>Lỗi tải câu hỏi: ${err.message}</td></tr>`;
     }
 }
 
 /**
- * Render bảng danh sách câu hỏi
+ * 1.5. Render bảng danh sách câu hỏi kèm phân trang (10 câu/trang) và tìm kiếm realtime
  */
-function renderQuestionsTable(questions) {
+function renderQuestionsView() {
     const tbody = document.getElementById('questions-tbody');
     const counter = document.getElementById('questions-count-text');
+    const paginationEl = document.getElementById('questions-pagination');
+
+    const filtered = filterQuestions(searchKeyword);
+    const totalItems = filtered.length;
+    const totalPages = Math.ceil(totalItems / pageSize) || 1;
+
+    if (currentPage > totalPages) currentPage = totalPages;
+    if (currentPage < 1) currentPage = 1;
+
+    const startIdx = (currentPage - 1) * pageSize;
+    const endIdx = Math.min(startIdx + pageSize, totalItems);
+    const pagedQuestions = filtered.slice(startIdx, endIdx);
+
     if (counter) {
-        counter.textContent = `Hiển thị ${questions.length} câu hỏi`;
+        counter.textContent = totalItems > 0
+            ? `Hiển thị ${startIdx + 1} - ${endIdx} trên tổng số ${totalItems} câu hỏi (Trang ${currentPage}/${totalPages})`
+            : 'Không tìm thấy câu hỏi nào phù hợp';
     }
 
-    if (questions.length === 0) {
+    if (totalItems === 0) {
         tbody.innerHTML = `<tr><td colspan="6" class="text-center py-5 text-muted">Không tìm thấy câu hỏi nào phù hợp.</td></tr>`;
+        if (paginationEl) paginationEl.innerHTML = '';
         return;
     }
 
-    tbody.innerHTML = questions.map(q => {
+    tbody.innerHTML = pagedQuestions.map(q => {
         const topicTitle = topicsMap[q.topicId] || `Chủ đề #${q.topicId}`;
         let diffBadge = 'bg-secondary-subtle text-secondary';
         let diffText = 'Trung bình';
@@ -257,6 +280,11 @@ function renderQuestionsTable(questions) {
             diffText = 'Khó';
         }
 
+        let tagBadge = '';
+        if (q.misconceptionTag) {
+            tagBadge = `<span class="badge bg-light text-primary border ms-1" style="font-size: 0.72rem;">${escapeHtml(q.misconceptionTag)}</span>`;
+        }
+
         return `
             <tr>
                 <td class="fw-bold text-muted">${q.questionId}</td>
@@ -265,7 +293,10 @@ function renderQuestionsTable(questions) {
                         ${escapeHtml(q.questionText)}
                     </div>
                 </td>
-                <td><span class="badge bg-light text-dark border text-truncate" style="max-width: 130px;" title="${escapeHtml(topicTitle)}">${escapeHtml(topicTitle)}</span></td>
+                <td>
+                    <span class="badge bg-light text-dark border text-truncate" style="max-width: 130px;" title="${escapeHtml(topicTitle)}">${escapeHtml(topicTitle)}</span>
+                    ${tagBadge}
+                </td>
                 <td class="text-center"><span class="badge ${diffBadge} px-2 py-1">${diffText}</span></td>
                 <td class="text-center"><span class="badge bg-primary px-3 py-1 fw-bold fs-6">${q.correctAnswer}</span></td>
                 <td class="text-center">
@@ -279,6 +310,45 @@ function renderQuestionsTable(questions) {
             </tr>
         `;
     }).join('');
+
+    // Render bộ chuyển trang (Pagination Controls)
+    if (paginationEl) {
+        let pagHtml = '';
+
+        // Nút Prev
+        pagHtml += `
+            <li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
+                <button class="page-link" onclick="goToPage(${currentPage - 1})" aria-label="Previous">
+                    <i class="fa-solid fa-chevron-left"></i>
+                </button>
+            </li>
+        `;
+
+        // Các số trang
+        for (let p = 1; p <= totalPages; p++) {
+            pagHtml += `
+                <li class="page-item ${p === currentPage ? 'active' : ''}">
+                    <button class="page-link" onclick="goToPage(${p})">${p}</button>
+                </li>
+            `;
+        }
+
+        // Nút Next
+        pagHtml += `
+            <li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
+                <button class="page-link" onclick="goToPage(${currentPage + 1})" aria-label="Next">
+                    <i class="fa-solid fa-chevron-right"></i>
+                </button>
+            </li>
+        `;
+
+        paginationEl.innerHTML = pagHtml;
+    }
+}
+
+function goToPage(page) {
+    currentPage = page;
+    renderQuestionsView();
 }
 
 /**
@@ -290,6 +360,7 @@ function filterQuestions(keyword) {
     return allQuestions.filter(q => {
         return (q.questionText && q.questionText.toLowerCase().includes(term)) ||
                (q.explanation && q.explanation.toLowerCase().includes(term)) ||
+               (q.misconceptionTag && q.misconceptionTag.toLowerCase().includes(term)) ||
                (q.questionId && q.questionId.toString().includes(term));
     });
 }
@@ -302,7 +373,7 @@ function openCreateModal() {
     document.getElementById('modal-question-id').value = '';
     document.getElementById('questionModalLabel').innerHTML = '<i class="fa-solid fa-plus-circle me-2"></i>Thêm Câu Hỏi Mới';
     document.getElementById('modal-difficulty').value = 'medium';
-    document.getElementById('modal-correctAnswer') ? document.getElementById('modal-correctAnswer').value = 'A' : null;
+    document.getElementById('modal-misconception-tag').value = '';
 
     // Chọn topic mặc định nếu đang lọc theo topic
     const currentTopicFilter = document.getElementById('filter-topic').value;
@@ -331,6 +402,7 @@ function openEditModal(questionId) {
     document.getElementById('modal-option-d').value = q.optionD;
     document.getElementById('modal-correct-answer').value = q.correctAnswer;
     document.getElementById('modal-explanation').value = q.explanation || '';
+    document.getElementById('modal-misconception-tag').value = q.misconceptionTag || '';
 
     questionModal.show();
 }
@@ -344,6 +416,7 @@ async function handleSaveQuestion() {
 
     const topicId = parseInt(document.getElementById('modal-topic-id').value);
     const difficulty = document.getElementById('modal-difficulty').value;
+    const misconceptionTag = document.getElementById('modal-misconception-tag').value || null;
     const questionText = document.getElementById('modal-question-text').value.trim();
     const optionA = document.getElementById('modal-option-a').value.trim();
     const optionB = document.getElementById('modal-option-b').value.trim();
@@ -364,6 +437,7 @@ async function handleSaveQuestion() {
     const payload = {
         topicId,
         difficulty,
+        misconceptionTag,
         questionText,
         optionA,
         optionB,

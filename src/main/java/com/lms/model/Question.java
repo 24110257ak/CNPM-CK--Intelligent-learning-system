@@ -19,6 +19,7 @@ public class Question {
     private String correctAnswer;   // A | B | C | D
     private String explanation;      // ★ AI Fallback Buffer
     private String difficulty;       // easy | medium | hard
+    private String misconceptionTag; // syntax_swap | boundary_blindness | mental_model_gap | logic_flaw
     private LocalDateTime createdAt;
 
     // ── Constructors ──────────────────────────────────────────────────────
@@ -56,6 +57,9 @@ public class Question {
 
     public String getDifficulty() { return difficulty; }
     public void setDifficulty(String difficulty) { this.difficulty = difficulty; }
+
+    public String getMisconceptionTag() { return misconceptionTag; }
+    public void setMisconceptionTag(String misconceptionTag) { this.misconceptionTag = misconceptionTag; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

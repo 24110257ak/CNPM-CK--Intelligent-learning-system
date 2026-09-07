@@ -110,6 +110,9 @@ public class QuestionServlet extends HttpServlet {
         } else {
             q.setDifficulty("medium");
         }
+        if (body.has("misconceptionTag") && !body.get("misconceptionTag").isJsonNull()) {
+            q.setMisconceptionTag(body.get("misconceptionTag").getAsString().trim());
+        }
 
         int createdId = questionDAO.create(q);
         if (createdId > 0) {
@@ -175,6 +178,9 @@ public class QuestionServlet extends HttpServlet {
         }
         if (body.has("explanation")) q.setExplanation(body.get("explanation").getAsString().trim());
         if (body.has("difficulty")) q.setDifficulty(body.get("difficulty").getAsString().trim().toLowerCase());
+        if (body.has("misconceptionTag")) {
+            q.setMisconceptionTag(body.get("misconceptionTag").isJsonNull() ? null : body.get("misconceptionTag").getAsString().trim());
+        }
 
         boolean ok = questionDAO.update(q);
         if (ok) {

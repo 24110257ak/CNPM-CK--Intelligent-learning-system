@@ -30,13 +30,16 @@
   - `history.html`: Lịch sử các lần thi và thống kê điểm số.
   - `chat-widget.js`: Trợ giảng AI nổi đa nhân cách (Senior Dev, Peer Tutor, Professor) tích hợp trên toàn bộ trang.
 - [x] **Build & Packaging:** `mvn clean package` tạo file `target/lms.war` thành công 100%.
-- [x] **Git Repository:** Khởi tạo git, cấu hình remote, commit 46 files và merge remote README.
+- [x] **Git Repository & Remote Push:** Khởi tạo git, commit toàn bộ mã nguồn và **push thành công 100% lên GitHub remote `origin/main`**.
+- [x] **Cơ Sở Dữ Liệu SQL Server:** Tạo CSDL `lms_db` 7 bảng 3NF, kết nối thành công qua cổng 1433 với tài khoản sa.
+- [x] **Môi trường & Biến `.env`:** Cấu hình chuẩn xác JDBC URL và Gemini API Key.
+- [x] **Server Dev:** Jetty 11 đang chạy nền ổn định trên cổng 8080, phục vụ các trang UI và REST API.
 
-## Pending Tasks
-- [ ] **Chạy `schema.sql` trong SSMS** (nếu chưa chạy trên máy local).
-- [ ] **Điền `GEMINI_API_KEY` và mật khẩu SQL Server** vào file `.env`.
-- [ ] **Khởi động server:** Chạy `.\mvnw.cmd jetty:run` và trải nghiệm tại `http://localhost:8080/`.
-- [ ] **Cấp quyền push GitHub:** Phân quyền cho tài khoản GitHub trên máy để push nhánh `main` lên repo `24110257ak/CNPM-CK--Intelligent-learning-system`.
+## Pending Tasks (Các bước tiếp theo mở rộng)
+- [ ] Trải nghiệm luồng sinh viên làm bài thi, thử nghiệm tính năng **Confidence Tagging** (Chắc chắn vs Đoán mò).
+- [ ] Kiểm thử AI tạo bài học củng cố khi có câu trả lời sai hoặc câu đoán mò.
+- [ ] Trải nghiệm Trợ giảng AI Chatbot với 3 persona khác nhau.
+- [ ] Bổ sung thêm ngân hàng câu hỏi và các chủ đề học tập mới (nếu cần).
 
 ---
 

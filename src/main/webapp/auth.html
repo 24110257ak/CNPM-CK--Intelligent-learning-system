@@ -121,9 +121,15 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="js/api.js"></script>
     <script>
-        // Kiểm tra nếu đã đăng nhập thì chuyển vào trang chủ
-        if (API.auth.getUser()) {
-            window.location.href = 'index.html';
+        // Kiểm tra nếu đã đăng nhập thì chuyển hướng theo role
+        const existingUser = API.auth.getUser();
+        if (existingUser) {
+            const role = (existingUser.role || '').toUpperCase();
+            if (role === 'TEACHER' || role === 'ADMIN') {
+                window.location.href = 'teacher-dashboard.html';
+            } else {
+                window.location.href = 'index.html';
+            }
         }
 
         // Xử lý Login
@@ -137,15 +143,18 @@
             const password = document.getElementById('login-password').value;
 
             try {
-                await API.auth.login(username, password);
+                const res = await API.auth.login(username, password);
+                const role = (res.data && res.data.role ? res.data.role : '').toUpperCase();
+                const targetUrl = (role === 'TEACHER' || role === 'ADMIN') ? 'teacher-dashboard.html' : 'index.html';
+
                 Swal.fire({
                     icon: 'success',
                     title: 'Đăng nhập thành công!',
-                    text: 'Chào mừng bạn quay trở lại với hệ thống.',
+                    text: `Xin chào ${res.data.fullName || username} (${res.data.role || 'sinh viên'}).`,
                     timer: 1200,
                     showConfirmButton: false
                 }).then(() => {
-                    window.location.href = 'index.html';
+                    window.location.href = targetUrl;
                 });
             } catch (err) {
                 Swal.fire('Lỗi đăng nhập', err.message || 'Tài khoản hoặc mật khẩu không đúng.', 'error');

@@ -6,7 +6,9 @@ import com.lms.model.UserAnswer;
 
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Data Access Object cho bảng [quiz_sessions], [user_answers], [remedial_lessons].
@@ -201,6 +203,136 @@ public class QuizDAO {
             e.printStackTrace();
         }
         return lessons;
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    //  TEACHER DASHBOARD ANALYTICS
+    // ═══════════════════════════════════════════════════════════════════════
+
+    /**
+     * Lấy 4 chỉ số KPI quan trọng cho Giảng viên:
+     * - totalStudents: số sinh viên đã làm bài
+     * - totalQuestions: tổng số câu hỏi trong ngân hàng
+     * - averageScore: điểm trung bình toàn hệ thống (thang 10)
+     * - guessRate: tỷ lệ chọn đáp án kiểu GUESS (đoán mò %)
+     */
+    public Map<String, Object> getTeacherKPIs() {
+        Map<String, Object> kpis = new HashMap<>();
+        kpis.put("totalStudents", 0);
+        kpis.put("totalQuestions", 0);
+        kpis.put("averageScore", 0.0);
+        kpis.put("guessRate", 0.0);
+
+        // 1. Tổng sinh viên đã làm bài & Điểm trung bình
+        String sqlSessions = "SELECT COUNT(DISTINCT user_id) AS total_students, "
+                           + "       ISNULL(AVG(score), 0.0) AS avg_score "
+                           + "FROM quiz_sessions WHERE completed_at IS NOT NULL";
+        
+        // 2. Tổng số câu hỏi
+        String sqlQuestions = "SELECT COUNT(*) AS total_questions FROM questions";
+
+        // 3. Tỷ lệ đoán mò (GUESS rate %)
+        String sqlGuess = "SELECT CAST(SUM(CASE WHEN confidence_level = N'GUESS' THEN 1 ELSE 0 END) AS FLOAT) * 100.0 "
+                        + "       / NULLIF(COUNT(*), 0) AS guess_rate "
+                        + "FROM user_answers";
+
+        try (Connection conn = DatabaseUtil.getConnection()) {
+            try (PreparedStatement ps1 = conn.prepareStatement(sqlSessions);
+                 ResultSet rs1 = ps1.executeQuery()) {
+                if (rs1.next()) {
+                    kpis.put("totalStudents", rs1.getInt("total_students"));
+                    double avgScore = Math.round(rs1.getDouble("avg_score") * 10.0) / 10.0;
+                    kpis.put("averageScore", avgScore);
+                }
+            }
+
+            try (PreparedStatement ps2 = conn.prepareStatement(sqlQuestions);
+                 ResultSet rs2 = ps2.executeQuery()) {
+                if (rs2.next()) {
+                    kpis.put("totalQuestions", rs2.getInt("total_questions"));
+                }
+            }
+
+            try (PreparedStatement ps3 = conn.prepareStatement(sqlGuess);
+                 ResultSet rs3 = ps3.executeQuery()) {
+                if (rs3.next()) {
+                    double guessRate = Math.round(rs3.getDouble("guess_rate") * 10.0) / 10.0;
+                    kpis.put("guessRate", guessRate);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return kpis;
+    }
+
+    /**
+     * Thống kê tỷ lệ các loại sai lầm phổ biến từ bảng remedial_lessons.
+     * 4 nhóm chính: syntax_swap, boundary_blindness, mental_model_gap, logic_flaw/other.
+     */
+    public Map<String, Integer> getMisconceptionStats() {
+        Map<String, Integer> stats = new HashMap<>();
+        stats.put("syntax_swap", 0);
+        stats.put("boundary_blindness", 0);
+        stats.put("mental_model_gap", 0);
+        stats.put("logic_flaw", 0);
+        stats.put("other", 0);
+
+        String sql = "SELECT misconception_type, COUNT(*) AS count_val FROM remedial_lessons "
+                   + "GROUP BY misconception_type";
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                String type = rs.getNString("misconception_type");
+                int count = rs.getInt("count_val");
+                if (type != null) {
+                    type = type.trim();
+                    stats.put(type, count);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return stats;
+    }
+
+    /**
+     * Lấy danh sách các bài nộp gần đây nhất kèm thông tin sinh viên và chủ đề.
+     */
+    public List<Map<String, Object>> getRecentSessions(int limit) {
+        List<Map<String, Object>> list = new ArrayList<>();
+        String sql = "SELECT TOP (?) qs.session_id, qs.user_id, qs.topic_id, qs.total_questions, "
+                   + "       qs.correct_count, qs.score, qs.started_at, qs.completed_at, "
+                   + "       u.full_name, u.username, t.topic_name "
+                   + "FROM quiz_sessions qs "
+                   + "JOIN users u ON qs.user_id = u.user_id "
+                   + "JOIN topics t ON qs.topic_id = t.topic_id "
+                   + "WHERE qs.completed_at IS NOT NULL "
+                   + "ORDER BY qs.completed_at DESC";
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, limit > 0 ? limit : 20);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Map<String, Object> item = new HashMap<>();
+                    item.put("sessionId", rs.getInt("session_id"));
+                    item.put("userId", rs.getInt("user_id"));
+                    item.put("studentName", rs.getNString("full_name"));
+                    item.put("username", rs.getNString("username"));
+                    item.put("topicName", rs.getNString("topic_name"));
+                    item.put("totalQuestions", rs.getInt("total_questions"));
+                    item.put("correctCount", rs.getInt("correct_count"));
+                    item.put("score", rs.getDouble("score"));
+                    Timestamp completedAt = rs.getTimestamp("completed_at");
+                    item.put("completedAt", completedAt != null ? completedAt.toString() : "");
+                    list.add(item);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
     }
 
     // ═══════════════════════════════════════════════════════════════════════

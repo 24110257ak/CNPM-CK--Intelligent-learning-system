@@ -111,6 +111,144 @@ public class QuestionDAO {
         return result;
     }
 
+    /**
+     * Lấy danh sách tất cả câu hỏi, có thể lọc theo topicId (null hoặc <= 0 để lấy tất cả).
+     */
+    public List<Question> findAll(Integer topicId) {
+        List<Question> questions = new ArrayList<>();
+        String sql = (topicId != null && topicId > 0)
+                ? "SELECT * FROM questions WHERE topic_id = ? ORDER BY question_id DESC"
+                : "SELECT * FROM questions ORDER BY question_id DESC";
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            if (topicId != null && topicId > 0) {
+                ps.setInt(1, topicId);
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    questions.add(mapQuestion(rs));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return questions;
+    }
+
+    /**
+     * Đếm tổng số câu hỏi trong ngân hàng đề.
+     */
+    public int countAll() {
+        String sql = "SELECT COUNT(*) FROM questions";
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    /**
+     * Tạo câu hỏi mới trong CSDL.
+     * @return ID câu hỏi vừa tạo, hoặc -1 nếu thất bại
+     */
+    public int create(Question q) {
+        String sql = "INSERT INTO questions (topic_id, question_text, option_a, option_b, option_c, option_d, correct_answer, explanation, difficulty) "
+                   + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            ps.setInt(1, q.getTopicId());
+            ps.setNString(2, q.getQuestionText());
+            ps.setNString(3, q.getOptionA());
+            ps.setNString(4, q.getOptionB());
+            ps.setNString(5, q.getOptionC());
+            ps.setNString(6, q.getOptionD());
+            ps.setNString(7, q.getCorrectAnswer());
+            ps.setNString(8, q.getExplanation());
+            ps.setNString(9, q.getDifficulty() != null ? q.getDifficulty() : "medium");
+
+            int affected = ps.executeUpdate();
+            if (affected > 0) {
+                try (ResultSet rs = ps.getGeneratedKeys()) {
+                    if (rs.next()) {
+                        return rs.getInt(1);
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return -1;
+    }
+
+    /**
+     * Cập nhật thông tin câu hỏi.
+     */
+    public boolean update(Question q) {
+        String sql = "UPDATE questions SET topic_id = ?, question_text = ?, option_a = ?, option_b = ?, "
+                   + "option_c = ?, option_d = ?, correct_answer = ?, explanation = ?, difficulty = ? "
+                   + "WHERE question_id = ?";
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, q.getTopicId());
+            ps.setNString(2, q.getQuestionText());
+            ps.setNString(3, q.getOptionA());
+            ps.setNString(4, q.getOptionB());
+            ps.setNString(5, q.getOptionC());
+            ps.setNString(6, q.getOptionD());
+            ps.setNString(7, q.getCorrectAnswer());
+            ps.setNString(8, q.getExplanation());
+            ps.setNString(9, q.getDifficulty() != null ? q.getDifficulty() : "medium");
+            ps.setInt(10, q.getQuestionId());
+
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    /**
+     * Xóa câu hỏi cùng dữ liệu liên kết (dọn dẹp cascade an toàn trong transaction).
+     */
+    public boolean delete(int questionId) {
+        String deleteLessonsSql = "DELETE FROM remedial_lessons WHERE answer_id IN (SELECT answer_id FROM user_answers WHERE question_id = ?)";
+        String deleteAnswersSql = "DELETE FROM user_answers WHERE question_id = ?";
+        String deleteQuestionSql = "DELETE FROM questions WHERE question_id = ?";
+
+        try (Connection conn = DatabaseUtil.getConnection()) {
+            conn.setAutoCommit(false);
+            try (PreparedStatement ps1 = conn.prepareStatement(deleteLessonsSql);
+                 PreparedStatement ps2 = conn.prepareStatement(deleteAnswersSql);
+                 PreparedStatement ps3 = conn.prepareStatement(deleteQuestionSql)) {
+                
+                ps1.setInt(1, questionId);
+                ps1.executeUpdate();
+
+                ps2.setInt(1, questionId);
+                ps2.executeUpdate();
+
+                ps3.setInt(1, questionId);
+                int affected = ps3.executeUpdate();
+
+                conn.commit();
+                return affected > 0;
+            } catch (SQLException ex) {
+                conn.rollback();
+                ex.printStackTrace();
+            } finally {
+                conn.setAutoCommit(true);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
     // ── Private Mapper ────────────────────────────────────────────────────
 
     private Question mapQuestion(ResultSet rs) throws SQLException {

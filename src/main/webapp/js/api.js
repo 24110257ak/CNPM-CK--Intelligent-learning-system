@@ -90,6 +90,28 @@ const API = {
                 return null;
             }
             return user;
+        },
+
+        requireTeacher() {
+            const user = this.getUser();
+            if (!user) {
+                window.location.href = 'auth.html';
+                return null;
+            }
+            const role = (user.role || '').toUpperCase();
+            if (role !== 'TEACHER' && role !== 'ADMIN') {
+                alert('Truy cập bị từ chối: Trang này dành riêng cho Giảng viên.');
+                window.location.href = 'index.html';
+                return null;
+            }
+            return user;
+        },
+
+        isTeacher() {
+            const user = this.getUser();
+            if (!user) return false;
+            const role = (user.role || '').toUpperCase();
+            return role === 'TEACHER' || role === 'ADMIN';
         }
     },
 
@@ -100,6 +122,39 @@ const API = {
 
         async get(topicId) {
             return API.request(`/topics/${topicId}`);
+        }
+    },
+
+    questions: {
+        async list(topicId = null) {
+            const query = topicId ? `?topicId=${topicId}` : '';
+            return API.request(`/questions${query}`);
+        },
+
+        async create(questionData) {
+            return API.request('/questions', {
+                method: 'POST',
+                body: JSON.stringify(questionData)
+            });
+        },
+
+        async update(questionId, questionData) {
+            return API.request(`/questions/${questionId}`, {
+                method: 'PUT',
+                body: JSON.stringify(questionData)
+            });
+        },
+
+        async delete(questionId) {
+            return API.request(`/questions/${questionId}`, {
+                method: 'DELETE'
+            });
+        }
+    },
+
+    teacher: {
+        async stats() {
+            return API.request('/teacher/stats');
         }
     },
 

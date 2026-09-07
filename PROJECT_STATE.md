@@ -5,7 +5,7 @@
 ---
 
 ## Current Phase
-**Giai đoạn 1 - 4 ✅ HOÀN THÀNH — Full-Stack Intelligent LMS Sẵn Sàng Chạy & Kiểm Thử**
+**Giai đoạn 1 - 5A ✅ HOÀN THÀNH — Tối Ưu Quiz UI & Triển Khai Teacher Dashboard Sẵn Sàng Chạy & Kiểm Thử**
 
 ## Completed Milestones
 - [x] **Phase 0:** Thiết lập nền móng kiến trúc, 12 ADRs, schema.sql 7 bảng 3NF cho SQL Server, pom.xml cấu hình Jetty 11 & Gemini SDK v1.64.0.
@@ -29,17 +29,23 @@
   - `result.html`: Trung tâm kết quả & Bài học củng cố cá nhân hóa do AI tạo.
   - `history.html`: Lịch sử các lần thi và thống kê điểm số.
   - `chat-widget.js`: Trợ giảng AI nổi đa nhân cách (Senior Dev, Peer Tutor, Professor) tích hợp trên toàn bộ trang.
-- [x] **Build & Packaging:** `mvn clean package` tạo file `target/lms.war` thành công 100%.
-- [x] **Git Repository & Remote Push:** Khởi tạo git, commit toàn bộ mã nguồn và **push thành công 100% lên GitHub remote `origin/main`**.
-- [x] **Cơ Sở Dữ Liệu SQL Server:** Tạo CSDL `lms_db` 7 bảng 3NF, kết nối thành công qua cổng 1433 với tài khoản sa.
-- [x] **Môi trường & Biến `.env`:** Cấu hình chuẩn xác JDBC URL và Gemini API Key.
+- [x] **Phase 5A (Tối Ưu UI Quiz & Teacher Dashboard):**
+  - UI Quiz: Sửa hover đáp án `#252a36`, viền `#6366f1`, transition `0.12s`, chữ luôn trắng `#fff`.
+  - Định dạng Code: Tích hợp Marked.js + Highlight.js (Atom One Dark theme) tự động định dạng mã nguồn `pre`/`code` trong câu hỏi và bài học.
+  - Phân quyền & Điều hướng: `AuthServlet` trả role, tự động chuyển hướng Giảng viên sang `teacher-dashboard.html`, chặn sinh viên truy cập.
+  - Giao diện Giảng viên (`teacher-dashboard.html` & `js/teacher.js`):
+    * 4 Thẻ KPI: Sinh viên làm bài, Ngân hàng câu hỏi, Điểm trung bình, Tỷ lệ đoán mò (GUESS rate).
+    * Tab 1: Quản lý ngân hàng câu hỏi (CRUD câu hỏi, bộ lọc Topic, tìm kiếm, modal thêm câu hỏi có markdown/code).
+    * Tab 2: AI Pedagogical Insight (thống kê 4 dạng lỗ hổng nhận thức: `syntax_swap`, `boundary_blindness`, `mental_model_gap`, `logic_flaw` và bảng bài nộp gần nhất).
+  - Backend APIs: Bật `QuestionServlet.java` (`/api/questions`) và `TeacherServlet.java` (`/api/teacher/stats`).
+- [x] **Build & Packaging:** Biên dịch 28 source files thành công 100% qua `.\mvnw.cmd compile`.
+- [x] **Kiểm thử tự động:** Browser Subagent kiểm thử thành công toàn bộ luồng Giảng viên (Đăng nhập -> Xem KPI -> Thêm câu hỏi code Markdown -> Xem AI Insight -> Điều hướng về LMS).
 - [x] **Server Dev:** Jetty 11 đang chạy nền ổn định trên cổng 8080, phục vụ các trang UI và REST API.
 
 ## Pending Tasks (Các bước tiếp theo mở rộng)
-- [ ] Trải nghiệm luồng sinh viên làm bài thi, thử nghiệm tính năng **Confidence Tagging** (Chắc chắn vs Đoán mò).
-- [ ] Kiểm thử AI tạo bài học củng cố khi có câu trả lời sai hoặc câu đoán mò.
-- [ ] Trải nghiệm Trợ giảng AI Chatbot với 3 persona khác nhau.
-- [ ] Bổ sung thêm ngân hàng câu hỏi và các chủ đề học tập mới (nếu cần).
+- [ ] Trải nghiệm làm bài thi ở góc độ sinh viên và kiểm tra AI giải thích các câu hỏi vừa thêm.
+- [ ] Export báo cáo thống kê kết quả học tập ra Excel/PDF cho Giảng viên (nếu cần).
+- [ ] Nâng cấp thêm các chủ đề và dạng bài trắc nghiệm nâng cao.
 
 ---
 

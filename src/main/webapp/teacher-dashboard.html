@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bảng Quản Trị Giảng Viên — Hệ Thống Học Tập Thông Minh</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- SweetAlert2 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <!-- Highlight.js CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/app.css">
+    <style>
+        .badge-syntax { background-color: #f87171; color: #fff; }
+        .badge-boundary { background-color: #fbbf24; color: #78350f; }
+        .badge-mental { background-color: #60a5fa; color: #fff; }
+        .badge-logic { background-color: #a78bfa; color: #fff; }
+        .table-action-btn { width: 32px; height: 32px; padding: 0; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; }
+        .question-cell { max-width: 320px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .insight-card { border-radius: 12px; border: 1px solid #e2e8f0; background: #ffffff; padding: 1.25rem; transition: transform 0.2s ease; }
+        .insight-card:hover { transform: translateY(-2px); }
+    </style>
+</head>
+<body>
+
+    <!-- ── Navbar ── -->
+    <nav class="navbar navbar-expand-lg navbar-custom sticky-top">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center gap-2" href="teacher-dashboard.html">
+                <i class="fa-solid fa-chalkboard-user fa-lg text-primary"></i>
+                <span>LMS Giảng Viên</span>
+                <span class="badge bg-indigo text-white ms-2 px-2 py-1 fs-6" style="background-color: #6366f1;">Teacher Portal</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navContent">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navContent">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-3">
+                    <li class="nav-item">
+                        <a class="nav-link fw-semibold text-secondary" href="index.html">
+                            <i class="fa-solid fa-arrow-left me-1"></i>Về LMS Sinh Viên
+                        </a>
+                    </li>
+                </ul>
+                <div class="d-flex align-items-center gap-3">
+                    <div class="d-flex align-items-center gap-2 border-end pe-3">
+                        <div class="rounded-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
+                            <i class="fa-solid fa-user-tie"></i>
+                        </div>
+                        <div>
+                            <div class="fw-bold small text-dark" id="teacher-name">Giảng Viên</div>
+                            <div class="text-muted" style="font-size: 0.75rem;">Giảng viên bộ môn</div>
+                        </div>
+                    </div>
+                    <button class="btn btn-outline-danger btn-sm rounded-pill px-3 py-1" id="logout-btn">
+                        <i class="fa-solid fa-right-from-bracket me-1"></i>Đăng xuất
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ── Main Container ── -->
+    <main class="container my-4 flex-grow-1">
+
+        <!-- Banner Chào Mừng -->
+        <div class="hero-banner shadow-sm mb-4 py-4 px-4">
+            <div class="row align-items-center position-relative" style="z-index: 1;">
+                <div class="col-lg-9">
+                    <span class="badge bg-primary-subtle text-white border border-primary px-3 py-1 rounded-pill mb-2">
+                        <i class="fa-solid fa-microchip me-1"></i>Trung Tâm Quản Lý & Chẩn Đoán Sư Phạm
+                    </span>
+                    <h3 class="fw-bold mb-1">Bảng Điều Khiển & Phân Tích Nhận Thức Sinh Viên</h3>
+                    <p class="text-light opacity-75 mb-0 small">
+                        Hệ thống tự động theo dõi tỷ lệ đoán mò (GUESS rate), gom nhóm các lỗ hổng nhận thức phổ biến bằng AI Gemini và quản trị ngân hàng đề trắc nghiệm.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── 4 KPI Cards ── -->
+        <div class="row g-3 mb-4">
+            <!-- KPI 1: Tổng SV -->
+            <div class="col-6 col-lg-3">
+                <div class="kpi-card kpi-blue h-100">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-muted small fw-semibold mb-1">Sinh Viên Làm Bài</div>
+                            <h3 class="fw-bold text-dark mb-0" id="kpi-students">--</h3>
+                        </div>
+                        <div class="kpi-icon bg-primary-subtle text-primary">
+                            <i class="fa-solid fa-users-line"></i>
+                        </div>
+                    </div>
+                    <div class="text-muted mt-2 small" style="font-size: 0.78rem;">
+                        <i class="fa-solid fa-circle-check text-success me-1"></i>Đã nộp bài kiểm tra
+                    </div>
+                </div>
+            </div>
+
+            <!-- KPI 2: Tổng Câu Hỏi -->
+            <div class="col-6 col-lg-3">
+                <div class="kpi-card kpi-indigo h-100">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-muted small fw-semibold mb-1">Ngân Hàng Câu Hỏi</div>
+                            <h3 class="fw-bold text-dark mb-0" id="kpi-questions">--</h3>
+                        </div>
+                        <div class="kpi-icon bg-indigo-subtle text-indigo" style="background-color: #e0e7ff; color: #4338ca;">
+                            <i class="fa-solid fa-database"></i>
+                        </div>
+                    </div>
+                    <div class="text-muted mt-2 small" style="font-size: 0.78rem;">
+                        <i class="fa-solid fa-layer-group text-primary me-1"></i>Tổng số câu trong đề
+                    </div>
+                </div>
+            </div>
+
+            <!-- KPI 3: Điểm Trung Bình -->
+            <div class="col-6 col-lg-3">
+                <div class="kpi-card kpi-emerald h-100">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-muted small fw-semibold mb-1">Điểm Trung Bình Hệ Thống</div>
+                            <h3 class="fw-bold text-dark mb-0"><span id="kpi-avg-score">--</span><span class="fs-6 text-muted">/10</span></h3>
+                        </div>
+                        <div class="kpi-icon bg-success-subtle text-success">
+                            <i class="fa-solid fa-chart-line"></i>
+                        </div>
+                    </div>
+                    <div class="text-muted mt-2 small" style="font-size: 0.78rem;">
+                        <i class="fa-solid fa-award text-warning me-1"></i>Thang điểm 10 chuẩn
+                    </div>
+                </div>
+            </div>
+
+            <!-- KPI 4: Tỷ lệ Đoán Mò (GUESS) -->
+            <div class="col-6 col-lg-3">
+                <div class="kpi-card kpi-amber h-100">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <div class="text-muted small fw-semibold mb-1">Tỷ Lệ Đoán Mò (GUESS)</div>
+                            <h3 class="fw-bold text-dark mb-0"><span id="kpi-guess-rate">--</span>%</h3>
+                        </div>
+                        <div class="kpi-icon bg-warning-subtle text-warning">
+                            <i class="fa-solid fa-dice"></i>
+                        </div>
+                    </div>
+                    <div class="text-muted mt-2 small" style="font-size: 0.78rem;">
+                        <i class="fa-solid fa-triangle-exclamation text-warning me-1"></i>Cần AI hỗ trợ củng cố
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Navigation Tabs ── -->
+        <ul class="nav nav-pills mb-4 bg-white p-2 rounded-3 border shadow-sm" id="dashboardTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active fw-bold px-4 py-2" id="tab-questions-btn" data-bs-toggle="pill" data-bs-target="#tab-questions" type="button" role="tab">
+                    <i class="fa-solid fa-boxes-stacked me-2"></i>Quản Lý Ngân Hàng Câu Hỏi
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link fw-bold px-4 py-2" id="tab-insights-btn" data-bs-toggle="pill" data-bs-target="#tab-insights" type="button" role="tab">
+                    <i class="fa-solid fa-brain me-2"></i>AI Pedagogical Insight (Chẩn Đoán Sư Phạm)
+                </button>
+            </li>
+        </ul>
+
+        <!-- ── Tab Contents ── -->
+        <div class="tab-content" id="dashboardTabContent">
+
+            <!-- ══════════════════════════════════════════════════════════════ -->
+            <!-- TAB 1: Quản Lý Ngân Hàng Câu Hỏi -->
+            <!-- ══════════════════════════════════════════════════════════════ -->
+            <div class="tab-pane fade show active" id="tab-questions" role="tabpanel">
+                <div class="card border-0 shadow-sm rounded-3">
+                    <div class="card-body p-4">
+                        
+                        <!-- Filter & Actions Bar -->
+                        <div class="row g-2 align-items-center justify-content-between mb-3">
+                            <div class="col-md-4">
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0"><i class="fa-solid fa-filter text-muted"></i></span>
+                                    <select class="form-select border-start-0 ps-0" id="filter-topic">
+                                        <option value="">-- Tất cả chủ đề --</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-5">
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
+                                    <input type="text" class="form-control border-start-0 ps-0" id="search-question" placeholder="Tìm câu hỏi theo từ khóa...">
+                                </div>
+                            </div>
+                            <div class="col-md-3 text-md-end">
+                                <button class="btn btn-primary rounded-pill px-3 fw-semibold shadow-sm w-100 w-md-auto" id="btn-open-create-modal">
+                                    <i class="fa-solid fa-plus me-1"></i>Thêm Câu Hỏi Mới
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Questions Table -->
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle border-top" id="questions-table">
+                                <thead class="table-light">
+                                    <tr class="text-secondary small">
+                                        <th style="width: 50px;">ID</th>
+                                        <th>Nội Dung Câu Hỏi</th>
+                                        <th style="width: 140px;">Chủ Đề</th>
+                                        <th style="width: 100px;" class="text-center">Độ Khó</th>
+                                        <th style="width: 110px;" class="text-center">Đáp Án Đúng</th>
+                                        <th style="width: 100px;" class="text-center">Thao Tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="questions-tbody">
+                                    <tr>
+                                        <td colspan="6" class="text-center py-5 text-muted">
+                                            <div class="spinner-border spinner-border-sm text-primary me-2"></div>Đang tải dữ liệu câu hỏi...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Question Counter -->
+                        <div class="d-flex justify-content-between align-items-center mt-3 text-muted small">
+                            <div id="questions-count-text">Hiển thị 0 câu hỏi</div>
+                            <div><i class="fa-solid fa-circle-info me-1"></i>Hỗ trợ Markdown & highlight code tự động</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ══════════════════════════════════════════════════════════════ -->
+            <!-- TAB 2: AI Pedagogical Insight (Chẩn Đoán Sư Phạm) -->
+            <!-- ══════════════════════════════════════════════════════════════ -->
+            <div class="tab-pane fade" id="tab-insights" role="tabpanel">
+                
+                <!-- 4 Nhóm Sai Lầm Phổ Biến (Misconceptions Breakdown) -->
+                <div class="card border-0 shadow-sm rounded-3 mb-4">
+                    <div class="card-header bg-white py-3 border-0">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="fa-solid fa-dna text-primary fs-5"></i>
+                            <h5 class="fw-bold mb-0 text-dark">Phân Tích 4 Lỗ Hổng Nhận Thức Phổ Biến (AI Pedagogical Diagnostic)</h5>
+                        </div>
+                        <p class="text-muted small mb-0 mt-1">Dựa trên mô hình phân tích bài nộp của Gemini 2.5 Flash để hỗ trợ Giảng viên điều chỉnh giáo án kịp thời.</p>
+                    </div>
+                    <div class="card-body pt-1 p-4">
+                        <div class="row g-3" id="misconception-cards-row">
+                            <!-- Card 1: syntax_swap -->
+                            <div class="col-md-6 col-lg-3">
+                                <div class="insight-card border-danger-subtle bg-danger-subtle bg-opacity-10 h-100">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span class="badge badge-syntax px-2 py-1 rounded-pill">syntax_swap</span>
+                                        <h4 class="fw-bold text-danger mb-0" id="stat-syntax-swap">0</h4>
+                                    </div>
+                                    <div class="fw-bold text-dark small mb-1">Nhầm Lẫn Cú Pháp</div>
+                                    <p class="text-muted small mb-0" style="font-size: 0.8rem;">
+                                        Nhầm lẫn giữa toán tử gán <code>=</code> và so sánh <code>==</code>, sai cú pháp khởi tạo mảng hoặc gọi hàm.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Card 2: boundary_blindness -->
+                            <div class="col-md-6 col-lg-3">
+                                <div class="insight-card border-warning-subtle bg-warning-subtle bg-opacity-10 h-100">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span class="badge badge-boundary px-2 py-1 rounded-pill">boundary_blindness</span>
+                                        <h4 class="fw-bold text-warning mb-0" id="stat-boundary-blindness">0</h4>
+                                    </div>
+                                    <div class="fw-bold text-dark small mb-1">Lỗi Biên Vòng Lặp & Mảng</div>
+                                    <p class="text-muted small mb-0" style="font-size: 0.8rem;">
+                                        Vượt quá chỉ số mảng (IndexOutOfBounds), sai điều kiện dừng vòng lặp <code>&lt;</code> thành <code>&lt;=</code> (Off-by-one).
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Card 3: mental_model_gap -->
+                            <div class="col-md-6 col-lg-3">
+                                <div class="insight-card border-primary-subtle bg-primary-subtle bg-opacity-10 h-100">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span class="badge badge-mental px-2 py-1 rounded-pill">mental_model_gap</span>
+                                        <h4 class="fw-bold text-primary mb-0" id="stat-mental-model-gap">0</h4>
+                                    </div>
+                                    <div class="fw-bold text-dark small mb-1">Hổng Mô Hình Tư Duy (OOP)</div>
+                                    <p class="text-muted small mb-0" style="font-size: 0.8rem;">
+                                        Hiểu sai vùng nhớ Stack vs Heap, cơ chế tham chiếu đối tượng, tính đóng gói hoặc kế thừa đa hình.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <!-- Card 4: logic_flaw -->
+                            <div class="col-md-6 col-lg-3">
+                                <div class="insight-card border-secondary-subtle bg-secondary-subtle bg-opacity-10 h-100">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span class="badge badge-logic px-2 py-1 rounded-pill">logic_flaw</span>
+                                        <h4 class="fw-bold text-secondary mb-0" id="stat-logic-flaw">0</h4>
+                                    </div>
+                                    <div class="fw-bold text-dark small mb-1">Sai Sót Logic Điều Kiện</div>
+                                    <p class="text-muted small mb-0" style="font-size: 0.8rem;">
+                                        Nhầm toán tử logic <code>&amp;&amp;</code> và <code>||</code>, sót trường hợp rẽ nhánh if/else hoặc return sớm ngoài ý muốn.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bảng Danh Sách Bài Nộp Gần Nhất (Recent Submissions) -->
+                <div class="card border-0 shadow-sm rounded-3">
+                    <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="fa-solid fa-clock-rotate-left text-primary fs-5"></i>
+                            <h5 class="fw-bold mb-0 text-dark">Danh Sách Bài Nộp Gần Nhất</h5>
+                        </div>
+                        <button class="btn btn-sm btn-outline-secondary rounded-pill px-3" id="btn-refresh-stats">
+                            <i class="fa-solid fa-arrows-rotate me-1"></i>Làm mới
+                        </button>
+                    </div>
+                    <div class="card-body p-4 pt-1">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle border-top" id="recent-sessions-table">
+                                <thead class="table-light">
+                                    <tr class="text-secondary small">
+                                        <th style="width: 70px;">Mã Phiên</th>
+                                        <th>Sinh Viên</th>
+                                        <th>Chủ Đề</th>
+                                        <th class="text-center" style="width: 140px;">Số Câu Đúng</th>
+                                        <th class="text-center" style="width: 110px;">Điểm Số</th>
+                                        <th style="width: 180px;">Thời Gian Nộp</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="recent-sessions-tbody">
+                                    <tr>
+                                        <td colspan="6" class="text-center py-4 text-muted">
+                                            <div class="spinner-border spinner-border-sm text-primary me-2"></div>Đang tải danh sách bài nộp...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- ══════════════════════════════════════════════════════════════ -->
+    <!-- MODAL THÊM / CẬP NHẬT CÂU HỎI -->
+    <!-- ══════════════════════════════════════════════════════════════ -->
+    <div class="modal fade" id="questionModal" tabindex="-1" aria-labelledby="questionModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header bg-primary text-white border-0 py-3">
+                    <h5 class="modal-title fw-bold" id="questionModalLabel">
+                        <i class="fa-solid fa-pen-to-square me-2"></i>Thêm Câu Hỏi Mới
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form id="question-form">
+                        <input type="hidden" id="modal-question-id" value="">
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-8">
+                                <label for="modal-topic-id" class="form-label fw-semibold small">Chủ đề <span class="text-danger">*</span></label>
+                                <select class="form-select" id="modal-topic-id" required>
+                                    <option value="">-- Chọn chủ đề bài học --</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="modal-difficulty" class="form-label fw-semibold small">Độ khó <span class="text-danger">*</span></label>
+                                <select class="form-select" id="modal-difficulty" required>
+                                    <option value="easy">Dễ (Easy)</option>
+                                    <option value="medium" selected>Trung bình (Medium)</option>
+                                    <option value="hard">Khó (Hard)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="modal-question-text" class="form-label fw-semibold small d-flex justify-content-between">
+                                <span>Nội dung câu hỏi <span class="text-danger">*</span></span>
+                                <span class="text-muted fw-normal" style="font-size: 0.78rem;">Hỗ trợ cú pháp Markdown code ```java ... ```</span>
+                            </label>
+                            <textarea class="form-control font-monospace" id="modal-question-text" rows="4" placeholder="Nhập câu hỏi... (VD: Đoạn code sau in ra gì?&#10;```java&#10;int x = 5;&#10;System.out.println(++x);&#10;```)" required></textarea>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label for="modal-option-a" class="form-label fw-semibold small">Phương án A <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text fw-bold bg-light">A</span>
+                                    <input type="text" class="form-control" id="modal-option-a" placeholder="Nội dung đáp án A..." required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="modal-option-b" class="form-label fw-semibold small">Phương án B <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text fw-bold bg-light">B</span>
+                                    <input type="text" class="form-control" id="modal-option-b" placeholder="Nội dung đáp án B..." required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="modal-option-c" class="form-label fw-semibold small">Phương án C <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text fw-bold bg-light">C</span>
+                                    <input type="text" class="form-control" id="modal-option-c" placeholder="Nội dung đáp án C..." required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="modal-option-d" class="form-label fw-semibold small">Phương án D <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <span class="input-group-text fw-bold bg-light">D</span>
+                                    <input type="text" class="form-control" id="modal-option-d" placeholder="Nội dung đáp án D..." required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label for="modal-correct-answer" class="form-label fw-semibold small">Đáp án đúng <span class="text-danger">*</span></label>
+                                <select class="form-select fw-bold text-success border-success" id="modal-correct-answer" required>
+                                    <option value="A">Phương án A</option>
+                                    <option value="B">Phương án B</option>
+                                    <option value="C">Phương án C</option>
+                                    <option value="D">Phương án D</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-2">
+                            <label for="modal-explanation" class="form-label fw-semibold small d-flex justify-content-between">
+                                <span>Giải thích cơ bản (★ AI Fallback Buffer)</span>
+                                <span class="text-primary fw-normal" style="font-size: 0.78rem;"><i class="fa-solid fa-shield-halved me-1"></i>Dùng khi Gemini API bận</span>
+                            </label>
+                            <textarea class="form-control" id="modal-explanation" rows="3" placeholder="Nhập lời giải thích chuẩn sư phạm để hệ thống hiển thị ngay cho sinh viên nếu Gemini API gặp sự cố hoặc offline..."></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer bg-light border-0 py-3">
+                    <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" class="btn btn-primary rounded-pill px-4 fw-semibold" id="btn-save-question">
+                        <i class="fa-solid fa-floppy-disk me-1"></i>Lưu Câu Hỏi
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 Bundle JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- API Client -->
+    <script src="js/api.js"></script>
+    <!-- Teacher Dashboard Logic -->
+    <script src="js/teacher.js"></script>
+</body>
+</html>

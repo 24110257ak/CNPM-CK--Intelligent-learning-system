@@ -39,19 +39,19 @@
   - Tự động lưu tiến độ (Autosave Progress) vào `localStorage`, Fullscreen AI Loading Overlay, Guard Routes & SweetAlert2 Toasts.
   - Teacher Dashboard Nâng Cao (tìm kiếm realtime, phân trang 10 câu/trang).
   - Adaptive Remediation Engine (Mini-Quiz 3 câu, Confetti, huy hiệu "ĐÃ PHỤC HỒI KIẾN THỨC").
-- [x] **Phase 6 (Chuyển Đổi PostgreSQL Neon.tech & Đóng Gói Docker):**
+- [x] **Phase 6 (Chuyển Đổi PostgreSQL Neon.tech & Đóng Gói Docker & Deploy Cloud):**
   - `pom.xml`: Chuyển compile target sang Java 17 LTS, thêm `org.postgresql:postgresql:42.7.2`.
   - `DatabaseUtil.java`: Tự động nhận diện Driver (PostgreSQL/MSSQL), PL/pgSQL `DO $$` auto-migration, auto-seed từ `schema.sql` nếu CSDL trống.
-  - DAOs (`QuestionDAO`, `QuizDAO`, `UserDAO`, `TopicDAO`, `ChatDAO`): Thay thế toàn bộ `SELECT TOP (?)` -> `LIMIT ?`, `GETDATE()` -> `CURRENT_TIMESTAMP`, `is_correct = 0` -> `NOT is_correct`, và thay thế 100% `getNString`/`setNString` sang `getString`/`setString`.
-  - `schema.sql`: Chuẩn hóa PostgreSQL DDL (`SERIAL PRIMARY KEY`, `VARCHAR`, `TEXT`, `BOOLEAN`, `TIMESTAMP DEFAULT CURRENT_TIMESTAMP`, `CREATE TABLE IF NOT EXISTS`, `ON CONFLICT DO NOTHING`, Sequence setval an toàn).
+  - DAOs (`QuestionDAO`, `QuizDAO`, `UserDAO`, `TopicDAO`, `ChatDAO`): Chuẩn hóa 100% dialect PostgreSQL và thay thế `getNString`/`setNString` sang `getString`/`setString`.
+  - `schema.sql`: Chuẩn hóa PostgreSQL DDL (`SERIAL PRIMARY KEY`, `VARCHAR`, `TEXT`, `BOOLEAN`, UTF-8, sequence an toàn).
   - `Dockerfile` & `.dockerignore`: Multi-stage build (`maven:3.9.6-eclipse-temurin-17-alpine` -> `jetty:11-jre17-alpine` port 8080).
-  - Kiểm thử trực tiếp CSDL Neon.tech Cloud: Login, Lấy danh sách Topic, Câu hỏi kèm Markdown, Bắt đầu thi, Nộp bài chấm điểm 100%, Lấy Teacher Stats thành công 100%.
-  - Cập nhật tài liệu: `.env`, `.env.example`, `README.md`.
+  - `AIService.java`: Nâng cấp model thế hệ mới `gemini-3.6-flash`, cơ chế tự động fallback giữa model `gemini-3.6-flash` và `gemini-3.8-flash`, chẩn đoán lỗi chi tiết và Smart Offline FAQ Fallback.
+  - **Triển khai Cloud Production (Render + Neon.tech PostgreSQL):** Đã kiểm thử trực tiếp thành công 100% trên Render live URL `https://cnpm-ck-intelligent-learning-system.onrender.com` với API Key Google AI Studio. Trợ Giảng AI phản hồi mượt mà, phân tích sư phạm chuẩn xác!
 
 ## Pending Tasks (Các bước tiếp theo mở rộng)
 - [ ] Export báo cáo thống kê kết quả học tập ra Excel/PDF cho Giảng viên.
-- [ ] Bổ sung thêm nhiều câu hỏi phân loại chi tiết theo từng chủ đề mới.
-- [ ] Triển khai CI/CD pipeline tự động build và push image lên Docker Hub / GitHub Packages.
+- [ ] Bổ sung thêm ngân hàng câu hỏi phân loại theo các chủ đề chuyên sâu mới.
+- [ ] Tích hợp tính năng Voice Input / Audio cho Trợ Giảng AI.
 
 ---
 

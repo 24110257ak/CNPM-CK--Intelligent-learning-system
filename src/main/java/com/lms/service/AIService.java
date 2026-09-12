@@ -24,7 +24,7 @@ public class AIService {
 
     public AIService() {
         String apiKey = ConfigLoader.get("GEMINI_API_KEY", "").trim();
-        if (!apiKey.isEmpty() && !apiKey.equalsIgnoreCase("your_api_key_here")) {
+        if (isValidApiKey(apiKey)) {
             Client c = null;
             try {
                 c = Client.builder().apiKey(apiKey).build();
@@ -39,8 +39,31 @@ public class AIService {
         } else {
             this.client = null;
             this.isConfigured = false;
-            System.out.println("[AIService] ℹ️ Chưa có GEMINI_API_KEY. Hệ thống sẽ tự động dùng FallbackService (ADR-008).");
+            System.out.println("[AIService] ℹ️ GEMINI_API_KEY chưa hợp lệ hoặc đang để trống. Hệ thống tự động kích hoạt Fallback Buffer (ADR-008).");
         }
+    }
+
+    /**
+     * Kiểm tra tính hợp lệ của API Key để tránh lỗi OkHttp header hoặc dùng nhầm text placeholder.
+     */
+    public static boolean isValidApiKey(String key) {
+        if (key == null || key.isBlank()) {
+            return false;
+        }
+        // Tránh lỗi OkHttp "Unexpected char at in x-goog-api-key value" khi có ký tự có dấu/tiếng Việt
+        for (int i = 0; i < key.length(); i++) {
+            if (key.charAt(i) > 127) {
+                return false;
+            }
+        }
+        // Kiểm tra placeholder thông dụng
+        String lower = key.toLowerCase();
+        if (lower.contains("your_") || lower.contains("placeholder") || lower.contains("dán_")
+                || lower.contains("dan_") || lower.contains("api_key") || lower.contains("here")) {
+            return false;
+        }
+        // API Key chuẩn của Google AI Studio thường có ít nhất 20 ký tự (AIzaSy...)
+        return key.length() >= 20;
     }
 
     /**
@@ -91,8 +114,8 @@ public class AIService {
      */
     public String chat(String userMessage, String persona, String context) {
         if (!isConfigured) {
-            return "Xin chào! Hiện tại hệ thống đang chạy ở chế độ ngoại tuyến (Offline Mode - chưa có GEMINI_API_KEY). "
-                 + "Vui lòng xem lại giải thích chi tiết trong bài học củng cố hoặc liên hệ giảng viên môn học.";
+            return "Xin chào! Hiện tại hệ thống đang chạy ở chế độ ngoại tuyến (Offline Fallback — chưa cấu hình GEMINI_API_KEY hợp lệ). "
+                 + "Bạn vui lòng lấy API Key miễn phí từ Google AI Studio (bắt đầu bằng 'AIzaSy...') và cấu hình vào hệ thống để trò chuyện trực tiếp cùng Trợ Giảng AI nhé!";
         }
 
         try {
@@ -114,7 +137,7 @@ public class AIService {
             return response.text();
         } catch (Exception e) {
             System.err.println("[AIService] ❌ Gọi Gemini Chat thất bại: " + e.getMessage());
-            return "Hệ thống AI đang bận hoặc gặp sự cố kết nối (" + e.getMessage() + "). Bạn vui lòng thử lại sau giây lát nhé!";
+            return "Hệ thống AI đang bận hoặc gặp sự cố kết nối dịch vụ. Bạn vui lòng kiểm tra lại GEMINI_API_KEY hoặc thử lại sau giây lát nhé!";
         }
     }
 

@@ -1,234 +1,266 @@
 # 🎓 Hệ Thống Học Tập Thông Minh Tích Hợp AI (Intelligent LMS)
 
-> **Đồ Án Cuối Kỳ — Môn Công Nghệ Phần Mềm**  
-> Nền tảng LMS hiện đại giúp phát hiện quan niệm sai lầm (**Pedagogical Misconception Detection**), kích hoạt tính năng **Confidence Tagging**, tự động kiến tạo **Bài học củng cố cá nhân hóa (AI Remedial Lessons)** và bài tập hồi quy thích ứng (**Adaptive Remediation Engine**) bằng **Google Gemini 3.6 Flash**.
+> **Đồ Án Cuối Kỳ — Môn Công Nghệ Phần Mềm (CNPM - CK)**  
+> Nền tảng LMS hiện đại kết hợp Trí tuệ Nhân tạo thế hệ mới (**Google Gemini 3.6 Flash**), ứng dụng các lý thuyết sư phạm thực nghiệm: **Confidence Tagging** (Gắn nhãn độ tự tin), **Pedagogical Misconception Detection** (Chẩn đoán 4 nhóm lỗ hổng tư duy), **Adaptive Remediation Engine** (Động cơ củng cố kiến thức thích ứng) và **Teacher AI Co-Pilot Studio** (Studio trợ lý soạn đề & bài tập thông minh cho giảng viên).
 
 ---
 
-## 🌟 Tính Năng Nổi Bật
+## 🏛️ 1. Kiến Trúc Hệ Thống & Sự Liên Kết Công Nghệ (Architecture & Interconnections)
 
-1. **Kiểm Tra Trắc Nghiệm Thông Minh & Gắn Nhãn Tự Tin (Confidence Tagging - ADR-009):**
-   - Sinh viên khi làm bài có thể đánh dấu: 🟢 **Chắc chắn (Certain)** hoặc 🟡 **Đoán mò (Guess)**.
-   - Nếu chọn ĐÚNG nhưng với tâm thế **ĐOÁN MÒ**, hệ thống AI vẫn can thiệp để củng cố bản chất lý thuyết, biến kiến thức may rủi thành nền tảng vững vàng.
-   - Tự động lưu tiến độ làm bài (**Autosave**) vào `localStorage` và hỏi khôi phục bài làm dở dang khi reload trang.
-   - Màn hình chờ AI Loading Overlay toàn màn hình với chu kỳ thông điệp sư phạm sinh động.
+Hệ thống được thiết kế theo kiến trúc phân tầng chuẩn doanh nghiệp (**Layered Architecture / MVC - Service - DAO**), tối ưu hóa hiệu năng, tính mở rộng và khả năng phục hồi (Resilience):
 
-2. **Chẩn Đoán & Phân Loại Lỗ Hổng Tư Duy (Misconception Diagnosis):**
-   - Tự động phân loại lỗi sai vào 4 nhóm nhận thức cốt lõi:
-     - `syntax_swap`: Nhầm lẫn cú pháp toán tử, đặc tả ngôn ngữ.
-     - `boundary_blindness`: Bỏ quên điều kiện biên, kiểm tra ranh giới mảng, null pointer.
-     - `mental_model_gap`: Lỗ hổng mô hình tư duy (OOP, luồng quản lý bộ nhớ Heap/Stack).
-     - `logic_flaw`: Lỗi phân nhánh logic điều kiện if/else, vòng lặp.
+```mermaid
+graph TD
+    subgraph Client_Layer ["Client Layer (Trình Duyệt Người Dùng)"]
+        UI_Student["Giao Diện Sinh Viên<br/>(index.html, quiz.html, result.html)"]
+        UI_Teacher["Giao Diện Giảng Viên<br/>(teacher-dashboard.html)"]
+        UI_Auth["Xác Thực & Đăng Nhập<br/>(auth.html)"]
+        JS_Client["Vanilla JS ES6+ Modules<br/>(api.js, quiz.js, result.js, teacher.js)"]
+    end
 
-3. **Công Cụ Phục Hồi Thích Ứng (Adaptive Remediation Engine):**
-   - Cung cấp thẻ chẩn đoán lỗi nhận thức kèm nút **Làm Bài Tập Phục Hồi (Mini-Quiz 3 câu)** tập trung đúng dạng sai sót.
-   - Hiệu ứng pháo hoa **Confetti** rực rỡ và huy hiệu **ĐÃ PHỤC HỒI KIẾN THỨC** khi sinh viên làm chủ được lỗ hổng tư duy.
+    subgraph Container_Runtime ["Runtime Container (Docker / Eclipse Jetty 11)"]
+        subgraph Controller_Layer ["Controller Layer (Jakarta Servlet 5.0)"]
+            AuthServlet["AuthServlet<br/>/api/auth/*"]
+            QuizServlet["QuizServlet<br/>/api/quiz/*"]
+            TeacherServlet["TeacherServlet<br/>/api/teacher/*"]
+            QuestionServlet["QuestionServlet<br/>/api/questions/*"]
+            ChatServlet["ChatServlet<br/>/api/chat/*"]
+            Filter["CorsFilter & AuthFilter"]
+        end
 
-4. **Bảng Điều Khiển Giảng Viên Hiện Đại (Teacher Dashboard):**
-   - 4 Thẻ KPI thời gian thực: Sinh viên làm bài, Ngân hàng câu hỏi, Điểm trung bình, Tỷ lệ đoán mò (GUESS rate).
-   - Quản lý ngân hàng câu hỏi (CRUD câu hỏi, soạn thảo mã nguồn Markdown, tìm kiếm realtime, phân trang 10 câu/trang).
-   - Tab AI Pedagogical Insight thống kê tần suất các dạng lỗi tư duy sinh viên hay mắc phải nhất.
+        subgraph Service_Layer ["Service Layer (Business Logic & AI Orchestration)"]
+            QuizService["QuizService<br/>(Chấm điểm, phân tích bài thi)"]
+            UserService["UserService<br/>(BCrypt hashing, quản lý tài khoản)"]
+            AIService["AIService<br/>(Điều phối Gemini API, Circuit Breaker)"]
+            FallbackService["FallbackService<br/>(Bộ đệm cứu sinh offline)"]
+            PromptBuilder["PromptBuilder<br/>(Xây dựng Prompt sư phạm chuẩn JSON)"]
+        end
 
-5. **Bộ Đệm Dự Phòng Ngoại Tuyến (AI Fallback Buffer - ADR-008):**
-   - Nếu mất mạng, hết quota hoặc chưa cấu hình API Key, hệ thống **không bao giờ bị lỗi** mà tự động kích hoạt cơ chế Fallback nội bộ từ kho giải thích chuẩn trong CSDL.
+        subgraph DAO_Layer ["Data Access Layer (JDBC & Connection Pool)"]
+            DatabaseUtil["DatabaseUtil (HikariCP Pool)"]
+            UserDAO["UserDAO"]
+            QuizDAO["QuizDAO"]
+            QuestionDAO["QuestionDAO"]
+            TopicDAO["TopicDAO"]
+            ChatDAO["ChatDAO"]
+        end
+    end
 
-6. **Trợ Giảng AI Đa Nhân Cách (Multi-Persona Chatbot Widget - ADR-011):**
-   - Widget chat nổi góc màn hình 24/7 với 3 persona:
-     - 🎓 **Bạn Học Kèm (Peer Tutor):** Thân thiện, mẹo nhớ nhanh.
-     - 💻 **Senior Developer:** Thực chiến, chuẩn dự án doanh nghiệp.
-     - 🏛️ **Giáo Sư (Professor):** Học thuật, phân tích nguồn gốc lý thuyết.
+    subgraph Infrastructure_Cloud ["Hạ Tầng Điện Toán Đám Mây & AI"]
+        NeonDB[("PostgreSQL 16 Cloud<br/>(Neon.tech Serverless / Render)")]
+        GeminiAPI["Google Gemini 3.6 Flash<br/>(Google AI Studio REST API)"]
+        DockerHost["Render Cloud Web Service<br/>(Container hóa Multi-stage)"]
+    end
+
+    %% Client to Controller
+    UI_Student -->|RESTful JSON / Fetch API| Filter
+    UI_Teacher -->|RESTful JSON / Fetch API| Filter
+    UI_Auth -->|RESTful JSON / Fetch API| Filter
+    Filter --> Controller_Layer
+
+    %% Controller to Service
+    AuthServlet --> UserService
+    QuizServlet --> QuizService
+    TeacherServlet --> QuizDAO
+    TeacherServlet --> AIService
+    ChatServlet --> AIService
+    QuestionServlet --> QuestionDAO
+
+    %% Service to Service & AI
+    QuizService --> AIService
+    AIService -.->|Khi mất mạng / Hết quota| FallbackService
+    AIService -->|Structured JSON Output| GeminiAPI
+    AIService --> PromptBuilder
+
+    %% Service to DAO
+    QuizService --> QuizDAO
+    UserService --> UserDAO
+    FallbackService --> QuestionDAO
+
+    %% DAO to Database
+    DAO_Layer --> DatabaseUtil
+    DatabaseUtil -->|HikariCP Connection Pool| NeonDB
+    Container_Runtime -.->|Triển khai trên| DockerHost
+```
 
 ---
 
-## 🛠️ Yêu Cầu Môi Trường (Prerequisites)
+## 🛠️ 2. Bảng Tổng Hợp Công Nghệ & Vai Trò (Tech Stack Specification)
 
-Dự án hỗ trợ 2 hình thức khởi chạy linh hoạt: **Chạy trực tiếp (Local)** hoặc **Chạy qua Docker (Cloud-ready)**:
-
-1. **Java Development Kit (JDK):**
-   - Phiên bản: **JDK 17 LTS, JDK 21 LTS trở lên** (Khuyên dùng Java 17 hoặc 21).
-   - Kiểm tra bằng lệnh: `java -version`
-2. **Cơ Sở Dữ Liệu:**
-   - **Khuyên dùng:** **PostgreSQL Cloud (Neon.tech / Render / Supabase)** — Cực kỳ nhẹ, không cần cài đặt phần mềm CSDL nặng vào máy, tự động khởi tạo bảng khi chạy!
-   - Hoặc **Microsoft SQL Server** (2017 - 2022 / SSMS).
-3. **Docker (Tùy chọn):** Docker Desktop nếu muốn chạy container hóa chỉ với 1 câu lệnh.
-4. **Không cần cài đặt sẵn Maven:** Đã tích hợp sẵn **Maven Wrapper** (`mvnw.cmd`).
+| Thành Phần (Layer) | Công Nghệ Sử Dụng | Phiên Bản | Vai Trò & Lý Do Lựa Chọn |
+|---|---|---|---|
+| **Core Platform** | **Java (JDK)** | 17 LTS / 21 LTS | Nền tảng hướng đối tượng mạnh mẽ, an toàn kiểu dữ liệu, bảo mật bộ nhớ và hiệu năng xử lý cao. |
+| **Web Server / Servlet Engine** | **Eclipse Jetty** | 11.0.24 | Nhẹ hơn Tomcat rất nhiều, thời gian khởi động < 2 giây, tương thích hoàn hảo với Java 17/21 và Jakarta EE 9. |
+| **Servlet Specification** | **Jakarta Servlet & Filter** | 5.0.0 (`jakarta.*`) | Định tuyến RESTful API, kiểm soát phiên đăng nhập (`HttpSession`), lọc CORS và phân quyền vai trò (`AuthFilter`). |
+| **Cơ Sở Dữ Liệu (Database)** | **PostgreSQL** | 16 (Neon.tech / Render) | CSDL quan hệ chuẩn ACID, lưu trữ JSON linh hoạt, điện toán Serverless trên Cloud, tự động co giãn kết nối. |
+| **Connection Pooling** | **HikariCP** | 5.1.0 | Thư viện quản lý kết nối CSDL nhanh nhất thế giới Java, hạn chế quá tải tài nguyên và chống nghẽn kết nối. |
+| **Trí Tuệ Nhân Tạo (Generative AI)** | **Google Gemini** | `gemini-3.6-flash` | Tốc độ suy luận tính bằng mili-giây, thông minh vượt trội, hỗ trợ sinh JSON có cấu trúc (`ResponseSchema`). |
+| **Bảo Mật Mật Khẩu** | **jBCrypt** | 0.4.3 | Mã hóa mật khẩu một chiều với thuật toán Blowfish (Cost 12), chống tấn công vét cạn (Brute-force) và Rainbow table. |
+| **Xử Lý JSON** | **Google Gson** | 2.10.1 | Chuyển đổi hai chiều POJO $\leftrightarrow$ JSON, cấu hình TypeAdapter cho `LocalDateTime` và định dạng UTF-8 chuẩn. |
+| **Đóng Gói & Triển Khai (DevOps)** | **Docker (Multi-stage)** | Alpine Linux | Đóng gói tự động từ source code (`maven:3.9.6-alpine`) sang runtime image (`jetty:11-jre17-alpine`) siêu nhẹ (~180MB). |
+| **Frontend UI / Styling** | **Vanilla JS, HTML5, CSS3, Bootstrap** | 5.3.3 | Không dùng framework nặng (React/Angular) để đảm bảo tốc độ tải trang cực nhanh (< 500ms), dễ bảo trì và mở rộng. |
+| **Icons & Trực Quan Hóa** | **FontAwesome 6, SweetAlert2, Highlight.js, Marked.js, Canvas-Confetti** | Latest CDN | Hiển thị mã nguồn tô màu cú pháp chuẩn (One Dark), popup thông báo hiện đại và hiệu ứng pháo hoa củng cố thành tích. |
 
 ---
 
-## 🚀 Cách 1: Khởi Chạy Nhanh Bằng Docker (Khuyên Dùng)
+## ⚙️ 3. Nguyên Lý Hoạt Động Cốt Lõi (Core Operating Principles)
 
-Dự án đã được cấu hình sẵn **Multi-stage Dockerfile** (`maven:3.9.6-eclipse-temurin-17-alpine` -> `jetty:11-jre17-alpine`).
+### 1. Nguyên Lý Gắn Nhãn Tự Tin (Confidence Tagging - ADR-009)
+* **Vấn đề sư phạm:** Sinh viên làm trắc nghiệm thường có yếu tố may rủi (đoán mò). Nếu đoán bừa trúng đáp án đúng, các LMS truyền thống sẽ bỏ qua, khiến lỗ hổng kiến thức bị che giấu.
+* **Giải pháp của hệ thống:**
+  - Ở mỗi câu hỏi, sinh viên chủ động chọn: 🟢 **Chắc chắn (Certain)** hoặc 🟡 **Đoán mò (Guess)**.
+  - Khi sinh viên chọn ĐÚNG nhưng với tâm thế **ĐOÁN MÒ**, thuật toán sẽ kích hoạt Gemini AI để tạo lời khuyên củng cố chuyên sâu, giải thích **tại sao đáp án đó đúng** và nguyên lý cốt lõi, giúp sinh viên thực sự làm chủ kiến thức thay vì dựa vào vận may.
+
+### 2. Nguyên Lý Chẩn Đoán 4 Nhóm Lỗ Hổng Tư Duy (Pedagogical Misconceptions)
+Hệ thống không chỉ chấm "Đúng/Sai" mà phân tích sâu bản chất nguyên nhân lỗi sai vào 4 nhóm nhận thức:
+1. **`syntax_swap` (Nhầm lẫn cú pháp):** Nhầm lẫn toán tử (`==` vs `.equals()`), đặc tả ngôn ngữ, khai báo biến, thứ tự tham số.
+2. **`boundary_blindness` (Mù điều kiện biên):** Bỏ quên trường hợp mảng rỗng, chỉ mục vượt quá giới hạn mảng (`IndexOutOfBounds`), kiểm tra giá trị `null` hoặc điều kiện dừng đệ quy.
+3. **`mental_model_gap` (Lỗ hổng mô hình tư duy):** Hiểu sai cơ chế hướng đối tượng (OOP), đa hình, tham chiếu bộ nhớ Heap vs Stack, luồng vòng đời đối tượng.
+4. **`logic_flaw` (Lỗi logic điều kiện):** Sai sót trong biểu thức Boolean phức tạp, phân nhánh `if-else` lồng nhau, điều kiện lặp vô tận.
+
+### 3. Động Cơ Phục Hồi Kiến Thức Thích Ứng (Adaptive Remediation Engine)
+* Sau khi nộp bài, mỗi câu làm sai hoặc đoán mò đều sinh ra một **Thẻ Bài Học Củng Cố Cá Nhân Hóa (AI Remedial Lesson)**.
+* Sinh viên có thể nhấn nút **"Làm Bài Tập Phục Hồi"**: Hệ thống khởi tạo ngay một **Mini-Quiz 3 câu hỏi thích ứng** xoay quanh chính lỗ hổng vừa mắc phải.
+* Khi hoàn thành tốt, hệ thống bắn hiệu ứng pháo hoa **Confetti** rực rỡ và cấp huy hiệu **"ĐÃ PHỤC HỒI KIẾN THỨC"**, đánh dấu sinh viên đã xóa bỏ thành công lỗ hổng tư duy đó.
+
+### 4. Cơ Chế Bộ Đệm Dự Phòng Ngoại Tuyến (Dual Fallback & Smart FAQ Buffer - ADR-008)
+* Hệ thống ứng dụng mô hình thiết kế **Circuit Breaker**:
+  - `Ưu tiên 1`: Gọi **Gemini 3.6 Flash** với Structured JSON Schema.
+  - `Ưu tiên 2 (Tự động chuyển tiếp)`: Nếu model 3.6 quá tải, hệ thống tự chuyển tiếp sang **Gemini 3.8 Flash**.
+  - `Ưu tiên 3 (Cứu sinh ngoại tuyến)`: Nếu không có Internet hoặc hết hạn mức API, `FallbackService` tự động trích xuất các phân tích có sẵn trong CSDL và trả về ngay lập tức. **Người dùng không bao giờ gặp màn hình trắng hoặc lỗi 500!**
+
+### 5. Studio Soạn Đề Tự Động & Trợ Lý Co-Pilot Dành Cho Giảng Viên (Teacher AI Co-Pilot)
+* Giảng viên có toàn quyền:
+  - Chọn chủ đề, mức độ khó (Dễ / Trung bình / Khó) và nhóm lỗ hổng tư duy mục tiêu.
+  - Gemini AI tự động sinh bộ câu hỏi trắc nghiệm chuẩn sư phạm theo **Thang đo nhận thức Bloom (Bloom's Taxonomy)**.
+  - Xem trước định dạng code chuẩn xác, tùy biến nội dung và **Import 1-Click** vào ngân hàng đề CSDL PostgreSQL.
+  - Khung chat **AI Co-Pilot Sư Phạm** hỗ trợ giảng viên thiết kế kế hoạch bài giảng và ra đề thi phân hóa.
+
+---
+
+## 🔄 4. Sự Liên Kết & Luồng Dữ Liệu Thực Tế (Data Flow Walkthrough)
+
+### 📌 Luồng 1: Sinh Viên Thi & Nhận Bài Học Thích Ứng
+1. **Làm bài (`quiz.html`):** Sinh viên chọn đáp án + gắn thẻ độ tự tin (`CERTAIN` / `GUESS`). Tiến độ được `quiz.js` tự động lưu trữ phòng sự cố mất điện/reload (`Autosave LocalStorage`).
+2. **Nộp bài (`POST /api/quiz/submit`):**
+   - `QuizServlet` tiếp nhận danh sách đáp án, xác thực session người dùng.
+   - `QuizService` lưu các câu trả lời vào bảng `user_answers` và cập nhật điểm số vào `quiz_sessions`.
+   - `QuizService` lọc các câu sai hoặc đoán mò $\rightarrow$ chuyển qua `PromptBuilder` để đóng gói ngữ cảnh sư phạm $\rightarrow$ gửi đến `AIService`.
+   - `AIService` gọi Gemini API bằng phương thức `generateContent` với schema JSON ép kiểu nghiêm ngặt.
+   - Kết quả trả về được lưu trữ vào bảng `remedial_lessons`.
+3. **Phân tích kết quả (`result.html`):** Hiển thị trực quan bảng điểm, danh sách bài học củng cố, phân tích nhận thức và nút kích hoạt Mini-Quiz phục hồi kiến thức.
+
+### 📌 Luồng 2: Giảng Viên Soạn Đề Bằng AI Studio
+1. Giảng viên mở `teacher-dashboard.html`, chọn Tab **"Trợ Lý AI Soạn Đề & Bài Tập"**.
+2. Thiết lập cấu hình yêu cầu $\rightarrow$ gửi `POST /api/teacher/ai/generate`.
+3. `TeacherServlet` kiểm tra phân quyền `TEACHER`/`ADMIN` $\rightarrow$ chuyển sang `AIService.generateQuestionsForTeacher(...)`.
+4. Gemini AI sinh danh sách câu hỏi cấu trúc JSON gồm: nội dung Markdown, các phương án A/B/C/D, đáp án đúng, giải thích sư phạm, thẻ lỗ hổng tư duy mục tiêu.
+5. Giao diện hiển thị danh sách câu hỏi trực quan $\rightarrow$ Giảng viên nhấn **"Lưu Vào Ngân Hàng Đề"** $\rightarrow$ gọi `QuestionDAO.createQuestion()` ghi thẳng vào CSDL PostgreSQL.
+
+---
+
+## 🚀 5. Hướng Dẫn Cài Đặt & Khởi Chạy
+
+### Cách 1: Khởi Chạy Siêu Tốc Bằng Docker (Khuyên Dùng)
 
 ```bash
-# 1. Đóng gói Docker image
+# 1. Đóng gói Docker container
 docker build -t lms-ai:latest .
 
-# 2. Khởi chạy container gắn biến môi trường .env
+# 2. Khởi chạy container gắn kèm biến môi trường
 docker run -d -p 8080:8080 --env-file .env --name lms-app lms-ai:latest
 
 # 3. Mở trình duyệt truy cập:
-# http://localhost:8080
+# http://localhost:8080/auth.html
 ```
 
 ---
 
-## 💻 Cách 2: Cài Đặt & Khởi Chạy Local (Chi Tiết)
+### Cách 2: Chạy Trực Tiếp Bằng Maven Wrapper (Local)
 
-### Bước 1: Clone Repository Về Máy
+#### Bước 1: Chuẩn Bị Môi Trường
+- **JDK:** Phiên bản **Java 17 LTS hoặc Java 21 LTS** (Khuyên dùng Java 17).
+- Không cần cài sẵn Maven (dự án đã có sẵn `mvnw.cmd`).
 
-```bash
-git clone https://github.com/24110257ak/CNPM-CK--Intelligent-learning-system.git
-cd "CNPM-CK--Intelligent-learning-system/Hệ thống học tập thông minh"
-```
-
----
-
-### Bước 2: Cấu Hình Biến Môi Trường (`.env`)
-
-Tạo file `.env` bằng cách copy từ file `.env.example`:
-
-- **Trên Windows PowerShell:** `Copy-Item .env.example .env`
-- **Trên Windows CMD:** `copy .env.example .env`
-- **Trên Linux / macOS:** `cp .env.example .env`
-
-Mở file `.env` và cấu hình thông số CSDL của bạn (mặc định đã hỗ trợ Neon.tech PostgreSQL):
-
+#### Bước 2: Cấu Hình Biến Môi Trường (`.env`)
+Tạo file `.env` từ `.env.example` với các thông số kết nối CSDL Neon.tech PostgreSQL:
 ```ini
-# ── CSDL PostgreSQL Cloud (Neon.tech) ──
+# CSDL PostgreSQL Cloud (Neon.tech / Render)
 DB_URL=jdbc:postgresql://ep-mute-queen-b3xtkksd-pooler.c-4.ap-southeast-1.aws.neon.tech/lms_db?sslmode=require
 DB_USERNAME=lms_db_owner
 DB_PASSWORD=npg_r4vyIfJa9tSX
 DB_POOL_SIZE=10
 
-# ── Google Gemini API (Tùy chọn) ──
-# Lấy API Key miễn phí tại: https://aistudio.google.com
+# Khóa Google Gemini API (Model thế hệ mới)
 GEMINI_API_KEY=your_gemini_api_key_here
 GEMINI_MODEL=gemini-3.6-flash
 
-# ── Cổng Web Server ──
+# Cổng lắng nghe
 PORT=8080
 ```
 
-> 💡 **CƠ CHẾ AUTO-SEED & AUTO-MIGRATION:**  
-> Hệ thống tích hợp tính năng **tự động phát hiện CSDL trống** và nạp toàn bộ cấu trúc bảng từ `schema.sql` kèm 10 câu hỏi mẫu khi khởi chạy lần đầu! Bạn không cần phải mở công cụ tạo bảng thủ công.
+> 💡 **TÍNH NĂNG AUTO-MIGRATION & AUTO-SEED:**  
+> Lớp `DatabaseUtil` tích hợp cơ chế tự động dò tìm cấu trúc bảng. Nếu CSDL trống, hệ thống sẽ **tự động chạy `schema.sql`** và nạp 10 câu hỏi mẫu chất lượng cao mà bạn không cần phải cấu hình thủ công!
 
----
+#### Bước 3: Khởi Động Máy Chủ
+```powershell
+# Trên Windows:
+.\mvnw.cmd jetty:run
 
-### Bước 3: Khởi Động Máy Chủ Web (Jetty 11)
-
-Tại thư mục `Hệ thống học tập thông minh`, chạy lệnh:
-
-- **Trên Windows (PowerShell hoặc CMD):**
-  ```powershell
-  .\mvnw.cmd jetty:run
-  ```
-- **Trên Linux / macOS:**
-  ```bash
-  ./mvnw jetty:run
-  ```
-
-Khi màn hình xuất hiện:
-```
-[DatabaseUtil] ✅ HikariCP Pool khởi tạo thành công: jdbc:postgresql:...
-[DatabaseUtil] ✅ PostgreSQL Auto-Migration: Cột [misconception_tag] đã sẵn sàng!
-[INFO] Started Server@...
+# Trên Linux / macOS:
+./mvnw jetty:run
 ```
 
-👉 Máy chủ đã khởi động thành công và đang lắng nghe tại cổng `8080`!
+Truy cập: **`http://localhost:8080/auth.html`**
 
 ---
 
-### Bước 4: Mở Trình Duyệt & Trải Nghiệm
+## 🔑 6. Danh Sách Tài Khoản Thử Nghiệm
 
-Mở trình duyệt truy cập địa chỉ:
-
-👉 **`http://localhost:8080/auth.html`** (hoặc **`http://localhost:8080/`**)
-
----
-
-## 🔑 Danh Sách Tài Khoản Thử Nghiệm Có Sẵn
-
-Hệ thống đã chuẩn bị sẵn các tài khoản demo sau khi bạn chạy `schema.sql`:
-
-| Vai Trò | Tên Đăng Nhập | Mật Khẩu | Điểm Đến Sau Đăng Nhập | Chức Năng Nổi Bật Để Trải Nghiệm |
+| Vai Trò | Tên Đăng Nhập | Mật Khẩu | Điểm Đến | Đặc Quyền & Tính Năng Nổi Bật |
 |:---:|:---:|:---:|:---:|---|
-| 👩‍🏫 **Giảng Viên** | `giangvien01`<br>*(hoặc `giangvien02`)* | `demo123` | **Teacher Dashboard**<br>(`teacher-dashboard.html`) | • Xem 4 thẻ KPI tổng quan hệ thống.<br>• Quản lý ngân hàng câu hỏi (thêm, sửa, xóa, tìm kiếm realtime, phân trang 10 câu/trang).<br>• Xem phân tích chẩn đoán sai sót AI Pedagogical Insight. |
-| 👨‍🎓 **Sinh Viên** | `sinhvien01`<br>*(hoặc `sinhvien02`)* | `demo123` | **Trang Chủ Sinh Viên**<br>(`index.html`) | • Làm bài thi trắc nghiệm kèm bộ chọn **Confidence Tagging** (Chắc chắn vs Đoán mò).<br>• Tự động lưu tiến độ & khôi phục bài làm dở dang.<br>• Màn hình chờ AI Loading Overlay phát sáng.<br>• Trang kết quả: Làm bài tập thích ứng (Mini-Quiz 3 câu) -> Bắn pháo hoa Confetti và nhận huy hiệu "ĐÃ PHỤC HỒI KIẾN THỨC".<br>• Trò chuyện với Chatbot Trợ Giảng AI 3 nhân cách. |
-| 🛡️ **Quản Trị Viên** | `admin` | `demo123` | **Teacher Dashboard** | Có đầy đủ mọi đặc quyền của Giảng viên và Quản trị viên. |
-
-> Bạn cũng có thể bấm sang tab **Đăng Ký** trên trang `auth.html` để tạo tài khoản sinh viên mới kèm theo sở thích cá nhân hóa (ví dụ: đá bóng, chơi game, anime) để AI cá nhân hóa bài giảng!
+| 👩‍🏫 **Giảng Viên** | `giangvien01` | `demo123` | **Teacher Dashboard**<br>(`teacher-dashboard.html`) | • 4 Thẻ KPI thời gian thực.<br>• Quản lý ngân hàng câu hỏi (Thêm/Sửa/Xóa, Tìm kiếm realtime, Phân trang).<br>• AI Pedagogical Insight (Thống kê 4 nhóm lỗi sai).<br>• Studio Trợ Lý AI Soạn Đề & Khung Chat Co-Pilot. |
+| 👨‍🎓 **Sinh Viên** | `sinhvien01` | `demo123` | **Trang Chủ Sinh Viên**<br>(`index.html`) | • Làm bài thi trắc nghiệm + Confidence Tagging.<br>• Tự động lưu bài dở dang (Autosave).<br>• Phân tích kết quả + Bài tập thích ứng (Mini-Quiz).<br>• Trò chuyện với Trợ Giảng AI 3 nhân cách. |
+| 🛡️ **Quản Trị Viên** | `admin` | `demo123` | **Teacher Dashboard** | Toàn quyền kiểm soát hệ thống và dữ liệu. |
 
 ---
 
-## ❓ Xử Lý Sự Cố Thường Gặp (Troubleshooting / FAQ)
-
-### 1. Lỗi kết nối CSDL: `Cannot get a connection from the pool` hoặc `Login failed for user 'sa'`
-- **Nguyên nhân:** Mật khẩu `DB_PASSWORD` trong file `.env` chưa đúng với mật khẩu SQL Server trên máy bạn, hoặc dịch vụ SQL Server chưa bật.
-- **Cách khắc phục:**
-  1. Mở `services.msc` trên Windows, tìm `SQL Server (MSSQLSERVER)` hoặc `SQL Server (SQLEXPRESS)` và đảm bảo trạng thái là **Running**.
-  2. Mở SSMS, chuột phải vào tên Server -> chọn **Properties** -> mục **Security** -> chọn **SQL Server and Windows Authentication mode**.
-  3. Mở **SQL Server Configuration Manager** -> mục **SQL Server Network Configuration** -> **Protocols for MSSQLSERVER** -> đảm bảo **TCP/IP** đang ở trạng thái **Enabled** (cổng mặc định 1433).
-  4. Cập nhật lại chính xác `DB_PASSWORD` trong file `.env`.
-
-### 2. Lỗi cổng bị trùng: `Address already in use: bind`
-- **Nguyên nhân:** Cổng 8080 đang bị một ứng dụng khác chiếm dụng (như Tomcat, Oracle XE, hoặc tiến trình Jetty cũ chưa tắt).
-- **Cách khắc phục:**
-  - Mở file `.env` và đổi port sang cổng khác: `PORT=8081` hoặc `PORT=8888`.
-  - Hoặc trên Windows, tìm và tắt process đang giữ cổng 8080:
-    ```powershell
-    Get-Process -Id (Get-NetTCPConnection -LocalPort 8080).OwningProcess | Stop-Process -Force
-    ```
-
-### 3. Lỗi: `'mvnw.cmd' is not recognized` hoặc lỗi `JAVA_HOME is not set`
-- **Nguyên nhân:** Máy tính chưa cài đặt JDK hoặc chưa cấu hình biến môi trường `JAVA_HOME`.
-- **Cách khắc phục:**
-  1. Tải và cài đặt **JDK 21 LTS** từ [Oracle](https://www.oracle.com/java/technologies/downloads/) hoặc [Adoptium Temurin](https://adoptium.net/).
-  2. Thiết lập biến môi trường `JAVA_HOME` trỏ tới thư mục cài đặt JDK (ví dụ: `C:\Program Files\Java\jdk-21`).
-  3. Thêm `%JAVA_HOME%\bin` vào biến môi trường `Path`.
-
-### 4. Hệ thống báo lỗi khóa file trên Windows khi chỉnh sửa code
-- Dự án đã cấu hình sẵn thuộc tính `useFileMappedBuffer = false` cho `DefaultServlet` trong `web.xml`, giúp bạn có thể chỉnh sửa file HTML/CSS/JS thoải mái mà không lo bị Windows lock file trong lúc máy chủ đang chạy.
-
----
-
-## 📂 Cấu Trúc Mã Nguồn Dự Án
+## 📂 7. Cấu Trúc Mã Nguồn Dự Án (Project Structure)
 
 ```
 Hệ thống học tập thông minh/
-├── .mvn/wrapper/                  # Maven Wrapper tự động tải Maven tương thích
-├── mvnw & mvnw.cmd & mvnw.ps1     # Script khởi chạy Maven (tối ưu hóa tiếng Việt)
-├── pom.xml                        # Cấu hình Jetty 11, MSSQL JDBC, Gemini SDK
-├── .env.example                   # Mẫu cấu hình môi trường chuẩn
+├── Dockerfile                         # Multi-stage Docker packaging (Maven Build -> Jetty 11 Runtime)
+├── .dockerignore                      # Loại trừ các file rác khi build image
+├── pom.xml                            # Quản lý dependency (Jetty 11, PostgreSQL, Gson, BCrypt...)
+├── export_codebase.ps1                # Script tự động xuất toàn bộ mã nguồn ra FULL_CODEBASE.md
+├── FULL_CODEBASE.md                   # File tổng hợp toàn bộ 47 file mã nguồn của dự án
+├── PROJECT_STATE.md                   # Sổ tay ghi chép tiến độ kỹ thuật giữa các phiên
+├── README.md                          # Tài liệu kiến trúc và hướng dẫn vận hành toàn diện
 ├── src/
 │   └── main/
 │       ├── java/com/lms/
-│       │   ├── model/             # POJO (User, Topic, Question, QuizSession, UserAnswer, RemedialLesson)
-│       │   ├── dao/               # JDBC Data Access (DatabaseUtil HikariCP, UserDAO, QuestionDAO, QuizDAO...)
-│       │   ├── service/           # AIService (Gemini), FallbackService, QuizService, PromptBuilder...
-│       │   ├── servlet/           # AuthServlet, QuizServlet, QuestionServlet, TeacherServlet, TopicServlet...
-│       │   ├── filter/            # CorsFilter, AuthFilter
-│       │   └── util/              # ConfigLoader, JsonHelper
+│       │   ├── model/                 # POJO Models (User, Topic, Question, QuizSession, UserAnswer...)
+│       │   ├── dao/                   # Data Access Objects (DatabaseUtil, UserDAO, QuizDAO, QuestionDAO...)
+│       │   ├── service/               # Nghiệp vụ lõi (AIService, QuizService, UserService, PromptBuilder...)
+│       │   ├── servlet/               # REST Controllers (AuthServlet, QuizServlet, TeacherServlet...)
+│       │   ├── filter/                # Bộ lọc an ninh & phân quyền (CorsFilter, AuthFilter)
+│       │   └── util/                  # Tiện ích bổ trợ (ConfigLoader, JsonHelper)
 │       ├── resources/
-│       │   └── db/schema.sql      # Kịch bản CSDL SQL Server 3NF tiếng Việt & dữ liệu mẫu
+│       │   └── db/schema.sql          # Kịch bản CSDL PostgreSQL (DDL, Indexes & Initial Data)
 │       └── webapp/
-│           ├── css/app.css        # Toàn bộ CSS giao diện Dark/Light mode & Animation
-│           ├── js/
-│           │   ├── api.js         # REST API Client & Toast SweetAlert2
-│           │   ├── quiz.js        # Logic làm bài, Autosave, AI Loading Overlay
-│           │   ├── result.js      # Logic kết quả, Mini-Quiz Adaptive Remediation, Confetti
-│           │   ├── teacher.js     # Logic Teacher Dashboard (KPIs, CRUD câu hỏi, Tìm kiếm, Phân trang)
-│           │   └── chat-widget.js # Logic Trợ giảng AI 3 nhân cách
-│           ├── index.html         # Trang danh mục chủ đề & điều hướng sinh viên
-│           ├── auth.html          # Đăng nhập & Đăng ký tài khoản
-│           ├── quiz.html          # Giao diện làm bài thi + Confidence Tagging
-│           ├── result.html        # Trang phân tích kết quả thi & Bài học phục hồi thích ứng
-│           ├── teacher-dashboard.html # Bảng điều khiển dành cho Giảng viên
-│           └── history.html       # Lịch sử bài làm & thống kê cá nhân
-└── README.md
+│           ├── css/app.css            # Hệ thống CSS Design Tokens, Glassmorphism & Animations
+│           ├── js/                    # Mã JavaScript hướng module (api.js, quiz.js, teacher.js...)
+│           ├── auth.html              # Màn hình Đăng nhập & Đăng ký (Toggle Password Eyes)
+│           ├── index.html             # Cổng thông tin môn học & chọn chủ đề ôn luyện
+│           ├── quiz.html              # Màn hình thi trắc nghiệm & Gắn nhãn tự tin
+│           ├── result.html            # Báo cáo kết quả & Bài tập phục hồi thích ứng
+│           ├── teacher-dashboard.html # Bảng điều khiển giảng viên & AI Soạn đề Studio
+│           └── history.html           # Lịch sử làm bài & theo dõi tiến bộ học tập
 ```
 
 ---
 
-## 👥 Tác Giả & Bản Quyền
-- **Đồ Án Cuối Kỳ:** Môn Công Nghệ Phần Mềm (CNPM - CK)
-- **Công Nghệ:** Java 21 • Eclipse Jetty 11 • MS SQL Server • Google Gemini API
+## 👥 8. Thông Tin Đồ Án
+- **Môn học:** Công Nghệ Phần Mềm (CNPM) — Học kỳ Cuối
+- **Phiên bản:** 1.0-SNAPSHOT (Production Cloud Deployed on Render)
+- **Bản quyền:** Đồ Án Nhóm Phát Triển LMS Thông Minh 2026.

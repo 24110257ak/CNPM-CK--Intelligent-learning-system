@@ -12,6 +12,24 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <!-- Custom CSS -->
     <link rel="stylesheet" href="css/app.css">
+    <style>
+        .toggle-password-btn {
+            border-color: #dee2e6;
+            background-color: #ffffff;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .toggle-password-btn:hover {
+            background-color: #f1f5f9;
+            color: #2563eb;
+            border-color: #cbd5e1;
+        }
+        .toggle-password-btn:focus {
+            box-shadow: none;
+            outline: none;
+        }
+    </style>
 </head>
 <body class="d-flex align-items-center justify-content-center py-5" style="background: linear-gradient(135deg, #eef2ff 0%, #f8fafc 100%);">
 
@@ -207,23 +225,22 @@
 
         // Nút bật/tắt hiển thị mật khẩu
         document.querySelectorAll('.toggle-password-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const targetId = btn.getAttribute('data-target');
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('data-target');
                 const input = document.getElementById(targetId);
                 if (!input) return;
-                const icon = btn.querySelector('i');
+                const icon = this.querySelector('i');
                 if (input.type === 'password') {
                     input.type = 'text';
-                    icon.classList.remove('fa-eye');
-                    icon.classList.add('fa-eye-slash');
-                    icon.classList.remove('text-muted');
-                    icon.classList.add('text-primary');
+                    icon.classList.remove('fa-eye', 'text-muted');
+                    icon.classList.add('fa-eye-slash', 'text-primary');
+                    this.setAttribute('title', 'Ẩn mật khẩu');
                 } else {
                     input.type = 'password';
-                    icon.classList.remove('fa-eye-slash');
-                    icon.classList.add('fa-eye');
-                    icon.classList.remove('text-primary');
-                    icon.classList.add('text-muted');
+                    icon.classList.remove('fa-eye-slash', 'text-primary');
+                    icon.classList.add('fa-eye', 'text-muted');
+                    this.setAttribute('title', 'Hiện mật khẩu');
                 }
             });
         });

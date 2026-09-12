@@ -104,16 +104,6 @@ function setupEventListeners() {
     }
 
     // ── AI Studio & Co-Pilot Events ──
-    // Nút chuyển nhanh sang Tab 3 từ Tab 1
-    const btnQuickAi = document.getElementById('btn-quick-ai-gen');
-    if (btnQuickAi) {
-        btnQuickAi.addEventListener('click', () => {
-            const tabBtn = document.getElementById('tab-ai-copilot-btn');
-            if (tabBtn) {
-                new bootstrap.Tab(tabBtn).show();
-            }
-        });
-    }
 
     // Form sinh câu hỏi bằng AI
     const aiGenForm = document.getElementById('ai-generator-form');

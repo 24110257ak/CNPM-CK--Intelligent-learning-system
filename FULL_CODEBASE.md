@@ -1,6 +1,6 @@
 ﻿# TOAN BO MA NGUON DU AN - HE THONG HOC TAP THONG MINH (INTELLIGENT LMS)
 
-> **Thoi gian tao file:** 2026-09-12 10:16:31
+> **Thoi gian tao file:** 2026-09-12 12:34:56
 > **Tong so file:** 47
 > **Muc dich:** Gom toan bo source code thanh 1 file duy nhat de gui cho ben thu ba xem xet, danh gia va gop y.
 
@@ -6941,16 +6941,6 @@ function setupEventListeners() {
     }
 
     // ── AI Studio & Co-Pilot Events ──
-    // Nút chuyển nhanh sang Tab 3 từ Tab 1
-    const btnQuickAi = document.getElementById('btn-quick-ai-gen');
-    if (btnQuickAi) {
-        btnQuickAi.addEventListener('click', () => {
-            const tabBtn = document.getElementById('tab-ai-copilot-btn');
-            if (tabBtn) {
-                new bootstrap.Tab(tabBtn).show();
-            }
-        });
-    }
 
     // Form sinh câu hỏi bằng AI
     const aiGenForm = document.getElementById('ai-generator-form');
@@ -7950,6 +7940,24 @@ function normalizeCorrectAnswer(val) {
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <!-- Custom CSS -->
     <link rel="stylesheet" href="css/app.css">
+    <style>
+        .toggle-password-btn {
+            border-color: #dee2e6;
+            background-color: #ffffff;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .toggle-password-btn:hover {
+            background-color: #f1f5f9;
+            color: #2563eb;
+            border-color: #cbd5e1;
+        }
+        .toggle-password-btn:focus {
+            box-shadow: none;
+            outline: none;
+        }
+    </style>
 </head>
 <body class="d-flex align-items-center justify-content-center py-5" style="background: linear-gradient(135deg, #eef2ff 0%, #f8fafc 100%);">
 
@@ -8145,23 +8153,22 @@ function normalizeCorrectAnswer(val) {
 
         // Nút bật/tắt hiển thị mật khẩu
         document.querySelectorAll('.toggle-password-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                const targetId = btn.getAttribute('data-target');
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('data-target');
                 const input = document.getElementById(targetId);
                 if (!input) return;
-                const icon = btn.querySelector('i');
+                const icon = this.querySelector('i');
                 if (input.type === 'password') {
                     input.type = 'text';
-                    icon.classList.remove('fa-eye');
-                    icon.classList.add('fa-eye-slash');
-                    icon.classList.remove('text-muted');
-                    icon.classList.add('text-primary');
+                    icon.classList.remove('fa-eye', 'text-muted');
+                    icon.classList.add('fa-eye-slash', 'text-primary');
+                    this.setAttribute('title', 'Ẩn mật khẩu');
                 } else {
                     input.type = 'password';
-                    icon.classList.remove('fa-eye-slash');
-                    icon.classList.add('fa-eye');
-                    icon.classList.remove('text-primary');
-                    icon.classList.add('text-muted');
+                    icon.classList.remove('fa-eye-slash', 'text-primary');
+                    icon.classList.add('fa-eye', 'text-muted');
+                    this.setAttribute('title', 'Hiện mật khẩu');
                 }
             });
         });
@@ -9196,10 +9203,7 @@ function normalizeCorrectAnswer(val) {
                                     <input type="text" class="form-control border-start-0 ps-0" id="search-question" placeholder="Tìm câu hỏi theo từ khóa...">
                                 </div>
                             </div>
-                            <div class="col-md-4 text-md-end d-flex gap-2 justify-content-md-end">
-                                <button class="btn btn-outline-primary rounded-pill px-3 fw-semibold shadow-sm" id="btn-quick-ai-gen">
-                                    <i class="fa-solid fa-wand-magic-sparkles me-1 text-warning"></i>Soạn Bằng AI
-                                </button>
+                            <div class="col-md-4 text-md-end">
                                 <button class="btn btn-primary rounded-pill px-3 fw-semibold shadow-sm" id="btn-open-create-modal">
                                     <i class="fa-solid fa-plus me-1"></i>Thêm Mới
                                 </button>

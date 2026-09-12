@@ -58,6 +58,9 @@
                             <div class="input-group">
                                 <span class="input-group-text bg-light text-muted"><i class="fa-solid fa-lock"></i></span>
                                 <input type="password" id="login-password" class="form-control" placeholder="••••••••" required>
+                                <button class="btn btn-outline-secondary toggle-password-btn" type="button" data-target="login-password" tabindex="-1" title="Hiện / ẩn mật khẩu">
+                                    <i class="fa-solid fa-eye text-muted"></i>
+                                </button>
                             </div>
                         </div>
 
@@ -95,7 +98,13 @@
 
                         <div class="mb-3">
                             <label class="form-label fw-semibold small">Mật khẩu <span class="text-danger">*</span></label>
-                            <input type="password" id="reg-password" class="form-control" placeholder="Ít nhất 6 ký tự" minlength="6" required>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light text-muted"><i class="fa-solid fa-lock"></i></span>
+                                <input type="password" id="reg-password" class="form-control" placeholder="Ít nhất 6 ký tự" minlength="6" required>
+                                <button class="btn btn-outline-secondary toggle-password-btn" type="button" data-target="reg-password" tabindex="-1" title="Hiện / ẩn mật khẩu">
+                                    <i class="fa-solid fa-eye text-muted"></i>
+                                </button>
+                            </div>
                         </div>
 
                         <div class="mb-3">
@@ -119,7 +128,7 @@
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="js/api.js"></script>
+    <script src="js/api.js?v=2.2"></script>
     <script>
         // Kiểm tra nếu đã đăng nhập thì chuyển hướng theo role
         const existingUser = API.auth.getUser();
@@ -194,6 +203,29 @@
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fa-solid fa-user-check me-2"></i>Tạo Tài Khoản';
             }
+        });
+
+        // Nút bật/tắt hiển thị mật khẩu
+        document.querySelectorAll('.toggle-password-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const targetId = btn.getAttribute('data-target');
+                const input = document.getElementById(targetId);
+                if (!input) return;
+                const icon = btn.querySelector('i');
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    icon.classList.remove('fa-eye');
+                    icon.classList.add('fa-eye-slash');
+                    icon.classList.remove('text-muted');
+                    icon.classList.add('text-primary');
+                } else {
+                    input.type = 'password';
+                    icon.classList.remove('fa-eye-slash');
+                    icon.classList.add('fa-eye');
+                    icon.classList.remove('text-primary');
+                    icon.classList.add('text-muted');
+                }
+            });
         });
     </script>
 </body>

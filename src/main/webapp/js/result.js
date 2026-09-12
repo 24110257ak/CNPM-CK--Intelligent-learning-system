@@ -26,6 +26,11 @@ document.addEventListener('DOMContentLoaded', () => {
         remediationModal = new bootstrap.Modal(modalEl);
     }
 
+    if (API.auth.isTeacher()) {
+        const btn = document.getElementById('result-teacher-btn');
+        if (btn) btn.classList.remove('d-none');
+    }
+
     // 1.3. Guard Route: Kiểm tra xem có sessionId hoặc cache không
     const cached = sessionStorage.getItem('last_quiz_result');
     if (!sessionId && !cached) {

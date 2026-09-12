@@ -1,7 +1,7 @@
 # 🎓 Hệ Thống Học Tập Thông Minh Tích Hợp AI (Intelligent LMS)
 
 > **Đồ Án Cuối Kỳ — Môn Công Nghệ Phần Mềm**  
-> Nền tảng LMS hiện đại giúp phát hiện quan niệm sai lầm (**Pedagogical Misconception Detection**), kích hoạt tính năng **Confidence Tagging**, tự động kiến tạo **Bài học củng cố cá nhân hóa (AI Remedial Lessons)** và bài tập hồi quy thích ứng (**Adaptive Remediation Engine**) bằng **Google Gemini 2.5 Flash**.
+> Nền tảng LMS hiện đại giúp phát hiện quan niệm sai lầm (**Pedagogical Misconception Detection**), kích hoạt tính năng **Confidence Tagging**, tự động kiến tạo **Bài học củng cố cá nhân hóa (AI Remedial Lessons)** và bài tập hồi quy thích ứng (**Adaptive Remediation Engine**) bằng **Google Gemini 3.6 Flash**.
 
 ---
 
@@ -103,7 +103,7 @@ DB_POOL_SIZE=10
 # ── Google Gemini API (Tùy chọn) ──
 # Lấy API Key miễn phí tại: https://aistudio.google.com
 GEMINI_API_KEY=your_gemini_api_key_here
-GEMINI_MODEL=gemini-2.5-flash
+GEMINI_MODEL=gemini-3.6-flash
 
 # ── Cổng Web Server ──
 PORT=8080

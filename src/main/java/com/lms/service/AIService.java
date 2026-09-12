@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Service tích hợp Google Gemini API chính thức (gemini-2.5-flash).
+ * Service tích hợp Google Gemini API chính thức (gemini-3.6-flash).
  * Đạt chuẩn ADR-005 (ResponseSchema structured JSON) và ADR-008 (AI Fallback Buffer).
  */
 public class AIService {
@@ -167,7 +167,7 @@ public class AIService {
                      + "- Sau đó vào Render $\\rightarrow$ **Environment** $\\rightarrow$ Cập nhật lại biến `GEMINI_API_KEY` nhé!";
             } else if (errorMsg.contains("404") || errorMsg.contains("not found")) {
                 return "⚠️ **Lỗi Model không tồn tại (404 Not Found)**:\n"
-                     + "Model `" + MODEL_NAME + "` không khả dụng trên tài khoản Google của bạn. Vui lòng kiểm tra lại biến `GEMINI_MODEL` (khuyên dùng `gemini-2.5-flash`) trên Render!";
+                     + "Model `" + MODEL_NAME + "` không khả dụng trên tài khoản Google của bạn. Vui lòng kiểm tra lại biến `GEMINI_MODEL` (khuyên dùng `gemini-3.6-flash`) trên Render!";
             } else if (errorMsg.contains("429") || errorMsg.contains("resource_exhausted") || errorMsg.contains("quota")) {
                 return "⏳ **Hết hạn mức yêu cầu (429 Quota Exceeded)**:\n"
                      + "API Key đã vượt quá số lượt gọi miễn phí trong phút của Google. Bạn vui lòng chờ 1-2 phút rồi thử lại nhé!";

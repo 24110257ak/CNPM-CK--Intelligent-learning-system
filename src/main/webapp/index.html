@@ -45,6 +45,11 @@
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3">
                             <li><h6 class="dropdown-header" id="nav-fullname">Họ và Tên</h6></li>
+                            <li class="d-none" id="dropdown-teacher-item">
+                                <a class="dropdown-item text-primary fw-semibold d-flex align-items-center gap-2" href="teacher-dashboard.html">
+                                    <i class="fa-solid fa-chalkboard-user"></i>Bảng Quản Trị Giảng Viên
+                                </a>
+                            </li>
                             <li><hr class="dropdown-divider"></li>
                             <li>
                                 <a class="dropdown-item text-danger d-flex align-items-center gap-2" href="#" id="logout-btn">
@@ -121,8 +126,8 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script src="js/api.js"></script>
-    <script src="js/chat-widget.js"></script>
+    <script src="js/api.js?v=2.2"></script>
+    <script src="js/chat-widget.js?v=2.2"></script>
 
     <script>
         // Kiểm tra xác thực
@@ -133,6 +138,8 @@
             if (API.auth.isTeacher()) {
                 const teacherLink = document.getElementById('nav-teacher-link');
                 if (teacherLink) teacherLink.classList.remove('d-none');
+                const dropdownTeacherItem = document.getElementById('dropdown-teacher-item');
+                if (dropdownTeacherItem) dropdownTeacherItem.classList.remove('d-none');
             }
         }
 

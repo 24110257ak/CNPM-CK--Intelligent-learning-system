@@ -225,18 +225,19 @@ public class QuizDAO {
 
         // 1. Tổng sinh viên đã làm bài & Điểm trung bình
         String sqlSessions = "SELECT COUNT(DISTINCT user_id) AS total_students, "
-                           + "       ISNULL(AVG(score), 0.0) AS avg_score "
+                           + "       COALESCE(AVG(score), 0.0) AS avg_score "
                            + "FROM quiz_sessions WHERE completed_at IS NOT NULL";
         
-        // 2. Tổng số câu hỏi
+        // 2. Tổng số câu hỏi trong ngân hàng
         String sqlQuestions = "SELECT COUNT(*) AS total_questions FROM questions";
 
         // 3. Tỷ lệ đoán mò (GUESS rate %)
-        String sqlGuess = "SELECT CAST(SUM(CASE WHEN confidence_level = N'GUESS' THEN 1 ELSE 0 END) AS FLOAT) * 100.0 "
-                        + "       / NULLIF(COUNT(*), 0) AS guess_rate "
+        String sqlGuess = "SELECT COALESCE(CAST(SUM(CASE WHEN confidence_level = 'GUESS' THEN 1.0 ELSE 0.0 END) * 100.0 "
+                        + "       / NULLIF(COUNT(*), 0) AS DOUBLE PRECISION), 0.0) AS guess_rate "
                         + "FROM user_answers";
 
         try (Connection conn = DatabaseUtil.getConnection()) {
+            // Query 1: Sessions
             try (PreparedStatement ps1 = conn.prepareStatement(sqlSessions);
                  ResultSet rs1 = ps1.executeQuery()) {
                 if (rs1.next()) {
@@ -244,21 +245,29 @@ public class QuizDAO {
                     double avgScore = Math.round(rs1.getDouble("avg_score") * 10.0) / 10.0;
                     kpis.put("averageScore", avgScore);
                 }
+            } catch (SQLException e) {
+                System.err.println("[QuizDAO] Lỗi truy vấn KPI sessions: " + e.getMessage());
             }
 
+            // Query 2: Questions
             try (PreparedStatement ps2 = conn.prepareStatement(sqlQuestions);
                  ResultSet rs2 = ps2.executeQuery()) {
                 if (rs2.next()) {
                     kpis.put("totalQuestions", rs2.getInt("total_questions"));
                 }
+            } catch (SQLException e) {
+                System.err.println("[QuizDAO] Lỗi truy vấn KPI questions: " + e.getMessage());
             }
 
+            // Query 3: Guess Rate
             try (PreparedStatement ps3 = conn.prepareStatement(sqlGuess);
                  ResultSet rs3 = ps3.executeQuery()) {
                 if (rs3.next()) {
                     double guessRate = Math.round(rs3.getDouble("guess_rate") * 10.0) / 10.0;
                     kpis.put("guessRate", guessRate);
                 }
+            } catch (SQLException e) {
+                System.err.println("[QuizDAO] Lỗi truy vấn KPI guess: " + e.getMessage());
             }
         } catch (SQLException e) {
             e.printStackTrace();

@@ -23,6 +23,19 @@
         .question-cell { max-width: 320px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .insight-card { border-radius: 12px; border: 1px solid #e2e8f0; background: #ffffff; padding: 1.25rem; transition: transform 0.2s ease; }
         .insight-card:hover { transform: translateY(-2px); }
+
+        /* AI Question Generator & Co-Pilot Styles */
+        .ai-question-card { border: 1px solid #e2e8f0; border-radius: 12px; background: #ffffff; transition: all 0.2s ease; }
+        .ai-question-card:hover { box-shadow: 0 4px 14px rgba(0,0,0,0.06); border-color: #cbd5e1; }
+        .ai-card-code pre { background-color: #1e1e2e; border-radius: 8px; padding: 12px; margin-bottom: 0.5rem; max-height: 240px; overflow-y: auto; }
+        .ai-card-code pre code { font-size: 0.85rem; font-family: 'Fira Code', 'Consolas', monospace; }
+        .ai-option-item { border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 12px; background: #f8fafc; font-size: 0.88rem; }
+        .ai-option-correct { border-color: #10b981 !important; background-color: #ecfdf5 !important; color: #065f46 !important; font-weight: 600; }
+        .chat-bubble-user { background-color: #4f46e5; color: #ffffff; border-radius: 14px 14px 2px 14px; padding: 10px 14px; max-width: 82%; margin-left: auto; font-size: 0.88rem; box-shadow: 0 2px 6px rgba(79,70,229,0.25); }
+        .chat-bubble-ai { background-color: #ffffff; color: #1e293b; border: 1px solid #e2e8f0; border-radius: 14px 14px 14px 2px; padding: 12px 16px; max-width: 88%; font-size: 0.88rem; line-height: 1.5; box-shadow: 0 2px 6px rgba(0,0,0,0.04); }
+        .chat-bubble-ai pre { background-color: #1e1e2e; color: #f8f8f2; padding: 10px; border-radius: 8px; margin-top: 8px; overflow-x: auto; }
+        .chat-bubble-ai code { color: #d946ef; font-size: 0.85rem; }
+        .chat-bubble-ai pre code { color: #f8f8f2; }
     </style>
 </head>
 <body>
@@ -169,6 +182,11 @@
                     <i class="fa-solid fa-brain me-2"></i>AI Pedagogical Insight (Chẩn Đoán Sư Phạm)
                 </button>
             </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link fw-bold px-4 py-2 text-primary" id="tab-ai-copilot-btn" data-bs-toggle="pill" data-bs-target="#tab-ai-copilot" type="button" role="tab">
+                    <i class="fa-solid fa-wand-magic-sparkles text-warning me-2"></i>Trợ Lý AI Soạn Đề & Bài Tập
+                </button>
+            </li>
         </ul>
 
         <!-- ── Tab Contents ── -->
@@ -191,15 +209,18 @@
                                     </select>
                                 </div>
                             </div>
-                            <div class="col-md-5">
+                            <div class="col-md-4">
                                 <div class="input-group">
                                     <span class="input-group-text bg-light border-end-0"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
                                     <input type="text" class="form-control border-start-0 ps-0" id="search-question" placeholder="Tìm câu hỏi theo từ khóa...">
                                 </div>
                             </div>
-                            <div class="col-md-3 text-md-end">
-                                <button class="btn btn-primary rounded-pill px-3 fw-semibold shadow-sm w-100 w-md-auto" id="btn-open-create-modal">
-                                    <i class="fa-solid fa-plus me-1"></i>Thêm Câu Hỏi Mới
+                            <div class="col-md-4 text-md-end d-flex gap-2 justify-content-md-end">
+                                <button class="btn btn-outline-primary rounded-pill px-3 fw-semibold shadow-sm" id="btn-quick-ai-gen">
+                                    <i class="fa-solid fa-wand-magic-sparkles me-1 text-warning"></i>Soạn Bằng AI
+                                </button>
+                                <button class="btn btn-primary rounded-pill px-3 fw-semibold shadow-sm" id="btn-open-create-modal">
+                                    <i class="fa-solid fa-plus me-1"></i>Thêm Mới
                                 </button>
                             </div>
                         </div>
@@ -353,6 +374,200 @@
 
             </div>
 
+            <!-- ══════════════════════════════════════════════════════════════ -->
+            <!-- TAB 3: Trợ Lý AI Soạn Đề & Bài Tập -->
+            <!-- ══════════════════════════════════════════════════════════════ -->
+            <div class="tab-pane fade" id="tab-ai-copilot" role="tabpanel">
+                <div class="row g-4">
+                    <!-- Cột trái (7 cols): AI Question Generator Studio -->
+                    <div class="col-lg-7">
+                        <div class="card border-0 shadow-sm rounded-4 mb-4">
+                            <div class="card-header bg-white border-0 pt-4 pb-0 px-4">
+                                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="rounded-3 bg-primary-subtle text-primary p-2 d-flex align-items-center justify-content-center" style="width: 42px; height: 42px;">
+                                            <i class="fa-solid fa-wand-magic-sparkles fa-lg text-primary"></i>
+                                        </div>
+                                        <div>
+                                            <h5 class="fw-bold mb-0 text-dark">AI Question Generator Studio</h5>
+                                            <p class="text-muted small mb-0">Tự động sinh câu hỏi trắc nghiệm & bẫy tư duy theo chuẩn Bloom bằng Gemini AI</p>
+                                        </div>
+                                    </div>
+                                    <span class="badge bg-success-subtle text-success border border-success px-2 py-1 small">
+                                        <i class="fa-solid fa-circle-check me-1"></i>Gemini 3.6 Ready
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="card-body p-4">
+                                <form id="ai-generator-form">
+                                    <div class="row g-3 mb-3">
+                                        <!-- Topic -->
+                                        <div class="col-md-6">
+                                            <label for="ai-topic-id" class="form-label fw-semibold small">
+                                                <i class="fa-solid fa-book-bookmark text-primary me-1"></i>Chủ đề bài học <span class="text-danger">*</span>
+                                            </label>
+                                            <select class="form-select rounded-3" id="ai-topic-id" required>
+                                                <option value="">-- Đang nạp danh mục chủ đề --</option>
+                                            </select>
+                                        </div>
+                                        <!-- Difficulty -->
+                                        <div class="col-md-6">
+                                            <label for="ai-difficulty" class="form-label fw-semibold small">
+                                                <i class="fa-solid fa-gauge text-warning me-1"></i>Độ khó mục tiêu
+                                            </label>
+                                            <select class="form-select rounded-3" id="ai-difficulty">
+                                                <option value="easy">Dễ (Easy - Hiểu & Nhận biết)</option>
+                                                <option value="medium" selected>Trung bình (Medium - Vận dụng)</option>
+                                                <option value="hard">Khó (Hard - Phân tích & Bẫy tư duy)</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="row g-3 mb-3">
+                                        <!-- Misconception Focus -->
+                                        <div class="col-md-7">
+                                            <label for="ai-misconception" class="form-label fw-semibold small">
+                                                <i class="fa-solid fa-crosshairs text-danger me-1"></i>Bẫy tư duy trọng tâm (Misconception)
+                                            </label>
+                                            <select class="form-select rounded-3" id="ai-misconception">
+                                                <option value="all">-- Phân bổ ngẫu nhiên cả 4 nhóm bẫy --</option>
+                                                <option value="syntax_swap">Syntax Swap (Nhầm cú pháp: = vs ==, gán vs so sánh)</option>
+                                                <option value="boundary_blindness">Boundary Blindness (Biên: off-by-one &lt;= vs &lt;, mảng rỗng)</option>
+                                                <option value="mental_model_gap">Mental Model Gap (Hiểu sai mô hình: Scope, Static, Tham chiếu)</option>
+                                                <option value="logic_flaw">Logic Flaw (Lỗi suy luận: Đảo ngược điều kiện, break/continue)</option>
+                                            </select>
+                                        </div>
+                                        <!-- Count -->
+                                        <div class="col-md-5">
+                                            <label for="ai-count" class="form-label fw-semibold small">
+                                                <i class="fa-solid fa-list-ol text-info me-1"></i>Số lượng câu hỏi (1 - 5)
+                                            </label>
+                                            <select class="form-select rounded-3" id="ai-count">
+                                                <option value="1">1 câu hỏi</option>
+                                                <option value="2">2 câu hỏi</option>
+                                                <option value="3" selected>3 câu hỏi (Khuyên dùng)</option>
+                                                <option value="4">4 câu hỏi</option>
+                                                <option value="5">5 câu hỏi</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <!-- Custom Prompt / Pedagogical Context -->
+                                    <div class="mb-3">
+                                        <label for="ai-custom-prompt" class="form-label fw-semibold small d-flex justify-content-between">
+                                            <span><i class="fa-regular fa-comment-dots text-secondary me-1"></i>Yêu cầu chi tiết / Ngữ cảnh đoạn code (Tùy chọn)</span>
+                                            <span class="text-muted fw-normal" style="font-size: 0.78rem;">Ví dụ: "Tập trung vòng lặp for lồng nhau", "Bẫy biến static"</span>
+                                        </label>
+                                        <textarea class="form-control rounded-3" id="ai-custom-prompt" rows="2" placeholder="Nhập thêm yêu cầu đặc thù cho AI: dạng bài truy vết giá trị biến (tracing), tìm lỗi sai biên, bẫy so sánh chuỗi..."></textarea>
+                                    </div>
+
+                                    <div class="d-flex justify-content-end gap-2">
+                                        <button type="submit" class="btn btn-primary rounded-pill px-4 fw-semibold shadow-sm" id="btn-generate-ai">
+                                            <i class="fa-solid fa-wand-magic-sparkles me-1 text-warning"></i>
+                                            <span id="btn-generate-text">Sinh Bộ Câu Hỏi Bằng AI</span>
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- Generated Questions Result Section -->
+                        <div id="ai-results-wrapper" style="display: none;">
+                            <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap gap-2">
+                                <div class="d-flex align-items-center gap-2">
+                                    <h6 class="fw-bold text-dark mb-0">
+                                        <i class="fa-solid fa-clipboard-check text-success me-1"></i>Các Câu Hỏi Vừa Sinh (<span id="ai-generated-count">0</span>)
+                                    </h6>
+                                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle" id="ai-target-topic-badge">Chủ đề</span>
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <button class="btn btn-outline-secondary btn-sm rounded-pill px-3" id="btn-clear-ai-results">
+                                        <i class="fa-solid fa-trash-can me-1"></i>Xóa kết quả
+                                    </button>
+                                    <button class="btn btn-success btn-sm rounded-pill px-3 fw-semibold shadow-sm" id="btn-import-all-ai">
+                                        <i class="fa-solid fa-cloud-arrow-down me-1"></i>Lưu Tất Cả Vào Đề
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Container containing generated question cards -->
+                            <div id="ai-generated-cards-container" class="d-flex flex-column gap-3">
+                                <!-- Cards will be injected dynamically -->
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Cột phải (5 cols): Trợ Lý Sư Phạm AI (Co-Pilot Chat) -->
+                    <div class="col-lg-5">
+                        <div class="card border-0 shadow-sm rounded-4 h-100 d-flex flex-column" style="min-height: 600px;">
+                            <div class="card-header bg-white border-0 pt-4 pb-2 px-4">
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="rounded-3 bg-info-subtle text-info p-2 d-flex align-items-center justify-content-center" style="width: 42px; height: 42px;">
+                                            <i class="fa-solid fa-graduation-cap fa-lg text-info"></i>
+                                        </div>
+                                        <div>
+                                            <h5 class="fw-bold mb-0 text-dark">Trợ Lý Sư Phạm AI</h5>
+                                            <p class="text-muted small mb-0">Tư vấn ma trận đề, thiết kế bẫy tư duy & thẩm định đề</p>
+                                        </div>
+                                    </div>
+                                    <span class="badge bg-indigo text-white px-2 py-1 small" style="background-color: #6366f1;">
+                                        <i class="fa-solid fa-bolt me-1"></i>Co-Pilot
+                                    </span>
+                                </div>
+
+                                <!-- Quick Prompt Chips -->
+                                <div class="d-flex gap-1 flex-wrap mt-3 pt-2 border-top">
+                                    <button type="button" class="btn btn-light btn-sm text-secondary rounded-pill py-0 px-2 small quick-prompt-btn" data-prompt="Gợi ý giúp tôi ma trận đề kiểm tra 15 phút về OOP gồm 5 câu phân hóa từ Dễ đến Khó.">
+                                        <i class="fa-regular fa-lightbulb text-warning me-1"></i>Ma trận đề OOP
+                                    </button>
+                                    <button type="button" class="btn btn-light btn-sm text-secondary rounded-pill py-0 px-2 small quick-prompt-btn" data-prompt="Làm sao thiết kế các phương án nhiễu (distractors) để phát hiện sinh viên hiểu sai về tham chiếu và tham trị trong Java?">
+                                        <i class="fa-solid fa-filter text-primary me-1"></i>Thiết kế phương án nhiễu
+                                    </button>
+                                    <button type="button" class="btn btn-light btn-sm text-secondary rounded-pill py-0 px-2 small quick-prompt-btn" data-prompt="Các bẫy tư duy thường gặp nhất của sinh viên khi học vòng lặp và đệ quy là gì?">
+                                        <i class="fa-solid fa-bug text-danger me-1"></i>Bẫy tư duy vòng lặp
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Chat Messages Body -->
+                            <div class="card-body p-3 flex-grow-1 overflow-auto" id="copilot-chat-history" style="max-height: 480px; min-height: 380px; background-color: #f8fafc; border-radius: 12px; margin: 0 1rem;">
+                                <!-- AI Welcome Message -->
+                                <div class="d-flex gap-3 mb-3">
+                                    <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center flex-shrink-0" style="width: 36px; height: 36px;">
+                                        <i class="fa-solid fa-robot"></i>
+                                    </div>
+                                    <div class="p-3 bg-white rounded-3 shadow-sm border" style="max-width: 88%;">
+                                        <p class="mb-1 fw-semibold text-primary small"><i class="fa-solid fa-sparkles me-1"></i>AI Pedagogical Co-Pilot</p>
+                                        <div class="text-dark small" style="line-height: 1.5;">
+                                            Chào Thầy/Cô! Tôi là trợ lý đồng hành thiết kế đề kiểm tra và chẩn đoán nhận thức. Thầy/Cô có thể yêu cầu tôi:
+                                            <ul class="mb-0 ps-3 mt-1 text-secondary">
+                                                <li>Soạn ma trận đề thi chuẩn phân hóa nhận thức</li>
+                                                <li>Thẩm định xem một câu hỏi có bị mơ hồ (ambiguous) hay không</li>
+                                                <li>Tạo các phương án nhiễu bắt nguồn từ lỗi nhận thức thực tế</li>
+                                                <li>Soạn bài tập tình huống thực tế (case study)</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Chat Input Box -->
+                            <div class="card-footer bg-white border-0 p-3">
+                                <form id="copilot-chat-form" class="d-flex gap-2">
+                                    <input type="text" class="form-control rounded-pill px-3" id="copilot-chat-input" placeholder="Hỏi Co-Pilot về phương pháp soạn đề, ma trận câu hỏi..." autocomplete="off">
+                                    <button type="submit" class="btn btn-primary rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width: 42px; height: 42px;" id="btn-send-copilot-chat">
+                                        <i class="fa-solid fa-paper-plane"></i>
+                                    </button>
+                                </form>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
 
     </main>
@@ -474,6 +689,10 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Marked.js for Markdown -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <!-- Highlight.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     <!-- API Client -->
     <script src="js/api.js"></script>
     <!-- Teacher Dashboard Logic -->

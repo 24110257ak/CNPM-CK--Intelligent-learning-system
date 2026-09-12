@@ -14,6 +14,8 @@ let questionModal = null;
 let currentPage = 1;
 const pageSize = 10;
 let searchKeyword = '';
+let currentGeneratedQuestions = [];
+let copilotChatHistory = [];
 
 document.addEventListener('DOMContentLoaded', () => {
     // Khởi tạo Bootstrap Modal
@@ -100,6 +102,61 @@ function setupEventListeners() {
             loadTeacherStats();
         });
     }
+
+    // ── AI Studio & Co-Pilot Events ──
+    // Nút chuyển nhanh sang Tab 3 từ Tab 1
+    const btnQuickAi = document.getElementById('btn-quick-ai-gen');
+    if (btnQuickAi) {
+        btnQuickAi.addEventListener('click', () => {
+            const tabBtn = document.getElementById('tab-ai-copilot-btn');
+            if (tabBtn) {
+                new bootstrap.Tab(tabBtn).show();
+            }
+        });
+    }
+
+    // Form sinh câu hỏi bằng AI
+    const aiGenForm = document.getElementById('ai-generator-form');
+    if (aiGenForm) {
+        aiGenForm.addEventListener('submit', handleAiGenerateSubmit);
+    }
+
+    // Nút xóa kết quả sinh câu hỏi
+    const btnClearAi = document.getElementById('btn-clear-ai-results');
+    if (btnClearAi) {
+        btnClearAi.addEventListener('click', () => {
+            currentGeneratedQuestions = [];
+            const resultsWrapper = document.getElementById('ai-results-wrapper');
+            if (resultsWrapper) resultsWrapper.style.display = 'none';
+            const cardsContainer = document.getElementById('ai-generated-cards-container');
+            if (cardsContainer) cardsContainer.innerHTML = '';
+        });
+    }
+
+    // Nút lưu tất cả câu hỏi vừa sinh vào DB
+    const btnImportAll = document.getElementById('btn-import-all-ai');
+    if (btnImportAll) {
+        btnImportAll.addEventListener('click', handleImportAllAiQuestions);
+    }
+
+    // Form Trợ lý Sư phạm Co-Pilot Chat
+    const copilotForm = document.getElementById('copilot-chat-form');
+    if (copilotForm) {
+        copilotForm.addEventListener('submit', handleCopilotChatSubmit);
+    }
+
+    // Quick Prompt Chips cho Co-Pilot
+    document.querySelectorAll('.quick-prompt-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const prompt = btn.getAttribute('data-prompt');
+            const input = document.getElementById('copilot-chat-input');
+            if (input && prompt) {
+                input.value = prompt;
+                const form = document.getElementById('copilot-chat-form');
+                if (form) form.dispatchEvent(new Event('submit'));
+            }
+        });
+    });
 }
 
 /**
@@ -128,23 +185,36 @@ async function loadTopics() {
 
         const filterSelect = document.getElementById('filter-topic');
         const modalSelect = document.getElementById('modal-topic-id');
+        const aiSelect = document.getElementById('ai-topic-id');
 
         // Reset options
-        filterSelect.innerHTML = '<option value="">-- Tất cả chủ đề --</option>';
-        modalSelect.innerHTML = '<option value="">-- Chọn chủ đề bài học --</option>';
+        if (filterSelect) filterSelect.innerHTML = '<option value="">-- Tất cả chủ đề --</option>';
+        if (modalSelect) modalSelect.innerHTML = '<option value="">-- Chọn chủ đề bài học --</option>';
+        if (aiSelect) aiSelect.innerHTML = '<option value="">-- Chọn chủ đề để AI sinh câu hỏi --</option>';
 
         allTopics.forEach(t => {
             topicsMap[t.topicId] = t.topicName;
 
-            const opt1 = document.createElement('option');
-            opt1.value = t.topicId;
-            opt1.textContent = t.topicName;
-            filterSelect.appendChild(opt1);
+            if (filterSelect) {
+                const opt1 = document.createElement('option');
+                opt1.value = t.topicId;
+                opt1.textContent = t.topicName;
+                filterSelect.appendChild(opt1);
+            }
 
-            const opt2 = document.createElement('option');
-            opt2.value = t.topicId;
-            opt2.textContent = t.topicName;
-            modalSelect.appendChild(opt2);
+            if (modalSelect) {
+                const opt2 = document.createElement('option');
+                opt2.value = t.topicId;
+                opt2.textContent = t.topicName;
+                modalSelect.appendChild(opt2);
+            }
+
+            if (aiSelect) {
+                const opt3 = document.createElement('option');
+                opt3.value = t.topicId;
+                opt3.textContent = t.topicName;
+                aiSelect.appendChild(opt3);
+            }
         });
     } catch (err) {
         console.error('Lỗi tải danh mục chủ đề:', err);
@@ -530,4 +600,493 @@ function escapeHtml(str) {
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;');
+}
+
+/**
+ * ══════════════════════════════════════════════════════════════
+ * AI QUESTION GENERATOR STUDIO & TEACHER CO-PILOT
+ * ══════════════════════════════════════════════════════════════
+ */
+
+/**
+ * Xử lý khi Giảng viên nhấn nút "Sinh Bộ Câu Hỏi Bằng AI"
+ */
+async function handleAiGenerateSubmit(e) {
+    if (e) e.preventDefault();
+
+    const topicId = document.getElementById('ai-topic-id').value;
+    if (!topicId) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Chưa chọn chủ đề',
+            text: 'Vui lòng chọn chủ đề bài học trước khi yêu cầu AI sinh câu hỏi!'
+        });
+        return;
+    }
+
+    const topicName = topicsMap[topicId] || 'Lập trình Java';
+    const difficulty = document.getElementById('ai-difficulty').value;
+    const misconceptionTag = document.getElementById('ai-misconception').value;
+    const count = parseInt(document.getElementById('ai-count').value) || 3;
+    const promptHint = document.getElementById('ai-custom-prompt').value.trim();
+
+    const submitBtn = document.getElementById('btn-generate-ai');
+    const submitText = document.getElementById('btn-generate-text');
+    const originalText = submitText ? submitText.innerHTML : 'Sinh Bộ Câu Hỏi Bằng AI';
+
+    try {
+        if (submitBtn) submitBtn.disabled = true;
+        if (submitText) submitText.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Gemini đang tư duy & tạo câu hỏi...';
+
+        const res = await API.teacher.generateQuestions({
+            topicName,
+            difficulty,
+            misconceptionTag,
+            count,
+            promptHint
+        });
+
+        const questions = res.data || [];
+        if (!questions || questions.length === 0) {
+            throw new Error('AI không trả về danh sách câu hỏi hợp lệ.');
+        }
+
+        currentGeneratedQuestions = questions.map((q, idx) => ({
+            ...q,
+            topicId: parseInt(topicId),
+            imported: false,
+            _index: idx
+        }));
+
+        renderAiGeneratedCards(currentGeneratedQuestions, topicName);
+
+        const resultsWrapper = document.getElementById('ai-results-wrapper');
+        if (resultsWrapper) {
+            resultsWrapper.style.display = 'block';
+            resultsWrapper.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'success',
+            title: `Đã sinh thành công ${currentGeneratedQuestions.length} câu hỏi!`,
+            showConfirmButton: false,
+            timer: 3000
+        });
+    } catch (err) {
+        console.error('Lỗi khi sinh câu hỏi bằng AI:', err);
+        Swal.fire({
+            icon: 'error',
+            title: 'Lỗi sinh câu hỏi AI',
+            text: err.message || 'Không thể kết nối đến AI Gemini hoặc API đang bận. Vui lòng thử lại sau giây lát!'
+        });
+    } finally {
+        if (submitBtn) submitBtn.disabled = false;
+        if (submitText) submitText.innerHTML = originalText;
+    }
+}
+
+/**
+ * Hiển thị danh sách thẻ câu hỏi AI vừa sinh
+ */
+function renderAiGeneratedCards(questions, topicName) {
+    const countEl = document.getElementById('ai-generated-count');
+    if (countEl) countEl.textContent = questions.length;
+    const badgeEl = document.getElementById('ai-target-topic-badge');
+    if (badgeEl) badgeEl.textContent = topicName;
+
+    const container = document.getElementById('ai-generated-cards-container');
+    if (!container) return;
+
+    if (questions.length === 0) {
+        container.innerHTML = '<div class="alert alert-light text-center border">Chưa có câu hỏi nào được tạo.</div>';
+        return;
+    }
+
+    container.innerHTML = questions.map((q, index) => {
+        const correctLetter = normalizeCorrectAnswer(q.correctAnswer);
+
+        // Misconception badge
+        let misBadge = '<span class="badge bg-secondary">Chung</span>';
+        if (q.misconceptionTag === 'syntax_swap') misBadge = '<span class="badge badge-syntax"><i class="fa-solid fa-code me-1"></i>Syntax Swap</span>';
+        else if (q.misconceptionTag === 'boundary_blindness') misBadge = '<span class="badge badge-boundary"><i class="fa-solid fa-arrows-split-up-and-left me-1"></i>Boundary Blindness</span>';
+        else if (q.misconceptionTag === 'mental_model_gap') misBadge = '<span class="badge badge-mental"><i class="fa-solid fa-brain me-1"></i>Mental Model Gap</span>';
+        else if (q.misconceptionTag === 'logic_flaw') misBadge = '<span class="badge badge-logic"><i class="fa-solid fa-triangle-exclamation me-1"></i>Logic Flaw</span>';
+
+        // Difficulty badge
+        let diffBadge = '<span class="badge bg-warning-subtle text-warning border border-warning">Trung bình</span>';
+        if (q.difficulty === 'easy') diffBadge = '<span class="badge bg-info-subtle text-info border border-info">Dễ</span>';
+        else if (q.difficulty === 'hard') diffBadge = '<span class="badge bg-danger-subtle text-danger border border-danger">Khó</span>';
+
+        // Parse markdown for question text
+        let parsedText = '';
+        if (typeof marked !== 'undefined' && marked.parse) {
+            parsedText = marked.parse(q.questionText || '');
+        } else {
+            parsedText = `<p>${escapeHtml(q.questionText || '')}</p>`;
+        }
+
+        const isA = correctLetter === 'A';
+        const isB = correctLetter === 'B';
+        const isC = correctLetter === 'C';
+        const isD = correctLetter === 'D';
+
+        const importBtnContent = q.imported
+            ? `<button class="btn btn-outline-success btn-sm rounded-pill px-3" disabled><i class="fa-solid fa-circle-check me-1"></i>Đã lưu vào đề</button>`
+            : `<button class="btn btn-primary btn-sm rounded-pill px-3 fw-semibold shadow-sm" onclick="importSingleAiQuestion(${index}, this)"><i class="fa-solid fa-plus me-1"></i>Thêm Vào Ngân Hàng Đề</button>`;
+
+        return `
+            <div class="ai-question-card p-4 position-relative" id="ai-card-${index}">
+                <!-- Card Header -->
+                <div class="d-flex align-items-center justify-content-between mb-3 border-bottom pb-2 flex-wrap gap-2">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-primary text-white rounded-pill px-3 py-1">Câu #${index + 1}</span>
+                        ${diffBadge}
+                        ${misBadge}
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-secondary btn-sm rounded-pill px-2" title="Chỉnh sửa chi tiết trong Modal trước khi lưu" onclick="openModalWithAiQuestion(${index})">
+                            <i class="fa-solid fa-pen-to-square me-1"></i>Tùy biến
+                        </button>
+                        <div id="ai-import-btn-wrapper-${index}">
+                            ${importBtnContent}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Question Content (Markdown & Code) -->
+                <div class="ai-card-code text-dark mb-3">
+                    ${parsedText}
+                </div>
+
+                <!-- 4 Options Grid -->
+                <div class="row g-2 mb-3">
+                    <div class="col-md-6">
+                        <div class="ai-option-item ${isA ? 'ai-option-correct' : ''}">
+                            <strong>A.</strong> ${escapeHtml(q.optionA || '')}
+                            ${isA ? '<i class="fa-solid fa-circle-check ms-1"></i>' : ''}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="ai-option-item ${isB ? 'ai-option-correct' : ''}">
+                            <strong>B.</strong> ${escapeHtml(q.optionB || '')}
+                            ${isB ? '<i class="fa-solid fa-circle-check ms-1"></i>' : ''}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="ai-option-item ${isC ? 'ai-option-correct' : ''}">
+                            <strong>C.</strong> ${escapeHtml(q.optionC || '')}
+                            ${isC ? '<i class="fa-solid fa-circle-check ms-1"></i>' : ''}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="ai-option-item ${isD ? 'ai-option-correct' : ''}">
+                            <strong>D.</strong> ${escapeHtml(q.optionD || '')}
+                            ${isD ? '<i class="fa-solid fa-circle-check ms-1"></i>' : ''}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pedagogical Explanation Buffer -->
+                <div class="p-3 bg-light rounded-3 border">
+                    <div class="d-flex align-items-center justify-content-between mb-1">
+                        <span class="small fw-semibold text-primary">
+                            <i class="fa-solid fa-shield-halved me-1"></i>Giải thích sư phạm & Bẫy tư duy (AI Fallback Buffer):
+                        </span>
+                        <span class="badge bg-white text-success border border-success small">Đáp án đúng: ${correctLetter}</span>
+                    </div>
+                    <p class="mb-0 text-secondary small" style="line-height: 1.5;">${escapeHtml(q.explanation || 'Chưa có giải thích cụ thể.')}</p>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    // Syntax highlight code blocks
+    if (typeof hljs !== 'undefined') {
+        container.querySelectorAll('pre code').forEach(block => {
+            hljs.highlightElement(block);
+        });
+    }
+}
+
+/**
+ * Lưu 1 câu hỏi do AI sinh vào Ngân hàng câu hỏi (DB)
+ */
+async function importSingleAiQuestion(index, btnEl) {
+    const q = currentGeneratedQuestions[index];
+    if (!q || q.imported) return;
+
+    if (btnEl) {
+        btnEl.disabled = true;
+        btnEl.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Đang lưu...';
+    }
+
+    try {
+        const payload = {
+            topicId: q.topicId,
+            questionText: q.questionText,
+            optionA: q.optionA,
+            optionB: q.optionB,
+            optionC: q.optionC,
+            optionD: q.optionD,
+            correctAnswer: normalizeCorrectAnswer(q.correctAnswer),
+            explanation: q.explanation || '',
+            difficulty: q.difficulty || 'medium',
+            misconceptionTag: q.misconceptionTag || null
+        };
+
+        await API.questions.create(payload);
+        q.imported = true;
+
+        if (btnEl) {
+            btnEl.className = 'btn btn-outline-success btn-sm rounded-pill px-3';
+            btnEl.innerHTML = '<i class="fa-solid fa-circle-check me-1"></i>Đã lưu vào đề';
+            btnEl.disabled = true;
+        }
+
+        Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'success',
+            title: `Đã lưu câu #${index + 1} vào ngân hàng đề!`,
+            showConfirmButton: false,
+            timer: 2000
+        });
+
+        // Tải lại danh sách câu hỏi & KPIs
+        loadQuestions();
+        loadTeacherStats();
+    } catch (err) {
+        console.error('Lỗi khi lưu câu hỏi AI:', err);
+        Swal.fire({
+            icon: 'error',
+            title: 'Lưu thất bại',
+            text: err.message || 'Không thể lưu câu hỏi vào cơ sở dữ liệu.'
+        });
+        if (btnEl) {
+            btnEl.disabled = false;
+            btnEl.innerHTML = '<i class="fa-solid fa-plus me-1"></i>Thêm Vào Ngân Hàng Đề';
+        }
+    }
+}
+
+/**
+ * Lưu toàn bộ các câu hỏi AI vừa sinh vào DB
+ */
+async function handleImportAllAiQuestions() {
+    const unimported = currentGeneratedQuestions.filter(q => !q.imported);
+    if (unimported.length === 0) {
+        Swal.fire({
+            icon: 'info',
+            title: 'Đã lưu hết',
+            text: 'Tất cả các câu hỏi trong danh sách này đã được lưu vào ngân hàng đề rồi!'
+        });
+        return;
+    }
+
+    const topicName = unimported[0] ? (topicsMap[unimported[0].topicId] || '') : '';
+    const confirmResult = await Swal.fire({
+        title: 'Lưu tất cả vào ngân hàng đề?',
+        text: `Hệ thống sẽ lưu ${unimported.length} câu hỏi mới vào ngân hàng đề của chủ đề "${topicName}".`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Đồng ý lưu tất cả',
+        cancelButtonText: 'Hủy'
+    });
+
+    if (!confirmResult.isConfirmed) return;
+
+    Swal.fire({
+        title: 'Đang lưu danh sách câu hỏi...',
+        text: 'Vui lòng chờ trong giây lát...',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+
+    let successCount = 0;
+    let failCount = 0;
+
+    for (let i = 0; i < currentGeneratedQuestions.length; i++) {
+        const q = currentGeneratedQuestions[i];
+        if (q.imported) continue;
+
+        try {
+            await API.questions.create({
+                topicId: q.topicId,
+                questionText: q.questionText,
+                optionA: q.optionA,
+                optionB: q.optionB,
+                optionC: q.optionC,
+                optionD: q.optionD,
+                correctAnswer: normalizeCorrectAnswer(q.correctAnswer),
+                explanation: q.explanation || '',
+                difficulty: q.difficulty || 'medium',
+                misconceptionTag: q.misconceptionTag || null
+            });
+            q.imported = true;
+            successCount++;
+
+            // Update button in card
+            const btnWrapper = document.getElementById(`ai-import-btn-wrapper-${i}`);
+            if (btnWrapper) {
+                btnWrapper.innerHTML = `<button class="btn btn-outline-success btn-sm rounded-pill px-3" disabled><i class="fa-solid fa-circle-check me-1"></i>Đã lưu vào đề</button>`;
+            }
+        } catch (err) {
+            console.error(`Lỗi khi lưu câu #${i + 1}:`, err);
+            failCount++;
+        }
+    }
+
+    await Promise.all([
+        loadQuestions(),
+        loadTeacherStats()
+    ]);
+
+    Swal.fire({
+        icon: failCount === 0 ? 'success' : 'warning',
+        title: 'Hoàn tất lưu câu hỏi',
+        text: `Đã lưu thành công ${successCount} câu hỏi vào ngân hàng đề${failCount > 0 ? ` (${failCount} câu bị lỗi)` : ''}.`
+    });
+}
+
+/**
+ * Mở modal thêm/sửa câu hỏi để Giảng viên chỉnh sửa chi tiết câu do AI gợi ý
+ */
+function openModalWithAiQuestion(index) {
+    const q = currentGeneratedQuestions[index];
+    if (!q) return;
+
+    document.getElementById('modal-question-id').value = '';
+    document.getElementById('questionModalLabel').innerHTML = `<i class="fa-solid fa-wand-magic-sparkles text-warning me-2"></i>Tùy Biến Câu Hỏi AI (Câu #${index + 1})`;
+    document.getElementById('modal-topic-id').value = q.topicId || '';
+    document.getElementById('modal-difficulty').value = q.difficulty || 'medium';
+    document.getElementById('modal-question-text').value = q.questionText || '';
+    document.getElementById('modal-option-a').value = q.optionA || '';
+    document.getElementById('modal-option-b').value = q.optionB || '';
+    document.getElementById('modal-option-c').value = q.optionC || '';
+    document.getElementById('modal-option-d').value = q.optionD || '';
+    document.getElementById('modal-correct-answer').value = normalizeCorrectAnswer(q.correctAnswer);
+    document.getElementById('modal-explanation').value = q.explanation || '';
+    document.getElementById('modal-misconception-tag').value = q.misconceptionTag || '';
+
+    if (questionModal) questionModal.show();
+}
+
+/**
+ * Xử lý trò chuyện với Trợ Lý Sư Phạm AI Co-Pilot
+ */
+async function handleCopilotChatSubmit(e) {
+    if (e) e.preventDefault();
+    const inputEl = document.getElementById('copilot-chat-input');
+    if (!inputEl) return;
+    const message = inputEl.value.trim();
+    if (!message) return;
+
+    inputEl.value = '';
+
+    const historyContainer = document.getElementById('copilot-chat-history');
+    if (!historyContainer) return;
+
+    // Append user bubble
+    const userBubble = document.createElement('div');
+    userBubble.className = 'd-flex justify-content-end mb-3';
+    userBubble.innerHTML = `
+        <div class="chat-bubble-user">
+            <div>${escapeHtml(message)}</div>
+        </div>
+    `;
+    historyContainer.appendChild(userBubble);
+
+    // Append loading bubble
+    const loadingBubble = document.createElement('div');
+    loadingBubble.id = 'copilot-loading-bubble';
+    loadingBubble.className = 'd-flex gap-3 mb-3';
+    loadingBubble.innerHTML = `
+        <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center flex-shrink-0" style="width: 36px; height: 36px;">
+            <i class="fa-solid fa-robot"></i>
+        </div>
+        <div class="chat-bubble-ai">
+            <div class="spinner-grow spinner-grow-sm text-primary me-2" role="status"></div>
+            <span class="text-muted small">Co-Pilot đang tư duy & soạn thảo câu trả lời...</span>
+        </div>
+    `;
+    historyContainer.appendChild(loadingBubble);
+    historyContainer.scrollTop = historyContainer.scrollHeight;
+
+    try {
+        const context = copilotChatHistory.slice(-4).join('\n');
+        const res = await API.teacher.chat(message, context);
+        const aiText = (res.data && res.data.response) ? res.data.response : 'Co-Pilot không có phản hồi.';
+
+        copilotChatHistory.push('Giảng viên: ' + message);
+        copilotChatHistory.push('Co-Pilot: ' + aiText);
+
+        // Remove loading
+        const loadingEl = document.getElementById('copilot-loading-bubble');
+        if (loadingEl) loadingEl.remove();
+
+        // Parse markdown
+        let parsedAiHtml = '';
+        if (typeof marked !== 'undefined' && marked.parse) {
+            parsedAiHtml = marked.parse(aiText);
+        } else {
+            parsedAiHtml = `<p>${escapeHtml(aiText)}</p>`;
+        }
+
+        const aiBubble = document.createElement('div');
+        aiBubble.className = 'd-flex gap-3 mb-3';
+        aiBubble.innerHTML = `
+            <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center flex-shrink-0" style="width: 36px; height: 36px;">
+                <i class="fa-solid fa-robot"></i>
+            </div>
+            <div class="chat-bubble-ai">
+                <div class="ai-chat-content">${parsedAiHtml}</div>
+            </div>
+        `;
+        historyContainer.appendChild(aiBubble);
+
+        // Syntax highlight
+        if (typeof hljs !== 'undefined') {
+            aiBubble.querySelectorAll('pre code').forEach(block => {
+                hljs.highlightElement(block);
+            });
+        }
+
+        historyContainer.scrollTop = historyContainer.scrollHeight;
+    } catch (err) {
+        console.error('Lỗi khi chat với Co-Pilot:', err);
+        const loadingEl = document.getElementById('copilot-loading-bubble');
+        if (loadingEl) loadingEl.remove();
+
+        const errorBubble = document.createElement('div');
+        errorBubble.className = 'd-flex gap-3 mb-3';
+        errorBubble.innerHTML = `
+            <div class="rounded-circle bg-danger text-white d-flex align-items-center justify-content-center flex-shrink-0" style="width: 36px; height: 36px;">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <div class="chat-bubble-ai border-danger-subtle bg-danger-subtle text-danger">
+                <span class="small">Lỗi kết nối Co-Pilot: ${escapeHtml(err.message || 'Hệ thống bận. Vui lòng thử lại sau.')}</span>
+            </div>
+        `;
+        historyContainer.appendChild(errorBubble);
+        historyContainer.scrollTop = historyContainer.scrollHeight;
+    }
+}
+
+/**
+ * Chuẩn hóa ký tự đáp án đúng về A, B, C hoặc D
+ */
+function normalizeCorrectAnswer(val) {
+    if (!val) return 'A';
+    const s = String(val).trim().toUpperCase();
+    if (s === '0') return 'A';
+    if (s === '1') return 'B';
+    if (s === '2') return 'C';
+    if (s === '3') return 'D';
+    const firstChar = s.charAt(0);
+    if (['A', 'B', 'C', 'D'].includes(firstChar)) return firstChar;
+    return 'A';
 }

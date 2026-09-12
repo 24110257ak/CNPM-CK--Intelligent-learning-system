@@ -5,12 +5,19 @@ import com.google.genai.types.Content;
 import com.google.genai.types.GenerateContentConfig;
 import com.google.genai.types.GenerateContentResponse;
 import com.google.genai.types.Part;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.lms.model.Question;
 import com.lms.model.RemedialLesson;
 import com.lms.model.UserAnswer;
 import com.lms.util.ConfigLoader;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Service tích hợp Google Gemini API chính thức (gemini-2.5-flash).
@@ -181,5 +188,95 @@ public class AIService {
 
     public boolean isConfigured() {
         return isConfigured;
+    }
+
+    /**
+     * Dành cho Giảng viên / Admin: Tự động sinh danh sách câu hỏi trắc nghiệm chất lượng cao.
+     */
+    public List<Map<String, Object>> generateQuestionsForTeacher(String topicName, String difficulty, String misconceptionTag, int count, String promptHint) {
+        List<Map<String, Object>> questionsList = new ArrayList<>();
+        if (!isConfigured) {
+            System.err.println("[AIService] ⚠️ Chưa cấu hình GEMINI_API_KEY để sinh câu hỏi.");
+            return questionsList;
+        }
+
+        try {
+            String prompt = PromptBuilder.buildTeacherQuestionGenPrompt(topicName, difficulty, misconceptionTag, count, promptHint);
+            String systemInstruction = PromptBuilder.getTeacherCoPilotInstruction();
+
+            GenerateContentConfig config = GenerateContentConfig.builder()
+                    .systemInstruction(Content.fromParts(Part.fromText(systemInstruction)))
+                    .responseMimeType("application/json")
+                    .temperature(0.5f)
+                    .build();
+
+            GenerateContentResponse response;
+            try {
+                response = client.models.generateContent(MODEL_NAME, prompt, config);
+            } catch (Exception modelErr) {
+                String fallbackModel = MODEL_NAME.equals("gemini-3.6-flash") ? "gemini-3.8-flash" : "gemini-3.6-flash";
+                response = client.models.generateContent(fallbackModel, prompt, config);
+            }
+
+            String jsonText = response.text();
+            if (jsonText != null && !jsonText.isBlank()) {
+                JsonArray arr = JsonParser.parseString(jsonText).getAsJsonArray();
+                for (JsonElement el : arr) {
+                    if (el.isJsonObject()) {
+                        JsonObject obj = el.getAsJsonObject();
+                        Map<String, Object> map = new HashMap<>();
+                        map.put("questionText", obj.has("question_text") ? obj.get("question_text").getAsString() : "");
+                        map.put("optionA", obj.has("option_a") ? obj.get("option_a").getAsString() : "");
+                        map.put("optionB", obj.has("option_b") ? obj.get("option_b").getAsString() : "");
+                        map.put("optionC", obj.has("option_c") ? obj.get("option_c").getAsString() : "");
+                        map.put("optionD", obj.has("option_d") ? obj.get("option_d").getAsString() : "");
+                        map.put("correctAnswer", obj.has("correct_answer") ? obj.get("correct_answer").getAsString().toUpperCase() : "A");
+                        map.put("explanation", obj.has("explanation") ? obj.get("explanation").getAsString() : "");
+                        map.put("difficulty", obj.has("difficulty") ? obj.get("difficulty").getAsString().toLowerCase() : (difficulty != null ? difficulty : "medium"));
+                        map.put("misconceptionTag", obj.has("misconception_tag") ? obj.get("misconception_tag").getAsString().toLowerCase() : "mental_model_gap");
+                        questionsList.add(map);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("[AIService] ❌ Gọi Gemini sinh câu hỏi thất bại: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        return questionsList;
+    }
+
+    /**
+     * Dành cho Giảng viên / Admin: Chatbot tư vấn sư phạm và thiết kế bài thi.
+     */
+    public String teacherChat(String userMessage, String context) {
+        if (!isConfigured) {
+            return "Xin chào Thầy/Cô! Hiện tại hệ thống đang ở chế độ ngoại tuyến do chưa cấu hình GEMINI_API_KEY hợp lệ. "
+                 + "Vui lòng cấu hình API Key để kích hoạt Trợ Lý AI Co-Pilot hỗ trợ soạn đề.";
+        }
+
+        try {
+            String systemInstruction = PromptBuilder.getTeacherCoPilotInstruction();
+            String fullPrompt = (context != null && !context.isBlank() ? "Ngữ cảnh / Dữ liệu liên quan:\n" + context + "\n\n" : "")
+                              + "Yêu cầu của Giảng viên: " + userMessage;
+
+            GenerateContentConfig config = GenerateContentConfig.builder()
+                    .systemInstruction(Content.fromParts(Part.fromText(systemInstruction)))
+                    .temperature(0.7f)
+                    .build();
+
+            GenerateContentResponse response;
+            try {
+                response = client.models.generateContent(MODEL_NAME, fullPrompt, config);
+            } catch (Exception modelErr) {
+                String fallbackModel = MODEL_NAME.equals("gemini-3.6-flash") ? "gemini-3.8-flash" : "gemini-3.6-flash";
+                response = client.models.generateContent(fallbackModel, fullPrompt, config);
+            }
+
+            return response.text();
+        } catch (Exception e) {
+            System.err.println("[AIService] ❌ Gọi Teacher Chat thất bại: " + e.getMessage());
+            return "Trợ lý AI tạm thời gặp sự cố kết nối (" + e.getMessage() + "). Thầy/Cô vui lòng thử lại sau giây lát nhé!";
+        }
     }
 }

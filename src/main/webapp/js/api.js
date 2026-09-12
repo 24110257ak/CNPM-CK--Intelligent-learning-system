@@ -179,6 +179,20 @@ const API = {
     teacher: {
         async stats() {
             return API.request('/teacher/stats');
+        },
+
+        async generateQuestions(payload) {
+            return API.request('/teacher/ai/generate', {
+                method: 'POST',
+                body: JSON.stringify(payload)
+            });
+        },
+
+        async chat(message, context = '') {
+            return API.request('/teacher/ai/chat', {
+                method: 'POST',
+                body: JSON.stringify({ message, context })
+            });
         }
     },
 

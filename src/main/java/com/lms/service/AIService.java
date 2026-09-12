@@ -115,7 +115,7 @@ public class AIService {
     public String chat(String userMessage, String persona, String context) {
         if (!isConfigured) {
             return "Xin chào! Hiện tại hệ thống đang chạy ở chế độ ngoại tuyến (Offline Fallback — chưa cấu hình GEMINI_API_KEY hợp lệ). "
-                 + "Bạn vui lòng lấy API Key miễn phí từ Google AI Studio (bắt đầu bằng 'AIzaSy...') và cấu hình vào hệ thống để trò chuyện trực tiếp cùng Trợ Giảng AI nhé!";
+                 + "Bạn có thể vào trang Google AI Studio (aistudio.google.com) tạo API Key miễn phí và cấu hình vào hệ thống để trò chuyện trực tiếp cùng Trợ Giảng AI nhé!";
         }
 
         try {
@@ -144,7 +144,7 @@ public class AIService {
                      + "Google thông báo dự án của API Key này đã bị từ chối truy cập (*Your project has been denied access*).\n\n"
                      + "👉 **Nguyên nhân & Cách khắc phục:**\n"
                      + "- Key hiện tại không có quyền gọi Generative Language API hoặc dự án Google Cloud đã bị khóa/vô hiệu hóa.\n"
-                     + "- Bạn hãy truy cập [Google AI Studio (aistudio.google.com)](https://aistudio.google.com), đăng nhập Gmail và bấm **Create API key** mới (Key chuẩn của Google luôn bắt đầu bằng `AIzaSy...`).\n"
+                     + "- Bạn hãy truy cập [Google AI Studio (aistudio.google.com)](https://aistudio.google.com), dùng một tài khoản Gmail cá nhân khác và bấm **Create API key** $\\rightarrow$ **Create in new project**.\n"
                      + "- Sau đó vào Render $\\rightarrow$ **Environment** $\\rightarrow$ Cập nhật lại biến `GEMINI_API_KEY` nhé!";
             } else if (errorMsg.contains("404") || errorMsg.contains("not found")) {
                 return "⚠️ **Lỗi Model không tồn tại (404 Not Found)**:\n"

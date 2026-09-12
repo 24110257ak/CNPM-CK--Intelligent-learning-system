@@ -18,9 +18,17 @@ import com.lms.util.ConfigLoader;
  */
 public class AIService {
 
-    private static final String MODEL_NAME = ConfigLoader.get("GEMINI_MODEL", "gemini-2.5-flash");
+    private static final String MODEL_NAME = getEffectiveModel();
     private final Client client;
     private final boolean isConfigured;
+
+    private static String getEffectiveModel() {
+        String model = ConfigLoader.get("GEMINI_MODEL", "gemini-3.6-flash").trim();
+        if (model.equalsIgnoreCase("gemini-2.5-flash") || model.equalsIgnoreCase("gemini-1.5-flash") || model.equalsIgnoreCase("gemini-2.0-flash")) {
+            return "gemini-3.6-flash";
+        }
+        return model.isEmpty() ? "gemini-3.6-flash" : model;
+    }
 
     public AIService() {
         String apiKey = ConfigLoader.get("GEMINI_API_KEY", "").trim();
@@ -84,11 +92,13 @@ public class AIService {
                     .temperature(0.4f)
                     .build();
 
-            GenerateContentResponse response = client.models.generateContent(
-                    MODEL_NAME,
-                    prompt,
-                    config
-            );
+            GenerateContentResponse response;
+            try {
+                response = client.models.generateContent(MODEL_NAME, prompt, config);
+            } catch (Exception modelErr) {
+                String fallbackModel = MODEL_NAME.equals("gemini-3.6-flash") ? "gemini-3.8-flash" : "gemini-3.6-flash";
+                response = client.models.generateContent(fallbackModel, prompt, config);
+            }
 
             String jsonText = response.text();
             if (jsonText != null && !jsonText.isBlank()) {
@@ -128,11 +138,13 @@ public class AIService {
                     .temperature(0.7f)
                     .build();
 
-            GenerateContentResponse response = client.models.generateContent(
-                    MODEL_NAME,
-                    fullPrompt,
-                    config
-            );
+            GenerateContentResponse response;
+            try {
+                response = client.models.generateContent(MODEL_NAME, fullPrompt, config);
+            } catch (Exception modelErr) {
+                String fallbackModel = MODEL_NAME.equals("gemini-3.6-flash") ? "gemini-3.8-flash" : "gemini-3.6-flash";
+                response = client.models.generateContent(fallbackModel, fullPrompt, config);
+            }
 
             return response.text();
         } catch (Exception e) {

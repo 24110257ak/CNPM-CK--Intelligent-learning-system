@@ -2,6 +2,7 @@ package com.lms.servlet;
 
 import com.google.gson.JsonObject;
 import com.lms.dao.ChatDAO;
+import com.lms.dao.QuizDAO;
 import com.lms.model.ChatMessage;
 import com.lms.model.User;
 import com.lms.service.AIService;
@@ -22,6 +23,7 @@ import java.util.List;
 public class ChatServlet extends HttpServlet {
 
     private final ChatDAO chatDAO = new ChatDAO();
+    private final QuizDAO quizDAO = new QuizDAO();
     private final AIService aiService = new AIService();
 
     @Override
@@ -46,6 +48,11 @@ public class ChatServlet extends HttpServlet {
         }
 
         String userMessage = body.get("message").getAsString().trim();
+        if (userMessage.length() > 4000) {
+            resp.setStatus(422); // Unprocessable Entity
+            resp.getWriter().write(JsonHelper.error("Tin nhắn quá dài (tối đa 4000 ký tự)."));
+            return;
+        }
         if (userMessage.isEmpty()) {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             resp.getWriter().write(JsonHelper.error("Tin nhắn không được để trống."));
@@ -53,7 +60,13 @@ public class ChatServlet extends HttpServlet {
         }
 
         String persona = body.has("persona") ? body.get("persona").getAsString() : "peer_tutor";
+        if (!persona.equals("senior_dev") && !persona.equals("peer_tutor") && !persona.equals("professor")) persona = "peer_tutor";
         Integer sessionId = body.has("sessionId") && !body.get("sessionId").isJsonNull() ? body.get("sessionId").getAsInt() : null;
+        if (sessionId != null && quizDAO.findSessionForUser(sessionId, user.getUserId()) == null) {
+            resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            resp.getWriter().write(JsonHelper.error("Phiên làm bài đính kèm không thuộc tài khoản hiện tại."));
+            return;
+        }
         String context = body.has("context") && !body.get("context").isJsonNull() ? body.get("context").getAsString() : "";
 
         // Gọi AI tạo phản hồi

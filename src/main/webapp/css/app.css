@@ -344,3 +344,43 @@ body {
 }
 
 
+
+
+/* === 2026 UX hardening layer === */
+:root {
+    --surface: #ffffff; --surface-muted: #f8fafc; --text-strong: #0f172a;
+    --text-muted: #64748b; --border: #e2e8f0; --focus-ring: rgba(79,70,229,.28);
+}
+html { scroll-behavior: smooth; }
+body { background: radial-gradient(circle at top right, #eef2ff 0, transparent 32rem), #f8fafc; color: var(--text-strong); }
+.container { width: min(100% - 2rem, 1180px); }
+.navbar-custom { box-shadow: 0 1px 0 rgba(15,23,42,.04); }
+.card, .modal-content, .dropdown-menu { border-color: var(--border); border-radius: 18px; }
+.card { box-shadow: 0 10px 32px rgba(15,23,42,.055); }
+.btn { border-radius: 11px; font-weight: 650; min-height: 42px; transition: transform .16s ease, box-shadow .16s ease, background-color .16s ease; }
+.btn:hover { transform: translateY(-1px); }
+.form-control, .form-select { min-height: 44px; border-radius: 11px; border-color: #cbd5e1; }
+.form-control:focus, .form-select:focus, .btn:focus-visible, a:focus-visible, [tabindex]:focus-visible {
+    outline: 3px solid var(--focus-ring) !important; outline-offset: 2px; box-shadow: none !important;
+}
+.table-responsive { border-radius: 14px; }
+.table > :not(caption) > * > * { padding: .9rem .85rem; vertical-align: middle; }
+.skeleton { position: relative; overflow: hidden; background: #e9eef5; border-radius: 10px; min-height: 1rem; }
+.skeleton::after { content:''; position:absolute; inset:0; transform:translateX(-100%); background:linear-gradient(90deg,transparent,rgba(255,255,255,.75),transparent); animation:skeleton-wave 1.3s infinite; }
+@keyframes skeleton-wave { to { transform: translateX(100%); } }
+.empty-state { text-align:center; padding:3rem 1rem; color:var(--text-muted); }
+.empty-state i { font-size:2.4rem; margin-bottom:1rem; opacity:.65; }
+.status-banner { border-radius: 14px; padding: .9rem 1rem; border: 1px solid var(--border); background: var(--surface); }
+@media (max-width: 767.98px) {
+    .container { width: min(100% - 1rem, 1180px); }
+    .hero-banner { padding: 1.6rem 1.1rem; border-radius: 16px; }
+    .hero-banner h1 { font-size: clamp(1.55rem, 8vw, 2.2rem); }
+    .kpi-card { padding: 1rem; }
+    .chatbot-launcher { right: 16px; bottom: 16px; width: 54px; height: 54px; }
+    .chatbot-window { inset: auto 8px 78px 8px; width: auto; max-width: none; height: min(72vh, 560px); }
+    .table { min-width: 720px; }
+    .modal-dialog { margin: .5rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { scroll-behavior:auto !important; animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; }
+}

@@ -1,7 +1,7 @@
 ﻿# TOAN BO MA NGUON DU AN - HE THONG HOC TAP THONG MINH (INTELLIGENT LMS)
 
-> **Thoi gian tao file:** 2026-09-12 12:39:10
-> **Tong so file:** 47
+> **Thoi gian tao file:** 2026-09-22 15:05:11
+> **Tong so file:** 48
 > **Muc dich:** Gom toan bo source code thanh 1 file duy nhat de gui cho ben thu ba xem xet, danh gia va gop y.
 
 ---
@@ -49,12 +49,13 @@
 39. [src\main\webapp\js\quiz.js](#src-main-webapp-js-quiz-js)
 40. [src\main\webapp\js\result.js](#src-main-webapp-js-result-js)
 41. [src\main\webapp\js\teacher.js](#src-main-webapp-js-teacher-js)
-42. [src\main\webapp\auth.html](#src-main-webapp-auth-html)
-43. [src\main\webapp\history.html](#src-main-webapp-history-html)
-44. [src\main\webapp\index.html](#src-main-webapp-index-html)
-45. [src\main\webapp\quiz.html](#src-main-webapp-quiz-html)
-46. [src\main\webapp\result.html](#src-main-webapp-result-html)
-47. [src\main\webapp\teacher-dashboard.html](#src-main-webapp-teacher-dashboard-html)
+42. [src\main\webapp\js\ui.js](#src-main-webapp-js-ui-js)
+43. [src\main\webapp\auth.html](#src-main-webapp-auth-html)
+44. [src\main\webapp\history.html](#src-main-webapp-history-html)
+45. [src\main\webapp\index.html](#src-main-webapp-index-html)
+46. [src\main\webapp\quiz.html](#src-main-webapp-quiz-html)
+47. [src\main\webapp\result.html](#src-main-webapp-result-html)
+48. [src\main\webapp\teacher-dashboard.html](#src-main-webapp-teacher-dashboard-html)
 
 ---
 
@@ -572,6 +573,14 @@ Hệ thống học tập thông minh/
 - **Phiên bản:** 1.0-SNAPSHOT (Production Cloud Deployed on Render)
 - **Bản quyền:** Đồ Án Nhóm Phát Triển LMS Thông Minh 2026.
 
+
+## Refactor 2026-09-22
+- API client: timeout, abort, offline handling, typed ApiError, safe retry for GET.
+- Authorization: quiz session detail and submission now enforce owner checks.
+- Submission integrity: duplicate questions, wrong-topic question IDs, resubmission and incomplete answer sets are rejected.
+- Frontend: shared safe markdown/HTML utilities, mobile/a11y/focus/reduced-motion improvements, skeleton/empty-state primitives.
+- CORS: credentialed wildcard reflection removed; optional explicit allowlist via `CORS_ALLOWED_ORIGINS`.
+
 ``
 
 ---
@@ -642,6 +651,13 @@ Hệ thống học tập thông minh/
   - `export_codebase.ps1` & `FULL_CODEBASE.md`: Tự động trích xuất toàn bộ 47 file mã nguồn của dự án thành 1 file duy nhất để phục vụ đánh giá, thẩm định từ bên thứ ba.
   - `README.md`: Nâng cấp toàn diện với sơ đồ kiến trúc Mermaid, bảng công nghệ chi tiết, nguyên lý sư phạm và luồng dữ liệu liên kết giữa các tầng.
   - Thiết lập đề xuất quy chuẩn `/learn` tự động đồng bộ 3 file tài liệu sau mỗi phiên thay đổi mã nguồn.
+- [x] **Phase 9 (Nhánh Thử Nghiệm `refactor-experiment` — Security & Resilience Audit):**
+  - Vá lỗ hổng IDOR/Object-level authorization tại `GET /api/quiz/session/{id}`.
+  - Khóa tính toàn vẹn nộp bài thi (chống nộp 2 lần, chống trùng/thiếu câu hỏi, bọc kiểm tra topic).
+  - Tầng vận chuyển mạng `js/api.js` nâng cao với timeout, AbortController, offline detection và safe retry; bổ sung `js/ui.js` xử lý safe Markdown/HTML sanitation chống XSS.
+  - Sửa lỗi biên dịch `HttpServletResponse.SC_UNPROCESSABLE_ENTITY` (thay bằng `422` cho tương thích Jakarta Servlet 5.0).
+  - Schema CSDL bổ sung Unique index `(session_id, question_id)` chống duplicate answers.
+  - Giữ nguyên vẹn nhánh `main` để bảo toàn fallback production.
 
 ## Pending Tasks (Các bước tiếp theo mở rộng)
 - [ ] Export báo cáo thống kê kết quả học tập ra Excel/PDF cho Giảng viên.
@@ -805,6 +821,7 @@ CREATE INDEX IF NOT EXISTS IX_questions_topic      ON questions(topic_id);
 CREATE INDEX IF NOT EXISTS IX_quiz_sessions_user   ON quiz_sessions(user_id);
 CREATE INDEX IF NOT EXISTS IX_quiz_sessions_topic  ON quiz_sessions(topic_id);
 CREATE INDEX IF NOT EXISTS IX_user_answers_session ON user_answers(session_id);
+CREATE UNIQUE INDEX IF NOT EXISTS UQ_user_answers_session_question ON user_answers(session_id, question_id);
 CREATE INDEX IF NOT EXISTS IX_remedial_user        ON remedial_lessons(user_id);
 CREATE INDEX IF NOT EXISTS IX_chat_history_user    ON chat_history(user_id);
 CREATE INDEX IF NOT EXISTS IX_chat_history_session ON chat_history(session_id);
@@ -1605,6 +1622,8 @@ import java.time.format.DateTimeFormatter;
  */
 public class JsonHelper {
 
+    private static final int MAX_JSON_BODY_CHARS = 262_144;
+
     private static final DateTimeFormatter ISO_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 
     private static final Gson gson = new GsonBuilder()
@@ -1641,6 +1660,9 @@ public class JsonHelper {
                 String line;
                 while ((line = reader.readLine()) != null) {
                     sb.append(line);
+                    if (sb.length() > MAX_JSON_BODY_CHARS) {
+                        throw new JsonSyntaxException("Request body exceeds allowed size");
+                    }
                 }
             }
             String content = sb.toString().trim();
@@ -2502,6 +2524,33 @@ public class QuizDAO {
             e.printStackTrace();
         }
         return sessions;
+    }
+
+    /** Return the session only when it belongs to the requested user. */
+    public QuizSession findSessionForUser(int sessionId, int userId) {
+        String sql = "SELECT qs.*, t.topic_name FROM quiz_sessions qs JOIN topics t ON qs.topic_id=t.topic_id WHERE qs.session_id=? AND qs.user_id=?";
+        try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, sessionId); ps.setInt(2, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) { QuizSession session = mapQuizSession(rs); session.setTopicName(rs.getString("topic_name")); return session; }
+            }
+        } catch (SQLException e) { throw new IllegalStateException("Không thể truy vấn phiên làm bài.", e); }
+        return null;
+    }
+
+    public boolean questionBelongsToTopic(int questionId, int topicId) {
+        String sql = "SELECT 1 FROM questions WHERE question_id=? AND topic_id=?";
+        try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, questionId); ps.setInt(2, topicId);
+            try (ResultSet rs = ps.executeQuery()) { return rs.next(); }
+        } catch (SQLException e) { throw new IllegalStateException("Không thể xác minh câu hỏi.", e); }
+    }
+
+    public int countAnswersBySession(int sessionId) {
+        String sql = "SELECT COUNT(*) FROM user_answers WHERE session_id=?";
+        try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, sessionId); try (ResultSet rs = ps.executeQuery()) { return rs.next() ? rs.getInt(1) : 0; }
+        } catch (SQLException e) { throw new IllegalStateException("Không thể kiểm tra trạng thái bài làm.", e); }
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -3678,6 +3727,25 @@ public class QuizService {
      * Nộp bài, chấm điểm, ghi nhận Confidence Tagging và sinh bài học AI.
      */
     public Map<String, Object> submitQuiz(int sessionId, int userId, List<Map<String, Object>> submittedAnswers) {
+        QuizSession ownedSession = quizDAO.findSessionForUser(sessionId, userId);
+        if (ownedSession == null) throw new SecurityException("Phiên làm bài không tồn tại hoặc không thuộc tài khoản hiện tại.");
+        if (ownedSession.getCompletedAt() != null || quizDAO.countAnswersBySession(sessionId) > 0)
+            throw new IllegalStateException("Phiên làm bài này đã được nộp trước đó.");
+        if (submittedAnswers == null || submittedAnswers.isEmpty())
+            throw new IllegalArgumentException("Danh sách câu trả lời không được để trống.");
+        if (submittedAnswers.size() != ownedSession.getTotalQuestions())
+            throw new IllegalArgumentException("Số câu trả lời không khớp với bài kiểm tra.");
+
+        Set<Integer> uniqueQuestionIds = new HashSet<>();
+        for (Map<String,Object> answer : submittedAnswers) {
+            Object idValue = answer.get("questionId");
+            if (!(idValue instanceof Number)) throw new IllegalArgumentException("questionId không hợp lệ.");
+            int qid = ((Number) idValue).intValue();
+            if (!uniqueQuestionIds.add(qid)) throw new IllegalArgumentException("Bài nộp chứa câu hỏi trùng lặp.");
+            if (!quizDAO.questionBelongsToTopic(qid, ownedSession.getTopicId()))
+                throw new IllegalArgumentException("Bài nộp chứa câu hỏi không thuộc chủ đề của phiên thi.");
+        }
+
         // Lấy thông tin user để AI cá nhân hóa theo sở thích
         Optional<User> userOpt = userDAO.findById(userId);
         String userInterests = userOpt.map(User::getInterests).orElse(null);
@@ -3760,12 +3828,15 @@ public class QuizService {
     /**
      * Lấy chi tiết phiên làm bài kèm các bài học củng cố đã tạo.
      */
-    public Map<String, Object> getSessionDetails(int sessionId) {
+    public Map<String, Object> getSessionDetails(int sessionId, int userId) {
+        QuizSession session = quizDAO.findSessionForUser(sessionId, userId);
+        if (session == null) throw new SecurityException("Bạn không có quyền xem phiên làm bài này.");
         List<UserAnswer> answers = quizDAO.getAnswersBySession(sessionId);
         List<RemedialLesson> lessons = quizDAO.getRemedialLessonsBySession(sessionId);
 
         Map<String, Object> details = new HashMap<>();
         details.put("sessionId", sessionId);
+        details.put("session", session);
         details.put("answers", answers);
         details.put("remedialLessons", lessons);
         return details;
@@ -3963,48 +4034,43 @@ import jakarta.servlet.*;
 import jakarta.servlet.annotation.WebFilter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Set;
+import java.util.stream.Collectors;
 
-/**
- * Filter xử lý CORS và UTF-8 Encoding cho toàn bộ request/response.
- */
 @WebFilter(filterName = "CorsFilter", urlPatterns = {"/*"})
 public class CorsFilter implements Filter {
+    private Set<String> allowedOrigins;
 
-    @Override
-    public void init(FilterConfig filterConfig) throws ServletException {}
-
-    @Override
-    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
-            throws IOException, ServletException {
-        
-        HttpServletRequest req = (HttpServletRequest) request;
-        HttpServletResponse res = (HttpServletResponse) response;
-
-        // Cấu hình UTF-8
-        req.setCharacterEncoding("UTF-8");
-        res.setCharacterEncoding("UTF-8");
-
-        // Cấu hình CORS
-        String origin = req.getHeader("Origin");
-        res.setHeader("Access-Control-Allow-Origin", origin != null ? origin : "*");
-        res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-        res.setHeader("Access-Control-Allow-Headers", "Origin, Content-Type, Accept, Authorization, X-Requested-With");
-        res.setHeader("Access-Control-Allow-Credentials", "true");
-        res.setHeader("Access-Control-Max-Age", "3600");
-
-        // Trả về ngay nếu là OPTIONS Preflight
-        if ("OPTIONS".equalsIgnoreCase(req.getMethod())) {
-            res.setStatus(HttpServletResponse.SC_OK);
-            return;
-        }
-
-        chain.doFilter(request, response);
+    @Override public void init(FilterConfig filterConfig) {
+        String raw = System.getenv().getOrDefault("CORS_ALLOWED_ORIGINS", "");
+        allowedOrigins = Arrays.stream(raw.split(",")).map(String::trim).filter(v -> !v.isEmpty()).collect(Collectors.toSet());
     }
 
-    @Override
-    public void destroy() {}
+    @Override public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
+        HttpServletRequest req = (HttpServletRequest) request;
+        HttpServletResponse res = (HttpServletResponse) response;
+        req.setCharacterEncoding("UTF-8"); res.setCharacterEncoding("UTF-8");
+
+        String origin = req.getHeader("Origin");
+        boolean sameOrigin = origin == null || origin.equals(req.getScheme() + "://" + req.getServerName() + ((req.getServerPort()==80||req.getServerPort()==443) ? "" : ":"+req.getServerPort()));
+        if (origin != null && (sameOrigin || allowedOrigins.contains(origin))) {
+            res.setHeader("Access-Control-Allow-Origin", origin);
+            res.setHeader("Vary", "Origin");
+            res.setHeader("Access-Control-Allow-Credentials", "true");
+        }
+        res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+        res.setHeader("Access-Control-Allow-Headers", "Content-Type, Accept, X-Requested-With");
+        res.setHeader("Access-Control-Max-Age", "3600");
+        res.setHeader("X-Content-Type-Options", "nosniff");
+        res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+        res.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
+        res.setHeader("Content-Security-Policy", "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com data:; img-src 'self' data: https:; connect-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'");
+
+        if ("OPTIONS".equalsIgnoreCase(req.getMethod())) { res.setStatus(HttpServletResponse.SC_NO_CONTENT); return; }
+        chain.doFilter(request, response);
+    }
 }
 
 ``
@@ -4221,6 +4287,7 @@ package com.lms.servlet;
 
 import com.google.gson.JsonObject;
 import com.lms.dao.ChatDAO;
+import com.lms.dao.QuizDAO;
 import com.lms.model.ChatMessage;
 import com.lms.model.User;
 import com.lms.service.AIService;
@@ -4241,6 +4308,7 @@ import java.util.List;
 public class ChatServlet extends HttpServlet {
 
     private final ChatDAO chatDAO = new ChatDAO();
+    private final QuizDAO quizDAO = new QuizDAO();
     private final AIService aiService = new AIService();
 
     @Override
@@ -4265,6 +4333,11 @@ public class ChatServlet extends HttpServlet {
         }
 
         String userMessage = body.get("message").getAsString().trim();
+        if (userMessage.length() > 4000) {
+            resp.setStatus(422); // Unprocessable Entity
+            resp.getWriter().write(JsonHelper.error("Tin nhắn quá dài (tối đa 4000 ký tự)."));
+            return;
+        }
         if (userMessage.isEmpty()) {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             resp.getWriter().write(JsonHelper.error("Tin nhắn không được để trống."));
@@ -4272,7 +4345,13 @@ public class ChatServlet extends HttpServlet {
         }
 
         String persona = body.has("persona") ? body.get("persona").getAsString() : "peer_tutor";
+        if (!persona.equals("senior_dev") && !persona.equals("peer_tutor") && !persona.equals("professor")) persona = "peer_tutor";
         Integer sessionId = body.has("sessionId") && !body.get("sessionId").isJsonNull() ? body.get("sessionId").getAsInt() : null;
+        if (sessionId != null && quizDAO.findSessionForUser(sessionId, user.getUserId()) == null) {
+            resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            resp.getWriter().write(JsonHelper.error("Phiên làm bài đính kèm không thuộc tài khoản hiện tại."));
+            return;
+        }
         String context = body.has("context") && !body.get("context").isJsonNull() ? body.get("context").getAsString() : "";
 
         // Gọi AI tạo phản hồi
@@ -4657,7 +4736,7 @@ public class QuizServlet extends HttpServlet {
             handleGetHistory(resp, user);
         } else if (fullPath.startsWith("/api/quiz/session/")) {
             String sessionIdStr = fullPath.substring("/api/quiz/session/".length());
-            handleGetSessionDetail(sessionIdStr, resp);
+            handleGetSessionDetail(sessionIdStr, resp, user);
         } else {
             resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
             resp.getWriter().write(JsonHelper.error("Không tìm thấy endpoint GET: " + fullPath));
@@ -4708,8 +4787,19 @@ public class QuizServlet extends HttpServlet {
             }
         }
 
-        Map<String, Object> submissionResult = quizService.submitQuiz(sessionId, user.getUserId(), answersList);
-        resp.getWriter().write(JsonHelper.success("Chấm điểm và phân tích hoàn tất", submissionResult));
+        try {
+            Map<String, Object> submissionResult = quizService.submitQuiz(sessionId, user.getUserId(), answersList);
+            resp.getWriter().write(JsonHelper.success("Chấm điểm và phân tích hoàn tất", submissionResult));
+        } catch (SecurityException e) {
+            resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            resp.getWriter().write(JsonHelper.error(e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            resp.setStatus(422); // Unprocessable Entity
+            resp.getWriter().write(JsonHelper.error(e.getMessage()));
+        } catch (IllegalStateException e) {
+            resp.setStatus(HttpServletResponse.SC_CONFLICT);
+            resp.getWriter().write(JsonHelper.error(e.getMessage()));
+        }
     }
 
     /**
@@ -4818,14 +4908,17 @@ public class QuizServlet extends HttpServlet {
         resp.getWriter().write(JsonHelper.success("Lịch sử làm bài", history));
     }
 
-    private void handleGetSessionDetail(String sessionIdStr, HttpServletResponse resp) throws IOException {
+    private void handleGetSessionDetail(String sessionIdStr, HttpServletResponse resp, User user) throws IOException {
         try {
             int sessionId = Integer.parseInt(sessionIdStr);
-            Map<String, Object> details = quizService.getSessionDetails(sessionId);
+            Map<String, Object> details = quizService.getSessionDetails(sessionId, user.getUserId());
             resp.getWriter().write(JsonHelper.success("Chi tiết phiên làm bài", details));
         } catch (NumberFormatException e) {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             resp.getWriter().write(JsonHelper.error("Mã phiên không hợp lệ."));
+        } catch (SecurityException e) {
+            resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            resp.getWriter().write(JsonHelper.error(e.getMessage()));
         }
     }
 
@@ -5455,6 +5548,46 @@ body {
 
 
 
+
+/* === 2026 UX hardening layer === */
+:root {
+    --surface: #ffffff; --surface-muted: #f8fafc; --text-strong: #0f172a;
+    --text-muted: #64748b; --border: #e2e8f0; --focus-ring: rgba(79,70,229,.28);
+}
+html { scroll-behavior: smooth; }
+body { background: radial-gradient(circle at top right, #eef2ff 0, transparent 32rem), #f8fafc; color: var(--text-strong); }
+.container { width: min(100% - 2rem, 1180px); }
+.navbar-custom { box-shadow: 0 1px 0 rgba(15,23,42,.04); }
+.card, .modal-content, .dropdown-menu { border-color: var(--border); border-radius: 18px; }
+.card { box-shadow: 0 10px 32px rgba(15,23,42,.055); }
+.btn { border-radius: 11px; font-weight: 650; min-height: 42px; transition: transform .16s ease, box-shadow .16s ease, background-color .16s ease; }
+.btn:hover { transform: translateY(-1px); }
+.form-control, .form-select { min-height: 44px; border-radius: 11px; border-color: #cbd5e1; }
+.form-control:focus, .form-select:focus, .btn:focus-visible, a:focus-visible, [tabindex]:focus-visible {
+    outline: 3px solid var(--focus-ring) !important; outline-offset: 2px; box-shadow: none !important;
+}
+.table-responsive { border-radius: 14px; }
+.table > :not(caption) > * > * { padding: .9rem .85rem; vertical-align: middle; }
+.skeleton { position: relative; overflow: hidden; background: #e9eef5; border-radius: 10px; min-height: 1rem; }
+.skeleton::after { content:''; position:absolute; inset:0; transform:translateX(-100%); background:linear-gradient(90deg,transparent,rgba(255,255,255,.75),transparent); animation:skeleton-wave 1.3s infinite; }
+@keyframes skeleton-wave { to { transform: translateX(100%); } }
+.empty-state { text-align:center; padding:3rem 1rem; color:var(--text-muted); }
+.empty-state i { font-size:2.4rem; margin-bottom:1rem; opacity:.65; }
+.status-banner { border-radius: 14px; padding: .9rem 1rem; border: 1px solid var(--border); background: var(--surface); }
+@media (max-width: 767.98px) {
+    .container { width: min(100% - 1rem, 1180px); }
+    .hero-banner { padding: 1.6rem 1.1rem; border-radius: 16px; }
+    .hero-banner h1 { font-size: clamp(1.55rem, 8vw, 2.2rem); }
+    .kpi-card { padding: 1rem; }
+    .chatbot-launcher { right: 16px; bottom: 16px; width: 54px; height: 54px; }
+    .chatbot-window { inset: auto 8px 78px 8px; width: auto; max-width: none; height: min(72vh, 560px); }
+    .table { min-width: 720px; }
+    .modal-dialog { margin: .5rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { scroll-behavior:auto !important; animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; }
+}
+
 ``
 
 ---
@@ -5464,252 +5597,141 @@ body {
 
 ``javascript
 /**
- * ═══════════════════════════════════════════════════════════════════
- * LMS AI - API Client Module (Fetch API Wrapper)
- * Quản lý giao tiếp HTTP với Jakarta Servlet Backend
- * ═══════════════════════════════════════════════════════════════════
+ * Resilient API client for the LMS frontend.
+ * - timeout + AbortController
+ * - offline/network/HTTP error classification
+ * - safe JSON parsing
+ * - idempotent retry for GET requests only
  */
-
 const API_BASE = window.location.origin + (window.location.pathname.startsWith('/lms') ? '/lms' : '') + '/api';
+const API_TIMEOUT_MS = 15000;
 
-// ── Global Dark Toast Notification (SweetAlert2) ──
+class ApiError extends Error {
+    constructor(message, { status = 0, code = 'UNKNOWN', details = null, cause = null } = {}) {
+        super(message);
+        this.name = 'ApiError';
+        this.status = status;
+        this.code = code;
+        this.details = details;
+        this.cause = cause;
+    }
+}
+
 if (typeof Swal !== 'undefined') {
     window.Toast = Swal.mixin({
-        toast: true,
-        position: 'top-end',
-        showConfirmButton: false,
-        timer: 3000,
-        timerProgressBar: true,
-        background: '#1e293b',
-        color: '#ffffff',
-        iconColor: '#38bdf8'
+        toast: true, position: 'top-end', showConfirmButton: false, timer: 3200,
+        timerProgressBar: true, background: '#111827', color: '#fff', iconColor: '#818cf8'
     });
 }
 
 const API = {
     async request(endpoint, options = {}) {
-        const url = `${API_BASE}${endpoint}`;
-        const config = {
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            },
-            credentials: 'same-origin',
-            ...options
-        };
+        const { timeout = API_TIMEOUT_MS, retries, signal: externalSignal, ...fetchOptions } = options;
+        const method = String(fetchOptions.method || 'GET').toUpperCase();
+        const maxRetries = Number.isInteger(retries) ? retries : (method === 'GET' ? 1 : 0);
 
-        try {
-            const res = await fetch(url, config);
-            const data = await res.json().catch(() => ({}));
+        if (!navigator.onLine) {
+            throw new ApiError('Bạn đang ngoại tuyến. Hãy kiểm tra kết nối mạng rồi thử lại.', { code: 'OFFLINE' });
+        }
 
-            if (!res.ok) {
-                if (res.status === 401 && !endpoint.includes('/auth/login') && !endpoint.includes('/auth/me')) {
-                    // Phiên đăng nhập hết hạn
-                    localStorage.removeItem('lms_user');
-                    window.location.href = 'auth.html';
-                }
-                throw new Error(data.message || `Lỗi HTTP ${res.status}`);
+        for (let attempt = 0; attempt <= maxRetries; attempt++) {
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort('timeout'), timeout);
+            const abortFromOutside = () => controller.abort('external');
+            externalSignal?.addEventListener('abort', abortFromOutside, { once: true });
+
+            const config = {
+                credentials: 'same-origin',
+                headers: { 'Accept': 'application/json', ...fetchOptions.headers },
+                ...fetchOptions,
+                signal: controller.signal
+            };
+            if (config.body && !(config.body instanceof FormData) && !config.headers['Content-Type']) {
+                config.headers['Content-Type'] = 'application/json';
             }
 
-            return data;
-        } catch (err) {
-            console.error(`[API Error] ${endpoint}:`, err);
-            throw err;
+            try {
+                const res = await fetch(`${API_BASE}${endpoint}`, config);
+                const text = await res.text();
+                let data = {};
+                if (text) {
+                    try { data = JSON.parse(text); }
+                    catch { throw new ApiError('Máy chủ trả về dữ liệu không hợp lệ.', { status: res.status, code: 'INVALID_JSON' }); }
+                }
+
+                if (!res.ok) {
+                    if (res.status === 401 && !endpoint.includes('/auth/login') && !endpoint.includes('/auth/me')) {
+                        localStorage.removeItem('lms_user');
+                        if (!window.location.pathname.endsWith('/auth.html')) window.location.href = 'auth.html?reason=session-expired';
+                    }
+                    const codes = { 400: 'BAD_REQUEST', 401: 'UNAUTHORIZED', 403: 'FORBIDDEN', 404: 'NOT_FOUND', 409: 'CONFLICT', 422: 'VALIDATION', 429: 'RATE_LIMIT', 500: 'SERVER_ERROR', 503: 'UNAVAILABLE' };
+                    throw new ApiError(data.message || `Yêu cầu thất bại (HTTP ${res.status}).`, {
+                        status: res.status, code: codes[res.status] || 'HTTP_ERROR', details: data
+                    });
+                }
+                return data;
+            } catch (err) {
+                const aborted = controller.signal.aborted;
+                const apiErr = err instanceof ApiError ? err : new ApiError(
+                    aborted ? 'Yêu cầu mất quá nhiều thời gian hoặc đã bị hủy.' : 'Không thể kết nối tới máy chủ.',
+                    { code: aborted ? 'ABORTED' : 'NETWORK_ERROR', cause: err }
+                );
+                if (attempt < maxRetries && ['NETWORK_ERROR', 'ABORTED'].includes(apiErr.code) && !externalSignal?.aborted) {
+                    await new Promise(resolve => setTimeout(resolve, 350 * (attempt + 1)));
+                    continue;
+                }
+                console.error(`[API] ${method} ${endpoint}`, apiErr);
+                throw apiErr;
+            } finally {
+                clearTimeout(timer);
+                externalSignal?.removeEventListener('abort', abortFromOutside);
+            }
         }
     },
 
     auth: {
         async login(username, password) {
-            const res = await API.request('/auth/login', {
-                method: 'POST',
-                body: JSON.stringify({ username, password })
-            });
-            if (res.data) {
-                localStorage.setItem('lms_user', JSON.stringify(res.data));
-            }
+            const res = await API.request('/auth/login', { method: 'POST', body: JSON.stringify({ username, password }) });
+            if (res.data) localStorage.setItem('lms_user', JSON.stringify(res.data));
             return res;
         },
-
         async register(username, password, fullName, email, interests) {
-            const res = await API.request('/auth/register', {
-                method: 'POST',
-                body: JSON.stringify({ username, password, fullName, email, interests })
-            });
-            if (res.data) {
-                localStorage.setItem('lms_user', JSON.stringify(res.data));
-            }
+            const res = await API.request('/auth/register', { method: 'POST', body: JSON.stringify({ username, password, fullName, email, interests }) });
+            if (res.data) localStorage.setItem('lms_user', JSON.stringify(res.data));
             return res;
         },
-
-        async logout() {
-            try {
-                await API.request('/auth/logout', { method: 'POST' });
-            } finally {
-                localStorage.removeItem('lms_user');
-                window.location.href = 'auth.html';
-            }
-        },
-
-        async me() {
-            return API.request('/auth/me');
-        },
-
-        getUser() {
-            try {
-                return JSON.parse(localStorage.getItem('lms_user'));
-            } catch (e) {
-                return null;
-            }
-        },
-
-        requireAuth() {
-            const user = this.getUser();
-            if (!user) {
-                window.location.href = 'auth.html';
-                return null;
-            }
-            return user;
-        },
-
-        requireTeacher() {
-            const user = this.getUser();
-            if (!user) {
-                window.location.href = 'auth.html';
-                return null;
-            }
-            const role = (user.role || '').toUpperCase();
-            if (role !== 'TEACHER' && role !== 'ADMIN') {
-                if (typeof Swal !== 'undefined') {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Từ chối truy cập',
-                        text: 'Trang này dành riêng cho Giảng viên hoặc Quản trị viên.',
-                        confirmButtonText: 'Quay lại'
-                    }).then(() => {
-                        window.location.href = 'index.html';
-                    });
-                } else {
-                    window.location.href = 'index.html';
-                }
-                return null;
-            }
-            return user;
-        },
-
-        isTeacher() {
-            const user = this.getUser();
-            if (!user) return false;
-            const role = (user.role || '').toUpperCase();
-            return role === 'TEACHER' || role === 'ADMIN';
-        }
+        async logout() { try { await API.request('/auth/logout', { method: 'POST' }); } finally { localStorage.removeItem('lms_user'); window.location.href = 'auth.html'; } },
+        async me() { return API.request('/auth/me'); },
+        getUser() { try { return JSON.parse(localStorage.getItem('lms_user')); } catch { return null; } },
+        requireAuth() { const u=this.getUser(); if(!u){ window.location.href='auth.html'; return null; } return u; },
+        requireTeacher() { const u=this.requireAuth(); if(!u)return null; const r=String(u.role||'').toUpperCase(); if(!['TEACHER','ADMIN'].includes(r)){ window.location.href='index.html'; return null; } return u; },
+        isTeacher() { const u=this.getUser(); return !!u && ['TEACHER','ADMIN'].includes(String(u.role||'').toUpperCase()); }
     },
-
-    topics: {
-        async list() {
-            return API.request('/topics/list');
-        },
-
-        async get(topicId) {
-            return API.request(`/topics/${topicId}`);
-        }
-    },
-
+    topics: { list: () => API.request('/topics/list'), get: id => API.request(`/topics/${encodeURIComponent(id)}`) },
     questions: {
-        async list(topicId = null) {
-            const query = topicId ? `?topicId=${topicId}` : '';
-            return API.request(`/questions${query}`);
-        },
-
-        async create(questionData) {
-            return API.request('/questions', {
-                method: 'POST',
-                body: JSON.stringify(questionData)
-            });
-        },
-
-        async update(questionId, questionData) {
-            return API.request(`/questions/${questionId}`, {
-                method: 'PUT',
-                body: JSON.stringify(questionData)
-            });
-        },
-
-        async delete(questionId) {
-            return API.request(`/questions/${questionId}`, {
-                method: 'DELETE'
-            });
-        }
+        list: (topicId=null) => API.request(`/questions${topicId ? `?topicId=${encodeURIComponent(topicId)}` : ''}`),
+        create: data => API.request('/questions', { method:'POST', body:JSON.stringify(data) }),
+        update: (id,data) => API.request(`/questions/${encodeURIComponent(id)}`, { method:'PUT', body:JSON.stringify(data) }),
+        delete: id => API.request(`/questions/${encodeURIComponent(id)}`, { method:'DELETE' })
     },
-
     teacher: {
-        async stats() {
-            return API.request('/teacher/stats');
-        },
-
-        async generateQuestions(payload) {
-            return API.request('/teacher/ai/generate', {
-                method: 'POST',
-                body: JSON.stringify(payload)
-            });
-        },
-
-        async chat(message, context = '') {
-            return API.request('/teacher/ai/chat', {
-                method: 'POST',
-                body: JSON.stringify({ message, context })
-            });
-        }
+        stats: () => API.request('/teacher/stats'),
+        generateQuestions: payload => API.request('/teacher/ai/generate', { method:'POST', body:JSON.stringify(payload), timeout:30000 }),
+        chat: (message,context='') => API.request('/teacher/ai/chat', { method:'POST', body:JSON.stringify({message,context}), timeout:30000 })
     },
-
     quiz: {
-        async start(topicId) {
-            return API.request('/quiz/start', {
-                method: 'POST',
-                body: JSON.stringify({ topicId })
-            });
-        },
-
-        async submit(sessionId, answers) {
-            return API.request('/quiz/submit', {
-                method: 'POST',
-                body: JSON.stringify({ sessionId, answers })
-            });
-        },
-
-        async history() {
-            return API.request('/quiz/history');
-        },
-
-        async session(sessionId) {
-            return API.request(`/quiz/session/${sessionId}`);
-        }
+        start: topicId => API.request('/quiz/start', { method:'POST', body:JSON.stringify({topicId}) }),
+        submit: (sessionId,answers) => API.request('/quiz/submit', { method:'POST', body:JSON.stringify({sessionId,answers}), timeout:45000 }),
+        history: () => API.request('/quiz/history'),
+        session: sessionId => API.request(`/quiz/session/${encodeURIComponent(sessionId)}`)
     },
-
     remediation: {
-        async get(topicId, misconception) {
-            const query = `?topicId=${topicId}&misconception=${encodeURIComponent(misconception || '')}`;
-            return API.request(`/remediation${query}`);
-        },
-
-        async submit(payload) {
-            return API.request('/remediation/submit', {
-                method: 'POST',
-                body: JSON.stringify(payload)
-            });
-        }
+        get: (topicId,misconception) => API.request(`/remediation?topicId=${encodeURIComponent(topicId)}&misconception=${encodeURIComponent(misconception||'')}`),
+        submit: payload => API.request('/remediation/submit', { method:'POST', body:JSON.stringify(payload) })
     },
-
     chat: {
-        async send(message, persona = 'peer_tutor', sessionId = null, context = null) {
-            return API.request('/chat/send', {
-                method: 'POST',
-                body: JSON.stringify({ message, persona, sessionId, context })
-            });
-        },
-
-        async history(limit = 30) {
-            return API.request(`/chat/history?limit=${limit}`);
-        }
+        send: (message,persona='peer_tutor',sessionId=null,context=null) => API.request('/chat/send', { method:'POST', body:JSON.stringify({message,persona,sessionId,context}), timeout:30000 }),
+        history: (limit=30) => API.request(`/chat/history?limit=${Math.min(100, Math.max(1, Number(limit)||30))}`)
     }
 };
 
@@ -5841,7 +5863,7 @@ const API = {
         bubble.className = `chat-bubble chat-bubble-${sender}`;
 
         if (sender === 'ai' && typeof marked !== 'undefined') {
-            bubble.innerHTML = marked.parse(content);
+            bubble.innerHTML = AppUI.renderMarkdown(content);
         } else {
             bubble.textContent = content;
         }
@@ -6085,7 +6107,7 @@ function renderQuestion(index) {
     // Render nội dung câu hỏi (hỗ trợ Markdown & code block)
     const questionTextEl = document.getElementById('question-text');
     if (typeof marked !== 'undefined') {
-        questionTextEl.innerHTML = marked.parse(q.questionText || '');
+        questionTextEl.innerHTML = AppUI.renderMarkdown(q.questionText || '');
         if (typeof hljs !== 'undefined') {
             questionTextEl.querySelectorAll('pre code').forEach((el) => {
                 hljs.highlightElement(el);
@@ -7588,7 +7610,7 @@ function renderAiGeneratedCards(questions, topicName) {
         // Parse markdown for question text
         let parsedText = '';
         if (typeof marked !== 'undefined' && marked.parse) {
-            parsedText = marked.parse(q.questionText || '');
+            parsedText = AppUI.renderMarkdown(q.questionText || '');
         } else {
             parsedText = `<p>${escapeHtml(q.questionText || '')}</p>`;
         }
@@ -7961,6 +7983,78 @@ function normalizeCorrectAnswer(val) {
 
 ---
 
+## src\main\webapp\js\ui.js
+<a id='src-main-webapp-js-ui-js'></a>
+
+``javascript
+/** Shared UI/resilience helpers. */
+const AppUI = (() => {
+    const escapeHtml = (value = '') => String(value)
+        .replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;').replaceAll("'", '&#039;');
+
+    const sanitizeHtml = (html = '') => {
+        const template = document.createElement('template');
+        template.innerHTML = String(html);
+        template.content.querySelectorAll('script, iframe, object, embed, link[rel="import"]').forEach(el => el.remove());
+        template.content.querySelectorAll('*').forEach(el => {
+            [...el.attributes].forEach(attr => {
+                const name = attr.name.toLowerCase();
+                const value = attr.value.trim().toLowerCase();
+                if (name.startsWith('on') || ((name === 'href' || name === 'src') && value.startsWith('javascript:'))) {
+                    el.removeAttribute(attr.name);
+                }
+            });
+        });
+        return template.innerHTML;
+    };
+
+    const renderMarkdown = (source = '') => {
+        if (typeof marked === 'undefined') return escapeHtml(source);
+        return sanitizeHtml(marked.parse(String(source)));
+    };
+
+    const setBusy = (element, busy, label = 'Đang xử lý...') => {
+        if (!element) return;
+        if (busy) {
+            element.dataset.originalHtml ??= element.innerHTML;
+            element.disabled = true;
+            element.setAttribute('aria-busy', 'true');
+            element.innerHTML = `<span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>${escapeHtml(label)}`;
+        } else {
+            element.disabled = false;
+            element.removeAttribute('aria-busy');
+            if (element.dataset.originalHtml) {
+                element.innerHTML = element.dataset.originalHtml;
+                delete element.dataset.originalHtml;
+            }
+        }
+    };
+
+    const announce = (message) => {
+        let region = document.getElementById('app-live-region');
+        if (!region) {
+            region = document.createElement('div');
+            region.id = 'app-live-region';
+            region.className = 'visually-hidden';
+            region.setAttribute('aria-live', 'polite');
+            region.setAttribute('aria-atomic', 'true');
+            document.body.appendChild(region);
+        }
+        region.textContent = '';
+        requestAnimationFrame(() => { region.textContent = String(message || ''); });
+    };
+
+    window.addEventListener('offline', () => announce('Bạn đang ngoại tuyến. Một số chức năng cần mạng sẽ tạm thời không khả dụng.'));
+    window.addEventListener('online', () => announce('Đã kết nối mạng trở lại.'));
+
+    return { escapeHtml, sanitizeHtml, renderMarkdown, setBusy, announce };
+})();
+
+``
+
+---
+
 ## src\main\webapp\auth.html
 <a id='src-main-webapp-auth-html'></a>
 
@@ -8113,7 +8207,8 @@ function normalizeCorrectAnswer(val) {
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="js/api.js?v=2.2"></script>
+    <script src="js/ui.js?v=3.0"></script>
+    <script src="js/api.js?v=3.0"></script>
     <script>
         // Kiểm tra nếu đã đăng nhập thì chuyển hướng theo role
         const existingUser = API.auth.getUser();
@@ -8351,8 +8446,9 @@ function normalizeCorrectAnswer(val) {
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script src="js/api.js?v=2.2"></script>
-    <script src="js/chat-widget.js?v=2.2"></script>
+    <script src="js/ui.js?v=3.0"></script>
+    <script src="js/api.js?v=3.0"></script>
+    <script src="js/chat-widget.js?v=3.0"></script>
 
     <script>
         const currentUser = API.auth.requireAuth();
@@ -8567,8 +8663,9 @@ function normalizeCorrectAnswer(val) {
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script src="js/api.js?v=2.2"></script>
-    <script src="js/chat-widget.js?v=2.2"></script>
+    <script src="js/ui.js?v=3.0"></script>
+    <script src="js/api.js?v=3.0"></script>
+    <script src="js/chat-widget.js?v=3.0"></script>
 
     <script>
         // Kiểm tra xác thực
@@ -8826,10 +8923,11 @@ function normalizeCorrectAnswer(val) {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-    <script src="js/api.js?v=2.2"></script>
-    <script src="js/chat-widget.js?v=2.2"></script>
+    <script src="js/ui.js?v=3.0"></script>
+    <script src="js/api.js?v=3.0"></script>
+    <script src="js/chat-widget.js?v=3.0"></script>
     <!-- Externalized Quiz Module (1.1, 1.2, 1.3) -->
-    <script src="js/quiz.js?v=2.2"></script>
+    <script src="js/quiz.js?v=3.0"></script>
 </body>
 </html>
 
@@ -9007,10 +9105,11 @@ function normalizeCorrectAnswer(val) {
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-    <script src="js/api.js?v=2.2"></script>
-    <script src="js/chat-widget.js?v=2.2"></script>
+    <script src="js/ui.js?v=3.0"></script>
+    <script src="js/api.js?v=3.0"></script>
+    <script src="js/chat-widget.js?v=3.0"></script>
     <!-- Externalized Result Module (1.3, 2.3) -->
-    <script src="js/result.js?v=2.2"></script>
+    <script src="js/result.js?v=3.0"></script>
 </body>
 </html>
 
@@ -9718,9 +9817,10 @@ function normalizeCorrectAnswer(val) {
     <!-- Highlight.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     <!-- API Client -->
-    <script src="js/api.js?v=2.2"></script>
+    <script src="js/ui.js?v=3.0"></script>
+    <script src="js/api.js?v=3.0"></script>
     <!-- Teacher Dashboard Logic -->
-    <script src="js/teacher.js?v=2.2"></script>
+    <script src="js/teacher.js?v=3.0"></script>
 </body>
 </html>
 

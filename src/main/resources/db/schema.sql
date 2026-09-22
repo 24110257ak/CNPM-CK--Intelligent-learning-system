@@ -124,6 +124,7 @@ CREATE INDEX IF NOT EXISTS IX_questions_topic      ON questions(topic_id);
 CREATE INDEX IF NOT EXISTS IX_quiz_sessions_user   ON quiz_sessions(user_id);
 CREATE INDEX IF NOT EXISTS IX_quiz_sessions_topic  ON quiz_sessions(topic_id);
 CREATE INDEX IF NOT EXISTS IX_user_answers_session ON user_answers(session_id);
+CREATE UNIQUE INDEX IF NOT EXISTS UQ_user_answers_session_question ON user_answers(session_id, question_id);
 CREATE INDEX IF NOT EXISTS IX_remedial_user        ON remedial_lessons(user_id);
 CREATE INDEX IF NOT EXISTS IX_chat_history_user    ON chat_history(user_id);
 CREATE INDEX IF NOT EXISTS IX_chat_history_session ON chat_history(session_id);

@@ -62,7 +62,7 @@ public class QuizServlet extends HttpServlet {
             handleGetHistory(resp, user);
         } else if (fullPath.startsWith("/api/quiz/session/")) {
             String sessionIdStr = fullPath.substring("/api/quiz/session/".length());
-            handleGetSessionDetail(sessionIdStr, resp);
+            handleGetSessionDetail(sessionIdStr, resp, user);
         } else {
             resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
             resp.getWriter().write(JsonHelper.error("Không tìm thấy endpoint GET: " + fullPath));
@@ -113,8 +113,19 @@ public class QuizServlet extends HttpServlet {
             }
         }
 
-        Map<String, Object> submissionResult = quizService.submitQuiz(sessionId, user.getUserId(), answersList);
-        resp.getWriter().write(JsonHelper.success("Chấm điểm và phân tích hoàn tất", submissionResult));
+        try {
+            Map<String, Object> submissionResult = quizService.submitQuiz(sessionId, user.getUserId(), answersList);
+            resp.getWriter().write(JsonHelper.success("Chấm điểm và phân tích hoàn tất", submissionResult));
+        } catch (SecurityException e) {
+            resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            resp.getWriter().write(JsonHelper.error(e.getMessage()));
+        } catch (IllegalArgumentException e) {
+            resp.setStatus(422); // Unprocessable Entity
+            resp.getWriter().write(JsonHelper.error(e.getMessage()));
+        } catch (IllegalStateException e) {
+            resp.setStatus(HttpServletResponse.SC_CONFLICT);
+            resp.getWriter().write(JsonHelper.error(e.getMessage()));
+        }
     }
 
     /**
@@ -223,14 +234,17 @@ public class QuizServlet extends HttpServlet {
         resp.getWriter().write(JsonHelper.success("Lịch sử làm bài", history));
     }
 
-    private void handleGetSessionDetail(String sessionIdStr, HttpServletResponse resp) throws IOException {
+    private void handleGetSessionDetail(String sessionIdStr, HttpServletResponse resp, User user) throws IOException {
         try {
             int sessionId = Integer.parseInt(sessionIdStr);
-            Map<String, Object> details = quizService.getSessionDetails(sessionId);
+            Map<String, Object> details = quizService.getSessionDetails(sessionId, user.getUserId());
             resp.getWriter().write(JsonHelper.success("Chi tiết phiên làm bài", details));
         } catch (NumberFormatException e) {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             resp.getWriter().write(JsonHelper.error("Mã phiên không hợp lệ."));
+        } catch (SecurityException e) {
+            resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
+            resp.getWriter().write(JsonHelper.error(e.getMessage()));
         }
     }
 

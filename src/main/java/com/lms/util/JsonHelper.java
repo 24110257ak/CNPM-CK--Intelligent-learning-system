@@ -14,6 +14,8 @@ import java.time.format.DateTimeFormatter;
  */
 public class JsonHelper {
 
+    private static final int MAX_JSON_BODY_CHARS = 262_144;
+
     private static final DateTimeFormatter ISO_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 
     private static final Gson gson = new GsonBuilder()
@@ -50,6 +52,9 @@ public class JsonHelper {
                 String line;
                 while ((line = reader.readLine()) != null) {
                     sb.append(line);
+                    if (sb.length() > MAX_JSON_BODY_CHARS) {
+                        throw new JsonSyntaxException("Request body exceeds allowed size");
+                    }
                 }
             }
             String content = sb.toString().trim();

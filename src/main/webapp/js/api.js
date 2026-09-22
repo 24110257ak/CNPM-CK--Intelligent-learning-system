@@ -1,249 +1,138 @@
 /**
- * ═══════════════════════════════════════════════════════════════════
- * LMS AI - API Client Module (Fetch API Wrapper)
- * Quản lý giao tiếp HTTP với Jakarta Servlet Backend
- * ═══════════════════════════════════════════════════════════════════
+ * Resilient API client for the LMS frontend.
+ * - timeout + AbortController
+ * - offline/network/HTTP error classification
+ * - safe JSON parsing
+ * - idempotent retry for GET requests only
  */
-
 const API_BASE = window.location.origin + (window.location.pathname.startsWith('/lms') ? '/lms' : '') + '/api';
+const API_TIMEOUT_MS = 15000;
 
-// ── Global Dark Toast Notification (SweetAlert2) ──
+class ApiError extends Error {
+    constructor(message, { status = 0, code = 'UNKNOWN', details = null, cause = null } = {}) {
+        super(message);
+        this.name = 'ApiError';
+        this.status = status;
+        this.code = code;
+        this.details = details;
+        this.cause = cause;
+    }
+}
+
 if (typeof Swal !== 'undefined') {
     window.Toast = Swal.mixin({
-        toast: true,
-        position: 'top-end',
-        showConfirmButton: false,
-        timer: 3000,
-        timerProgressBar: true,
-        background: '#1e293b',
-        color: '#ffffff',
-        iconColor: '#38bdf8'
+        toast: true, position: 'top-end', showConfirmButton: false, timer: 3200,
+        timerProgressBar: true, background: '#111827', color: '#fff', iconColor: '#818cf8'
     });
 }
 
 const API = {
     async request(endpoint, options = {}) {
-        const url = `${API_BASE}${endpoint}`;
-        const config = {
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            },
-            credentials: 'same-origin',
-            ...options
-        };
+        const { timeout = API_TIMEOUT_MS, retries, signal: externalSignal, ...fetchOptions } = options;
+        const method = String(fetchOptions.method || 'GET').toUpperCase();
+        const maxRetries = Number.isInteger(retries) ? retries : (method === 'GET' ? 1 : 0);
 
-        try {
-            const res = await fetch(url, config);
-            const data = await res.json().catch(() => ({}));
+        if (!navigator.onLine) {
+            throw new ApiError('Bạn đang ngoại tuyến. Hãy kiểm tra kết nối mạng rồi thử lại.', { code: 'OFFLINE' });
+        }
 
-            if (!res.ok) {
-                if (res.status === 401 && !endpoint.includes('/auth/login') && !endpoint.includes('/auth/me')) {
-                    // Phiên đăng nhập hết hạn
-                    localStorage.removeItem('lms_user');
-                    window.location.href = 'auth.html';
-                }
-                throw new Error(data.message || `Lỗi HTTP ${res.status}`);
+        for (let attempt = 0; attempt <= maxRetries; attempt++) {
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort('timeout'), timeout);
+            const abortFromOutside = () => controller.abort('external');
+            externalSignal?.addEventListener('abort', abortFromOutside, { once: true });
+
+            const config = {
+                credentials: 'same-origin',
+                headers: { 'Accept': 'application/json', ...fetchOptions.headers },
+                ...fetchOptions,
+                signal: controller.signal
+            };
+            if (config.body && !(config.body instanceof FormData) && !config.headers['Content-Type']) {
+                config.headers['Content-Type'] = 'application/json';
             }
 
-            return data;
-        } catch (err) {
-            console.error(`[API Error] ${endpoint}:`, err);
-            throw err;
+            try {
+                const res = await fetch(`${API_BASE}${endpoint}`, config);
+                const text = await res.text();
+                let data = {};
+                if (text) {
+                    try { data = JSON.parse(text); }
+                    catch { throw new ApiError('Máy chủ trả về dữ liệu không hợp lệ.', { status: res.status, code: 'INVALID_JSON' }); }
+                }
+
+                if (!res.ok) {
+                    if (res.status === 401 && !endpoint.includes('/auth/login') && !endpoint.includes('/auth/me')) {
+                        localStorage.removeItem('lms_user');
+                        if (!window.location.pathname.endsWith('/auth.html')) window.location.href = 'auth.html?reason=session-expired';
+                    }
+                    const codes = { 400: 'BAD_REQUEST', 401: 'UNAUTHORIZED', 403: 'FORBIDDEN', 404: 'NOT_FOUND', 409: 'CONFLICT', 422: 'VALIDATION', 429: 'RATE_LIMIT', 500: 'SERVER_ERROR', 503: 'UNAVAILABLE' };
+                    throw new ApiError(data.message || `Yêu cầu thất bại (HTTP ${res.status}).`, {
+                        status: res.status, code: codes[res.status] || 'HTTP_ERROR', details: data
+                    });
+                }
+                return data;
+            } catch (err) {
+                const aborted = controller.signal.aborted;
+                const apiErr = err instanceof ApiError ? err : new ApiError(
+                    aborted ? 'Yêu cầu mất quá nhiều thời gian hoặc đã bị hủy.' : 'Không thể kết nối tới máy chủ.',
+                    { code: aborted ? 'ABORTED' : 'NETWORK_ERROR', cause: err }
+                );
+                if (attempt < maxRetries && ['NETWORK_ERROR', 'ABORTED'].includes(apiErr.code) && !externalSignal?.aborted) {
+                    await new Promise(resolve => setTimeout(resolve, 350 * (attempt + 1)));
+                    continue;
+                }
+                console.error(`[API] ${method} ${endpoint}`, apiErr);
+                throw apiErr;
+            } finally {
+                clearTimeout(timer);
+                externalSignal?.removeEventListener('abort', abortFromOutside);
+            }
         }
     },
 
     auth: {
         async login(username, password) {
-            const res = await API.request('/auth/login', {
-                method: 'POST',
-                body: JSON.stringify({ username, password })
-            });
-            if (res.data) {
-                localStorage.setItem('lms_user', JSON.stringify(res.data));
-            }
+            const res = await API.request('/auth/login', { method: 'POST', body: JSON.stringify({ username, password }) });
+            if (res.data) localStorage.setItem('lms_user', JSON.stringify(res.data));
             return res;
         },
-
         async register(username, password, fullName, email, interests) {
-            const res = await API.request('/auth/register', {
-                method: 'POST',
-                body: JSON.stringify({ username, password, fullName, email, interests })
-            });
-            if (res.data) {
-                localStorage.setItem('lms_user', JSON.stringify(res.data));
-            }
+            const res = await API.request('/auth/register', { method: 'POST', body: JSON.stringify({ username, password, fullName, email, interests }) });
+            if (res.data) localStorage.setItem('lms_user', JSON.stringify(res.data));
             return res;
         },
-
-        async logout() {
-            try {
-                await API.request('/auth/logout', { method: 'POST' });
-            } finally {
-                localStorage.removeItem('lms_user');
-                window.location.href = 'auth.html';
-            }
-        },
-
-        async me() {
-            return API.request('/auth/me');
-        },
-
-        getUser() {
-            try {
-                return JSON.parse(localStorage.getItem('lms_user'));
-            } catch (e) {
-                return null;
-            }
-        },
-
-        requireAuth() {
-            const user = this.getUser();
-            if (!user) {
-                window.location.href = 'auth.html';
-                return null;
-            }
-            return user;
-        },
-
-        requireTeacher() {
-            const user = this.getUser();
-            if (!user) {
-                window.location.href = 'auth.html';
-                return null;
-            }
-            const role = (user.role || '').toUpperCase();
-            if (role !== 'TEACHER' && role !== 'ADMIN') {
-                if (typeof Swal !== 'undefined') {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Từ chối truy cập',
-                        text: 'Trang này dành riêng cho Giảng viên hoặc Quản trị viên.',
-                        confirmButtonText: 'Quay lại'
-                    }).then(() => {
-                        window.location.href = 'index.html';
-                    });
-                } else {
-                    window.location.href = 'index.html';
-                }
-                return null;
-            }
-            return user;
-        },
-
-        isTeacher() {
-            const user = this.getUser();
-            if (!user) return false;
-            const role = (user.role || '').toUpperCase();
-            return role === 'TEACHER' || role === 'ADMIN';
-        }
+        async logout() { try { await API.request('/auth/logout', { method: 'POST' }); } finally { localStorage.removeItem('lms_user'); window.location.href = 'auth.html'; } },
+        async me() { return API.request('/auth/me'); },
+        getUser() { try { return JSON.parse(localStorage.getItem('lms_user')); } catch { return null; } },
+        requireAuth() { const u=this.getUser(); if(!u){ window.location.href='auth.html'; return null; } return u; },
+        requireTeacher() { const u=this.requireAuth(); if(!u)return null; const r=String(u.role||'').toUpperCase(); if(!['TEACHER','ADMIN'].includes(r)){ window.location.href='index.html'; return null; } return u; },
+        isTeacher() { const u=this.getUser(); return !!u && ['TEACHER','ADMIN'].includes(String(u.role||'').toUpperCase()); }
     },
-
-    topics: {
-        async list() {
-            return API.request('/topics/list');
-        },
-
-        async get(topicId) {
-            return API.request(`/topics/${topicId}`);
-        }
-    },
-
+    topics: { list: () => API.request('/topics/list'), get: id => API.request(`/topics/${encodeURIComponent(id)}`) },
     questions: {
-        async list(topicId = null) {
-            const query = topicId ? `?topicId=${topicId}` : '';
-            return API.request(`/questions${query}`);
-        },
-
-        async create(questionData) {
-            return API.request('/questions', {
-                method: 'POST',
-                body: JSON.stringify(questionData)
-            });
-        },
-
-        async update(questionId, questionData) {
-            return API.request(`/questions/${questionId}`, {
-                method: 'PUT',
-                body: JSON.stringify(questionData)
-            });
-        },
-
-        async delete(questionId) {
-            return API.request(`/questions/${questionId}`, {
-                method: 'DELETE'
-            });
-        }
+        list: (topicId=null) => API.request(`/questions${topicId ? `?topicId=${encodeURIComponent(topicId)}` : ''}`),
+        create: data => API.request('/questions', { method:'POST', body:JSON.stringify(data) }),
+        update: (id,data) => API.request(`/questions/${encodeURIComponent(id)}`, { method:'PUT', body:JSON.stringify(data) }),
+        delete: id => API.request(`/questions/${encodeURIComponent(id)}`, { method:'DELETE' })
     },
-
     teacher: {
-        async stats() {
-            return API.request('/teacher/stats');
-        },
-
-        async generateQuestions(payload) {
-            return API.request('/teacher/ai/generate', {
-                method: 'POST',
-                body: JSON.stringify(payload)
-            });
-        },
-
-        async chat(message, context = '') {
-            return API.request('/teacher/ai/chat', {
-                method: 'POST',
-                body: JSON.stringify({ message, context })
-            });
-        }
+        stats: () => API.request('/teacher/stats'),
+        generateQuestions: payload => API.request('/teacher/ai/generate', { method:'POST', body:JSON.stringify(payload), timeout:30000 }),
+        chat: (message,context='') => API.request('/teacher/ai/chat', { method:'POST', body:JSON.stringify({message,context}), timeout:30000 })
     },
-
     quiz: {
-        async start(topicId) {
-            return API.request('/quiz/start', {
-                method: 'POST',
-                body: JSON.stringify({ topicId })
-            });
-        },
-
-        async submit(sessionId, answers) {
-            return API.request('/quiz/submit', {
-                method: 'POST',
-                body: JSON.stringify({ sessionId, answers })
-            });
-        },
-
-        async history() {
-            return API.request('/quiz/history');
-        },
-
-        async session(sessionId) {
-            return API.request(`/quiz/session/${sessionId}`);
-        }
+        start: topicId => API.request('/quiz/start', { method:'POST', body:JSON.stringify({topicId}) }),
+        submit: (sessionId,answers) => API.request('/quiz/submit', { method:'POST', body:JSON.stringify({sessionId,answers}), timeout:45000 }),
+        history: () => API.request('/quiz/history'),
+        session: sessionId => API.request(`/quiz/session/${encodeURIComponent(sessionId)}`)
     },
-
     remediation: {
-        async get(topicId, misconception) {
-            const query = `?topicId=${topicId}&misconception=${encodeURIComponent(misconception || '')}`;
-            return API.request(`/remediation${query}`);
-        },
-
-        async submit(payload) {
-            return API.request('/remediation/submit', {
-                method: 'POST',
-                body: JSON.stringify(payload)
-            });
-        }
+        get: (topicId,misconception) => API.request(`/remediation?topicId=${encodeURIComponent(topicId)}&misconception=${encodeURIComponent(misconception||'')}`),
+        submit: payload => API.request('/remediation/submit', { method:'POST', body:JSON.stringify(payload) })
     },
-
     chat: {
-        async send(message, persona = 'peer_tutor', sessionId = null, context = null) {
-            return API.request('/chat/send', {
-                method: 'POST',
-                body: JSON.stringify({ message, persona, sessionId, context })
-            });
-        },
-
-        async history(limit = 30) {
-            return API.request(`/chat/history?limit=${limit}`);
-        }
+        send: (message,persona='peer_tutor',sessionId=null,context=null) => API.request('/chat/send', { method:'POST', body:JSON.stringify({message,persona,sessionId,context}), timeout:30000 }),
+        history: (limit=30) => API.request(`/chat/history?limit=${Math.min(100, Math.max(1, Number(limit)||30))}`)
     }
 };

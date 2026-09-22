@@ -84,6 +84,33 @@ public class QuizDAO {
         return sessions;
     }
 
+    /** Return the session only when it belongs to the requested user. */
+    public QuizSession findSessionForUser(int sessionId, int userId) {
+        String sql = "SELECT qs.*, t.topic_name FROM quiz_sessions qs JOIN topics t ON qs.topic_id=t.topic_id WHERE qs.session_id=? AND qs.user_id=?";
+        try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, sessionId); ps.setInt(2, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) { QuizSession session = mapQuizSession(rs); session.setTopicName(rs.getString("topic_name")); return session; }
+            }
+        } catch (SQLException e) { throw new IllegalStateException("Không thể truy vấn phiên làm bài.", e); }
+        return null;
+    }
+
+    public boolean questionBelongsToTopic(int questionId, int topicId) {
+        String sql = "SELECT 1 FROM questions WHERE question_id=? AND topic_id=?";
+        try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, questionId); ps.setInt(2, topicId);
+            try (ResultSet rs = ps.executeQuery()) { return rs.next(); }
+        } catch (SQLException e) { throw new IllegalStateException("Không thể xác minh câu hỏi.", e); }
+    }
+
+    public int countAnswersBySession(int sessionId) {
+        String sql = "SELECT COUNT(*) FROM user_answers WHERE session_id=?";
+        try (Connection conn = DatabaseUtil.getConnection(); PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, sessionId); try (ResultSet rs = ps.executeQuery()) { return rs.next() ? rs.getInt(1) : 0; }
+        } catch (SQLException e) { throw new IllegalStateException("Không thể kiểm tra trạng thái bài làm.", e); }
+    }
+
     // ═══════════════════════════════════════════════════════════════════════
     //  USER ANSWERS (+ Confidence Tagging)
     // ═══════════════════════════════════════════════════════════════════════

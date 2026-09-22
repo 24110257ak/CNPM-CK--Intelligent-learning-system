@@ -712,7 +712,7 @@ function renderAiGeneratedCards(questions, topicName) {
         // Parse markdown for question text
         let parsedText = '';
         if (typeof marked !== 'undefined' && marked.parse) {
-            parsedText = marked.parse(q.questionText || '');
+            parsedText = AppUI.renderMarkdown(q.questionText || '');
         } else {
             parsedText = `<p>${escapeHtml(q.questionText || '')}</p>`;
         }

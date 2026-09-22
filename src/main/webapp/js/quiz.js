@@ -187,7 +187,7 @@ function renderQuestion(index) {
     // Render nội dung câu hỏi (hỗ trợ Markdown & code block)
     const questionTextEl = document.getElementById('question-text');
     if (typeof marked !== 'undefined') {
-        questionTextEl.innerHTML = marked.parse(q.questionText || '');
+        questionTextEl.innerHTML = AppUI.renderMarkdown(q.questionText || '');
         if (typeof hljs !== 'undefined') {
             questionTextEl.querySelectorAll('pre code').forEach((el) => {
                 hljs.highlightElement(el);

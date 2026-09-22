@@ -264,3 +264,11 @@ Hệ thống học tập thông minh/
 - **Môn học:** Công Nghệ Phần Mềm (CNPM) — Học kỳ Cuối
 - **Phiên bản:** 1.0-SNAPSHOT (Production Cloud Deployed on Render)
 - **Bản quyền:** Đồ Án Nhóm Phát Triển LMS Thông Minh 2026.
+
+
+## Refactor 2026-09-22
+- API client: timeout, abort, offline handling, typed ApiError, safe retry for GET.
+- Authorization: quiz session detail and submission now enforce owner checks.
+- Submission integrity: duplicate questions, wrong-topic question IDs, resubmission and incomplete answer sets are rejected.
+- Frontend: shared safe markdown/HTML utilities, mobile/a11y/focus/reduced-motion improvements, skeleton/empty-state primitives.
+- CORS: credentialed wildcard reflection removed; optional explicit allowlist via `CORS_ALLOWED_ORIGINS`.

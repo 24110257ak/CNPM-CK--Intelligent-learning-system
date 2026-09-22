@@ -118,7 +118,7 @@
         bubble.className = `chat-bubble chat-bubble-${sender}`;
 
         if (sender === 'ai' && typeof marked !== 'undefined') {
-            bubble.innerHTML = marked.parse(content);
+            bubble.innerHTML = AppUI.renderMarkdown(content);
         } else {
             bubble.textContent = content;
         }

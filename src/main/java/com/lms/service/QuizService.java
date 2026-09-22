@@ -85,6 +85,25 @@ public class QuizService {
      * Nộp bài, chấm điểm, ghi nhận Confidence Tagging và sinh bài học AI.
      */
     public Map<String, Object> submitQuiz(int sessionId, int userId, List<Map<String, Object>> submittedAnswers) {
+        QuizSession ownedSession = quizDAO.findSessionForUser(sessionId, userId);
+        if (ownedSession == null) throw new SecurityException("Phiên làm bài không tồn tại hoặc không thuộc tài khoản hiện tại.");
+        if (ownedSession.getCompletedAt() != null || quizDAO.countAnswersBySession(sessionId) > 0)
+            throw new IllegalStateException("Phiên làm bài này đã được nộp trước đó.");
+        if (submittedAnswers == null || submittedAnswers.isEmpty())
+            throw new IllegalArgumentException("Danh sách câu trả lời không được để trống.");
+        if (submittedAnswers.size() != ownedSession.getTotalQuestions())
+            throw new IllegalArgumentException("Số câu trả lời không khớp với bài kiểm tra.");
+
+        Set<Integer> uniqueQuestionIds = new HashSet<>();
+        for (Map<String,Object> answer : submittedAnswers) {
+            Object idValue = answer.get("questionId");
+            if (!(idValue instanceof Number)) throw new IllegalArgumentException("questionId không hợp lệ.");
+            int qid = ((Number) idValue).intValue();
+            if (!uniqueQuestionIds.add(qid)) throw new IllegalArgumentException("Bài nộp chứa câu hỏi trùng lặp.");
+            if (!quizDAO.questionBelongsToTopic(qid, ownedSession.getTopicId()))
+                throw new IllegalArgumentException("Bài nộp chứa câu hỏi không thuộc chủ đề của phiên thi.");
+        }
+
         // Lấy thông tin user để AI cá nhân hóa theo sở thích
         Optional<User> userOpt = userDAO.findById(userId);
         String userInterests = userOpt.map(User::getInterests).orElse(null);
@@ -167,12 +186,15 @@ public class QuizService {
     /**
      * Lấy chi tiết phiên làm bài kèm các bài học củng cố đã tạo.
      */
-    public Map<String, Object> getSessionDetails(int sessionId) {
+    public Map<String, Object> getSessionDetails(int sessionId, int userId) {
+        QuizSession session = quizDAO.findSessionForUser(sessionId, userId);
+        if (session == null) throw new SecurityException("Bạn không có quyền xem phiên làm bài này.");
         List<UserAnswer> answers = quizDAO.getAnswersBySession(sessionId);
         List<RemedialLesson> lessons = quizDAO.getRemedialLessonsBySession(sessionId);
 
         Map<String, Object> details = new HashMap<>();
         details.put("sessionId", sessionId);
+        details.put("session", session);
         details.put("answers", answers);
         details.put("remedialLessons", lessons);
         return details;

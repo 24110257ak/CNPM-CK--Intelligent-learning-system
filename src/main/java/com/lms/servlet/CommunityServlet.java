@@ -190,12 +190,12 @@ public class CommunityServlet extends HttpServlet {
                 } else {
                     // DELETE /api/community/posts/{id}
                     int postId = Integer.parseInt(sub);
-                    boolean ok = communityDAO.deletePost(postId, user.getUserId(), isTeacherOrAdmin);
+                    boolean ok = communityDAO.deletePost(postId, user.getUserId());
                     if (ok) {
-                        resp.getWriter().write(JsonHelper.success(Map.of("message", "Đã xóa bài viết khỏi diễn đàn.")));
+                        resp.getWriter().write(JsonHelper.success(Map.of("message", "Đã xóa bài viết của bạn khỏi diễn đàn.")));
                     } else {
                         resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                        resp.getWriter().write(JsonHelper.error("Bạn không có quyền xóa bài viết này."));
+                        resp.getWriter().write(JsonHelper.error("Bạn chỉ có thể xóa bài viết do chính bạn đăng tải."));
                     }
                 }
             } else {

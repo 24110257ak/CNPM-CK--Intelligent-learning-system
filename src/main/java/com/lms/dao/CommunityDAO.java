@@ -127,19 +127,15 @@ public class CommunityDAO {
 
     /**
      * Xóa bài viết (Chỉ tác giả hoặc Giảng viên/Admin).
+    /**
+     * Xóa bài viết (Chỉ chính chủ / tác giả mới được quyền xóa bài viết của mình).
      */
-    public boolean deletePost(int postId, int userId, boolean isAdminOrTeacher) throws SQLException {
-        String sql = isAdminOrTeacher
-                ? "DELETE FROM community_posts WHERE post_id = ?"
-                : "DELETE FROM community_posts WHERE post_id = ? AND user_id = ?";
-
+    public boolean deletePost(int postId, int userId) throws SQLException {
+        String sql = "DELETE FROM community_posts WHERE post_id = ? AND user_id = ?";
         try (Connection conn = DatabaseUtil.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-
             ps.setInt(1, postId);
-            if (!isAdminOrTeacher) {
-                ps.setInt(2, userId);
-            }
+            ps.setInt(2, userId);
             return ps.executeUpdate() > 0;
         }
     }

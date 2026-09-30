@@ -1,6 +1,6 @@
 ﻿# TOAN BO MA NGUON DU AN - HE THONG HOC TAP THONG MINH (INTELLIGENT LMS)
 
-> **Thoi gian tao file:** 2026-09-30 20:31:17
+> **Thoi gian tao file:** 2026-09-30 20:35:45
 > **Tong so file:** 58
 > **Muc dich:** Gom toan bo source code thanh 1 file duy nhat de gui cho ben thu ba xem xet, danh gia va gop y.
 
@@ -2357,19 +2357,15 @@ public class CommunityDAO {
 
     /**
      * Xóa bài viết (Chỉ tác giả hoặc Giảng viên/Admin).
+    /**
+     * Xóa bài viết (Chỉ chính chủ / tác giả mới được quyền xóa bài viết của mình).
      */
-    public boolean deletePost(int postId, int userId, boolean isAdminOrTeacher) throws SQLException {
-        String sql = isAdminOrTeacher
-                ? "DELETE FROM community_posts WHERE post_id = ?"
-                : "DELETE FROM community_posts WHERE post_id = ? AND user_id = ?";
-
+    public boolean deletePost(int postId, int userId) throws SQLException {
+        String sql = "DELETE FROM community_posts WHERE post_id = ? AND user_id = ?";
         try (Connection conn = DatabaseUtil.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
-
             ps.setInt(1, postId);
-            if (!isAdminOrTeacher) {
-                ps.setInt(2, userId);
-            }
+            ps.setInt(2, userId);
             return ps.executeUpdate() > 0;
         }
     }
@@ -6193,12 +6189,12 @@ public class CommunityServlet extends HttpServlet {
                 } else {
                     // DELETE /api/community/posts/{id}
                     int postId = Integer.parseInt(sub);
-                    boolean ok = communityDAO.deletePost(postId, user.getUserId(), isTeacherOrAdmin);
+                    boolean ok = communityDAO.deletePost(postId, user.getUserId());
                     if (ok) {
-                        resp.getWriter().write(JsonHelper.success(Map.of("message", "Đã xóa bài viết khỏi diễn đàn.")));
+                        resp.getWriter().write(JsonHelper.success(Map.of("message", "Đã xóa bài viết của bạn khỏi diễn đàn.")));
                     } else {
                         resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                        resp.getWriter().write(JsonHelper.error("Bạn không có quyền xóa bài viết này."));
+                        resp.getWriter().write(JsonHelper.error("Bạn chỉ có thể xóa bài viết do chính bạn đăng tải."));
                     }
                 }
             } else {
@@ -8295,6 +8291,82 @@ let currentUser = null;
 let currentChannel = 'all';
 let currentTopicId = null;
 let allTopics = [];
+let cachedFeedPosts = [];
+
+/**
+ * Lấy danh sách ID các bài viết đã bị người dùng hiện tại ẩn
+ */
+function getHiddenPostIds() {
+    if (!currentUser) return [];
+    try {
+        const key = `lms_hidden_posts_${currentUser.userId}`;
+        const data = localStorage.getItem(key);
+        return data ? JSON.parse(data) : [];
+    } catch (e) {
+        return [];
+    }
+}
+
+function addHiddenPostId(postId) {
+    if (!currentUser) return;
+    const list = getHiddenPostIds();
+    if (!list.includes(postId)) {
+        list.push(postId);
+        localStorage.setItem(`lms_hidden_posts_${currentUser.userId}`, JSON.stringify(list));
+    }
+}
+
+function removeHiddenPostId(postId) {
+    if (!currentUser) return;
+    let list = getHiddenPostIds();
+    list = list.filter(id => id !== postId);
+    localStorage.setItem(`lms_hidden_posts_${currentUser.userId}`, JSON.stringify(list));
+}
+
+/**
+ * Ẩn bài viết khỏi bảng tin của người dùng (giống Facebook)
+ */
+function handleHidePost(postId) {
+    addHiddenPostId(postId);
+    const post = cachedFeedPosts.find(p => p.postId === postId);
+    const cardEl = document.getElementById(`post-card-${postId}`);
+    if (cardEl && post) {
+        cardEl.outerHTML = renderHiddenPostCard(post);
+    }
+}
+
+/**
+ * Hiện lại bài viết đã ẩn
+ */
+function handleUnhidePost(postId) {
+    removeHiddenPostId(postId);
+    const post = cachedFeedPosts.find(p => p.postId === postId);
+    const cardEl = document.getElementById(`post-card-${postId}`);
+    if (cardEl && post) {
+        cardEl.outerHTML = renderPostCard(post);
+    }
+}
+
+/**
+ * Thẻ thông báo bài viết đã bị ẩn
+ */
+function renderHiddenPostCard(p) {
+    return `
+        <div class="card p-3 shadow-sm rounded-4 mb-3 border bg-white" id="post-card-${p.postId}">
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                <div class="text-muted small d-flex align-items-center gap-2">
+                    <span class="badge bg-secondary-subtle text-secondary rounded-pill px-2.5 py-1">
+                        <i class="fa-regular fa-eye-slash me-1"></i>Đã ẩn
+                    </span>
+                    <span>Bạn đã ẩn bài viết của <strong>${escapeHtml(p.authorName || p.authorUsername)}</strong> khỏi bảng tin của bạn.</span>
+                </div>
+                <button class="btn btn-sm btn-outline-primary rounded-pill px-3 py-1 fw-semibold" onclick="handleUnhidePost(${p.postId})">
+                    <i class="fa-solid fa-rotate-left me-1"></i>Hiện lại bài viết
+                </button>
+            </div>
+        </div>
+    `;
+}
 
 const CHANNEL_INFO = {
     all: { title: 'Tất Cả Bài Viết', desc: 'Dòng thời gian các câu hỏi, mẹo học tập và bài thảo luận mới nhất' },
@@ -8496,6 +8568,7 @@ async function loadFeed() {
     try {
         const res = await API.community.listPosts(currentChannel, currentTopicId, 40, 0);
         const posts = res.data || [];
+        cachedFeedPosts = posts;
 
         if (loadingEl) loadingEl.style.display = 'none';
 
@@ -8521,6 +8594,11 @@ async function loadFeed() {
  * Sinh HTML cho từng bài viết
  */
 function renderPostCard(p) {
+    const hiddenList = getHiddenPostIds();
+    if (hiddenList.includes(p.postId)) {
+        return renderHiddenPostCard(p);
+    }
+
     const isTeacher = (p.authorRole || '').toLowerCase() === 'teacher' || (p.authorRole || '').toLowerCase() === 'admin';
     const avatarClass = isTeacher ? 'author-avatar avatar-teacher' : 'author-avatar avatar-student';
     const roleBadge = isTeacher
@@ -8545,13 +8623,17 @@ function renderPostCard(p) {
         ? `<span class="badge bg-light text-dark border rounded-pill px-2.5 py-1 small"><i class="fa-solid fa-book-bookmark me-1 text-primary"></i>${escapeHtml(p.topicName)}</span>`
         : '';
 
-    // Quyền xóa bài (chính chủ hoặc Giảng viên/Admin)
-    const canDelete = currentUser && (currentUser.userId === p.userId || API.auth.isTeacher());
-    const deleteBtn = canDelete ? `
-        <button class="btn btn-outline-danger btn-sm border-0 rounded-circle" style="width: 32px; height: 32px; padding: 0;" title="Xóa bài viết" onclick="handleDeletePost(${p.postId})">
+    // Quyền thao tác: Chỉ tác giả mới có nút xóa bài của mình. Người khác có nút Ẩn bài viết khỏi bảng tin.
+    const isOwner = currentUser && (currentUser.userId === p.userId);
+    const actionBtn = isOwner ? `
+        <button class="btn btn-outline-danger btn-sm border-0 rounded-circle" style="width: 32px; height: 32px; padding: 0;" title="Xóa bài viết của tôi" onclick="handleDeletePost(${p.postId})">
             <i class="fa-regular fa-trash-can"></i>
         </button>
-    ` : '';
+    ` : `
+        <button class="btn btn-outline-secondary btn-sm border-0 rounded-circle text-muted" style="width: 32px; height: 32px; padding: 0;" title="Ẩn bài viết khỏi bảng tin của bạn" onclick="handleHidePost(${p.postId})">
+            <i class="fa-regular fa-eye-slash"></i>
+        </button>
+    `;
 
     const isLiked = !!p.likedByMe;
     const likeBtnClass = isLiked ? 'post-action-btn liked' : 'post-action-btn';
@@ -8587,7 +8669,7 @@ function renderPostCard(p) {
                         </div>
                     </div>
                 </div>
-                ${deleteBtn ? `<div>${deleteBtn}</div>` : ''}
+                <div>${actionBtn}</div>
             </div>
 
             <!-- Tags Kênh & Môn học (Gọn gàng ngay dưới phần tác giả, không làm chật chội avatar) -->

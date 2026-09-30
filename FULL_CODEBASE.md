@@ -1,6 +1,6 @@
 ﻿# TOAN BO MA NGUON DU AN - HE THONG HOC TAP THONG MINH (INTELLIGENT LMS)
 
-> **Thoi gian tao file:** 2026-09-30 20:49:55
+> **Thoi gian tao file:** 2026-09-30 21:22:38
 > **Tong so file:** 58
 > **Muc dich:** Gom toan bo source code thanh 1 file duy nhat de gui cho ben thu ba xem xet, danh gia va gop y.
 
@@ -475,9 +475,108 @@ Hệ thống không chỉ chấm "Đúng/Sai" mà phân tích sâu bản chất 
 4. Gemini AI sinh danh sách câu hỏi cấu trúc JSON gồm: nội dung Markdown, các phương án A/B/C/D, đáp án đúng, giải thích sư phạm, thẻ lỗ hổng tư duy mục tiêu.
 5. Giao diện hiển thị danh sách câu hỏi trực quan $\rightarrow$ Giảng viên nhấn **"Lưu Vào Ngân Hàng Đề"** $\rightarrow$ gọi `QuestionDAO.createQuestion()` ghi thẳng vào CSDL PostgreSQL.
 
+### 📌 Luồng 3: Cộng Đồng Học Tập & Thảo Luận Môn Học
+1. Người học mở `community.html`, nhấn nút **"Đăng bài"** $\rightarrow$ mở modal soạn thảo học thuật (Facebook Style Composer).
+2. Người học có thể chèn khối Code lập trình, Mẹo né bẫy nhận thức, Thử thách câu hỏi mini, hoặc Trích dẫn giáo trình, kèm chọn trạng thái học tập.
+3. Người học chọn hoặc gõ tên môn học bất kỳ (Java OOP, CSDL, Toán rời rạc, AI...) $\rightarrow$ gửi `POST /api/community/posts`.
+4. `CommunityServlet` tiếp nhận: Nếu môn học chưa có, tự động tạo mới vào bảng `topics`; lưu bài viết vào `community_posts` và phát hành lên bảng tin cộng đồng.
+
 ---
 
-## 🚀 5. Hướng Dẫn Cài Đặt & Khởi Chạy
+## 📐 5. Thiết Kế Hệ Thống Chi Tiết: Biểu Đồ Tuần Tự & Biểu Đồ Cộng Tác (Sequence & Collaboration Diagrams)
+
+> Chi tiết phân tích đầy đủ và mã nguồn PlantUML tham khảo tại: [`SYSTEM_DIAGRAMS.md`](SYSTEM_DIAGRAMS.md).
+
+### 5.1. Biểu Đồ Tuần Tự — Tạo Bài Thảo Luận Học Tập (Sequence Diagram)
+*(Thiết kế theo mô hình phân tích chuẩn BCE: Actor $\rightarrow$ Boundary $\rightarrow$ Control $\rightarrow$ Entity $\rightarrow$ Database)*
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User as 👤 Người dùng
+    participant UI as 🖥️ Giao diện thảo luận (Boundary)
+    participant Ctrl as ⚙️ CommunityServlet (Control)
+    participant TopicEnt as 📚 Topic / Môn học (Entity)
+    participant PostEnt as 📝 CommunityPost (Entity)
+    participant DB as 🗄️ CSDL PostgreSQL
+
+    User ->> UI: 1. Yêu cầu tạo bài thảo luận
+    activate UI
+    UI -->> User: 1.1. Hiển thị modal soạn thảo học thuật (Facebook Style)
+    deactivate UI
+
+    User ->> UI: 2. Nhập thông tin & bấm "Đăng bài" (tiêu đề, nội dung, kênh, tên môn học)
+    activate UI
+    UI ->> Ctrl: 3. Gửi yêu cầu tạo bài viết (POST /api/community/posts)
+    activate Ctrl
+
+    alt Dữ liệu không hợp lệ (Tiêu đề hoặc nội dung trống)
+        Ctrl -->> UI: 4. Trả lỗi HTTP 400 (Yêu cầu điền đủ tiêu đề/nội dung)
+        UI -->> User: 4.1. Hiển thị cảnh báo lỗi
+    else Dữ liệu hợp lệ
+        Ctrl ->> TopicEnt: 5. Kiểm tra môn học (topicId, topicName)
+        activate TopicEnt
+        TopicEnt ->> DB: 5.1. Truy vấn môn học theo tên/mã
+        activate DB
+        DB -->> TopicEnt: 5.2. Trả kết quả truy vấn
+        deactivate DB
+
+        alt Môn học đã có sẵn trong CSDL
+            TopicEnt -->> Ctrl: 6. Trả về topicId hiện có
+        else Môn học mới (Người dùng tự nhập môn mới)
+            TopicEnt ->> DB: 6.1. Thêm mới môn học vào bảng topics (INSERT)
+            activate DB
+            DB -->> TopicEnt: 6.2. Trả về mã môn học mới vừa tạo
+            deactivate DB
+            TopicEnt -->> Ctrl: 6.3. Trả về topicId mới
+        end
+        deactivate TopicEnt
+
+        Ctrl ->> PostEnt: 7. Lưu bài thảo luận (userId, topicId, channel, title, content)
+        activate PostEnt
+        PostEnt ->> DB: 7.1. Ghi nhận bài thảo luận vào bảng community_posts (INSERT)
+        activate DB
+        DB -->> PostEnt: 8. Lưu thành công (trả về postId mới)
+        deactivate DB
+        PostEnt -->> Ctrl: 8.1. Thông báo tạo bài thành công
+        deactivate PostEnt
+        Ctrl -->> UI: 9. Trả kết quả thành công (HTTP 200)
+        deactivate Ctrl
+        UI -->> User: 10. Đóng modal, hiển thị thông báo thành công & cập nhật bảng tin
+    end
+    deactivate UI
+```
+
+### 5.2. Biểu Đồ Cộng Tác — Tạo Bài Thảo Luận Học Tập (Collaboration Diagram)
+*(Bố cục 4 đỉnh đối tượng với các thông điệp có hướng và số thứ tự phân cấp y hệt Form Hình 2)*
+
+```mermaid
+flowchart TD
+    subgraph TopRow [" "]
+        direction LR
+        BN[":Người dùng<br/>(Sinh viên/Giảng viên)"]
+        GD[":Giao diện thảo luận<br/>(community.html)"]
+    end
+
+    subgraph BottomRow [" "]
+        direction LR
+        CSDL[":Cơ sở dữ liệu<br/>(PostgreSQL)"]
+        HTDK[":Hệ thống điều khiển<br/>(CommunityServlet & DAOs)"]
+    end
+
+    %% Cạnh ngang trên
+    BN ---|"1: Yêu cầu mở form tạo bài ➔<br/>◀ 1.1: Hiển thị form soạn thảo<br/>1.2: Nhập thông tin & bấm Đăng bài ➔<br/>◀ 1.3: Thông báo kết quả đăng bài"| GD
+
+    %% Cạnh dọc phải
+    GD ---|"1.2: Gửi thông tin bài viết ➔<br/>◀ 1.2.1: Tiếp nhận và xác thực<br/>◀ 1.2.3: Trả kết quả xử lý thành công"| HTDK
+
+    %% Cạnh ngang dưới
+    HTDK ---|"1.2.1.1: Kiểm tra / Khởi tạo môn học ➔<br/>1.2.1.2: Lưu bài thảo luận vào CSDL ➔<br/>◀ 1.2.2: Trả dữ liệu xác nhận ghi CSDL"| CSDL
+```
+
+---
+
+## 🚀 6. Hướng Dẫn Cài Đặt & Khởi Chạy
 
 ### Cách 1: Khởi Chạy Siêu Tốc Bằng Docker (Khuyên Dùng)
 
@@ -543,17 +642,17 @@ Hệ thống đã được đóng gói và kiểm thử triển khai trên nền
 
 ---
 
-## 🔑 6. Danh Sách Tài Khoản Thử Nghiệm
+## 🔑 7. Danh Sách Tài Khoản Thử Nghiệm
 
 | Vai Trò | Tên Đăng Nhập | Mật Khẩu | Điểm Đến | Đặc Quyền & Tính Năng Nổi Bật |
 |:---:|:---:|:---:|:---:|---|
 | 👩‍🏫 **Giảng Viên** | `giangvien01` | `demo123` | **Teacher Dashboard**<br>(`teacher-dashboard.html`) | • 4 Thẻ KPI thời gian thực.<br>• Quản lý ngân hàng câu hỏi (Thêm/Sửa/Xóa, Tìm kiếm realtime, Phân trang).<br>• AI Pedagogical Insight (Thống kê 4 nhóm lỗi sai).<br>• Studio Trợ Lý AI Soạn Đề & Khung Chat Co-Pilot. |
-| 👨‍🎓 **Sinh Viên** | `sinhvien01` | `demo123` | **Trang Chủ Sinh Viên**<br>(`index.html`) | • Làm bài thi trắc nghiệm + Confidence Tagging.<br>• Tự động lưu bài dở dang (Autosave).<br>• Phân tích kết quả + Bài tập thích ứng (Mini-Quiz).<br>• Trò chuyện với Trợ Giảng AI 3 nhân cách. |
+| 👨‍🎓 **Sinh Viên** | `sinhvien01` | `demo123` | **Trang Chủ Sinh Viên**<br>(`index.html`) | • Làm bài thi trắc nghiệm + Confidence Tagging.<br>• Tự động lưu bài dở dang (Autosave).<br>• Phân tích kết quả + Bài tập thích ứng (Mini-Quiz).<br>• Trò chuyện với Trợ Giảng AI 3 nhân cách.<br>• Diễn đàn học tập Facebook-style & né bẫy tư duy (`community.html`). |
 | 🛡️ **Quản Trị Viên** | `admin` | `demo123` | **Teacher Dashboard** | Toàn quyền kiểm soát hệ thống và dữ liệu. |
 
 ---
 
-## 📂 7. Cấu Trúc Mã Nguồn Dự Án (Project Structure)
+## 📂 8. Cấu Trúc Mã Nguồn Dự Án (Project Structure)
 
 ```
 Hệ thống học tập thông minh/
@@ -561,17 +660,18 @@ Hệ thống học tập thông minh/
 ├── .dockerignore                      # Loại trừ các file rác khi build image
 ├── pom.xml                            # Quản lý dependency (Jetty 11, PostgreSQL, Gson, BCrypt...)
 ├── export_codebase.ps1                # Script tự động xuất toàn bộ mã nguồn ra FULL_CODEBASE.md
-├── FULL_CODEBASE.md                   # File tổng hợp toàn bộ 48 file mã nguồn của dự án
+├── FULL_CODEBASE.md                   # File tổng hợp toàn bộ 58 file mã nguồn của dự án
 ├── PROJECT_STATE.md                   # Sổ tay ghi chép tiến độ kỹ thuật giữa các phiên
+├── SYSTEM_DIAGRAMS.md                 # Tài liệu Biểu đồ tuần tự (Sequence) & Cộng tác (Collaboration)
 ├── REFACTOR_REPORT.md                 # Báo cáo kiểm toán bảo mật & khả năng phục hồi (Audit)
 ├── README.md                          # Tài liệu kiến trúc và hướng dẫn vận hành toàn diện
 ├── src/
 │   └── main/
 │       ├── java/com/lms/
-│       │   ├── model/                 # POJO Models (User, Topic, Question, QuizSession, UserAnswer...)
-│       │   ├── dao/                   # Data Access Objects (DatabaseUtil, UserDAO, QuizDAO, QuestionDAO...)
+│       │   ├── model/                 # POJO Models (User, Topic, Question, QuizSession, CommunityPost...)
+│       │   ├── dao/                   # Data Access Objects (DatabaseUtil, UserDAO, QuizDAO, CommunityDAO...)
 │       │   ├── service/               # Nghiệp vụ lõi (AIService, QuizService, UserService, PromptBuilder...)
-│       │   ├── servlet/               # REST Controllers (AuthServlet, QuizServlet, TeacherServlet...)
+│       │   ├── servlet/               # REST Controllers (AuthServlet, QuizServlet, CommunityServlet...)
 │       │   ├── filter/                # Bộ lọc an ninh & phân quyền (CorsFilter, AuthFilter)
 │       │   └── util/                  # Tiện ích bổ trợ (ConfigLoader, JsonHelper)
 │       ├── resources/
@@ -581,11 +681,13 @@ Hệ thống học tập thông minh/
 │           ├── js/                    # Mã JavaScript hướng module
 │           │   ├── api.js             # Transport layer: timeout, abort, retry, offline detection
 │           │   ├── ui.js              # Presentation utility: safe markdown, sanitize HTML chống XSS
+│           │   ├── community.js       # Diễn đàn học tập Facebook Style: Code, Bẫy tư duy, Quiz mini
 │           │   ├── quiz.js            # Logic làm bài thi & Autosave
 │           │   ├── result.js          # Logic kết quả & Adaptive Mini-Quiz
 │           │   ├── teacher.js         # Logic Teacher Dashboard & Studio AI
 │           │   └── chat-widget.js     # Trợ giảng AI đa nhân cách
 │           ├── auth.html              # Màn hình Đăng nhập & Đăng ký (Toggle Password Eyes)
+│           ├── community.html         # Diễn đàn thảo luận & cộng đồng học tập đa kênh
 │           ├── index.html             # Cổng thông tin môn học & chọn chủ đề ôn luyện
 │           ├── quiz.html              # Màn hình thi trắc nghiệm & Gắn nhãn tự tin
 │           ├── result.html            # Báo cáo kết quả & Bài tập phục hồi thích ứng
@@ -595,19 +697,20 @@ Hệ thống học tập thông minh/
 
 ---
 
-## 👥 8. Thông Tin Đồ Án
+## 👥 9. Thông Tin Đồ Án
 - **Môn học:** Công Nghệ Phần Mềm (CNPM) — Học kỳ Cuối
 - **Phiên bản:** 1.0-SNAPSHOT (Production Cloud Deployed on Render)
 - **Bản quyền:** Đồ Án Nhóm Phát Triển LMS Thông Minh 2026.
 
 ---
 
-## 🛡️ 9. Gói Cải Tiến Bảo Mật & Ổn Định (Refactor 2026-09-22)
+## 🛡️ 10. Gói Cải Tiến Bảo Mật & Ổn Định (Refactor 2026-09-22)
 - **API Transport Resilience:** `js/api.js` bổ sung timeout (10s), AbortController, bắt lỗi offline, `ApiError` có phân loại và retry có kiểm soát đối với phương thức `GET`.
 - **Phòng chống IDOR (Object-Level Authorization):** `QuizServlet` và `QuizDAO` siết chặt quyền sở hữu, ngăn chặn sinh viên xem kết quả session của tài khoản khác.
 - **Tính toàn vẹn bài thi (Submission Integrity):** Ngăn chặn gửi trùng câu hỏi, câu hỏi lệch topic, nộp lại session đã hoàn tất và thiếu câu trả lời.
 - **Bảo mật Frontend & XSS Sanitization:** `js/ui.js` chuẩn hóa lọc và vô hiệu hóa các thẻ script, sự kiện độc hại trong cú pháp Markdown do người dùng hoặc AI sinh ra trước khi render vào DOM.
 - **CORS Allowlist:** Loại bỏ wildcard reflection khi có credentials, cho phép chỉ định rõ danh sách domain được phép qua biến `CORS_ALLOWED_ORIGINS`.
+- **Quyền tự do ngôn luận & Ẩn bài viết:** Diễn đàn cộng đồng chỉ cho phép chính chủ tác giả xóa bài viết; người dùng khác được cấp tính năng Ẩn bài viết khỏi bảng tin cá nhân (có thể phục hồi bất kỳ lúc nào).
 
 ``
 
@@ -624,7 +727,7 @@ Hệ thống học tập thông minh/
 ---
 
 ## Current Phase
-**Giai đoạn 9 ✅ HOÀN THÀNH — Bảo Mật & Ổn Định (Security & Resilience Audit) & Vận Hành 24/7 (UptimeRobot Keep-Alive)**
+**Giai đoạn 11 ✅ HOÀN THÀNH — Facebook-Style Academic Composer, Dynamic Topic Provisioning & Thiết Kế Biểu Đồ Tuần Tự / Cộng Tác Chuẩn BCE**
 
 ## Completed Milestones
 - [x] **Phase 0:** Thiết lập nền móng kiến trúc, 12 ADRs, schema.sql 7 bảng 3NF cho SQL Server, pom.xml cấu hình Jetty 11 & Gemini SDK v1.64.0.
@@ -686,17 +789,21 @@ Hệ thống học tập thông minh/
   - Sửa lỗi biên dịch `HttpServletResponse.SC_UNPROCESSABLE_ENTITY` (thay bằng `422` cho tương thích Jakarta Servlet 5.0).
   - Schema CSDL bổ sung Unique index `(session_id, question_id)` chống duplicate answers.
   - Giữ nguyên vẹn nhánh `main` để bảo toàn fallback production.
-- [x] **Phase 10 (Nhánh `dev-backend` — Open Peer-Review Forum & Unlimited Multi-Disciplinary Question Engine):**
-  - **Đăng ký đa vai trò (Multi-Role Registration)**: Mọi người dùng đều có thể tự do đăng ký với role `teacher` (người sáng tạo/chia sẻ đề) hoặc `student`, phá bỏ giới hạn 1 tài khoản giảng viên duy nhất.
-  - **Chuẩn hóa điểm số thang 10**: Sửa triệt để lỗi hiển thị `37.5 / 10` do nhầm lẫn thang % 100 điểm với thang 10. `QuizService` và `QuizDAO` chuẩn hóa lưu trữ và truy vấn KPI thang 10 (ví dụ `3.8 / 10`), tương thích ngược hoàn hảo với dữ liệu cũ.
-  - **Động hóa chủ đề & Ngân hàng câu hỏi liên môn vô hạn**: `TopicDAO.findOrCreate` và `POST /api/topics` cho phép người dùng tự tạo bất kỳ môn học hay chủ đề nào (Toán, Lý, Kinh tế, Lập trình hỗn hợp). AI Prompt Builder được phổ quát hóa không giới hạn môn học, tăng trần sinh câu hỏi từ 5 lên đến 25 câu.
-  - **Diễn đàn Thảo luận & Hệ thống Đánh giá Độ Tin Cậy (Forum & Credibility Engine)**: Bổ sung 2 bảng `question_comments` và `question_ratings` (kèm auto-migration hỗ trợ cả Neon.tech PostgreSQL lẫn SQL Server). Cung cấp đầy đủ API bình luận, thảo luận phản biện, Upvote/Downvote, tính % điểm tín nhiệm và Báo lỗi ảo giác AI để cộng đồng cùng kiểm duyệt chất lượng câu hỏi.
+- [x] **Phase 10 (Hợp nhất nhánh `Web_enhancements` — Open Peer-Review Forum & Multi-Disciplinary Question Engine):**
+  - Đăng ký đa vai trò (`student` / `teacher`), chuẩn hóa điểm số thang 10, động hóa môn học không giới hạn.
+  - Bổ sung CSDL bảng `question_comments`, `question_ratings` và hệ thống đánh giá tín nhiệm câu hỏi.
+- [x] **Phase 11 (Cộng Đồng Học Tập Facebook-Style, Chọn Môn Động Học Thuật & Thiết Kế Biểu Đồ):**
+  - **Facebook-Style Academic Composer**: Thiết kế lại toàn diện modal tạo bài viết (`community.html`, `community.js`):
+    - Cá nhân hóa tên và avatar tác giả: `[Tên] ơi, bạn đang thắc mắc hay muốn chia sẻ điều gì về bài học hôm nay?`
+    - Bộ công cụ chuyên biệt cho học tập: 💻 Chèn khối Code (Java, Python, C++, SQL), 💡 Mẹo né bẫy nhận thức, 📊 Thử thách câu hỏi mini, 📖 Trích dẫn giáo trình/slide, 🏷️ Trạng thái học tập (🚀 Hào hứng, 🆘 Cần trợ giúp, 💡 Đã thông não, 🤯 Đau đầu vì bug, ☕ Cày đêm).
+  - **Cải tiến chọn môn học**: Cho phép tự do nhập tên bất kỳ môn học nào bằng bàn phím + Gợi ý thông minh từ CSDL (`<datalist>`) + Dãy phím tắt chọn nhanh 1-chạm (Java OOP, CTDL & Giải Thuật, Toán Rời Rạc, CSDL SQL, Mạng Máy Tính). `CommunityServlet.java` tự động nhận diện và khởi tạo topic mới vào CSDL nếu chưa có.
+  - **Quyền tự do ngôn luận & Ẩn bài viết**: Chỉ tác giả mới có quyền xóa bài; người dùng khác được cấp nút Ẩn bài viết khỏi bảng tin cá nhân (lưu `localStorage`) và có thể bấm "Hiện lại bài viết" bất kỳ lúc nào.
+  - **Thêm `image/` vào `.gitignore`**: Untrack triệt để các file ảnh chụp màn hình khỏi git index.
+  - **Tài liệu thiết kế `SYSTEM_DIAGRAMS.md` & `README.md`**: Xây dựng đầy đủ Biểu đồ tuần tự (Sequence Diagram) theo mô hình phân tích BCE (Actor $\rightarrow$ Boundary $\rightarrow$ Control $\rightarrow$ Entity $\rightarrow$ Database) kèm phân nhánh `alt`, và Biểu đồ cộng tác (Collaboration Diagram) chuẩn 4 đỉnh phân cấp y hệt form mẫu của người dùng.
 
 ## Pending Tasks (Các bước tiếp theo mở rộng)
-- [ ] Xây dựng giao diện Frontend (nhánh `dev-frontend`) cho Diễn đàn thảo luận và Vote tín nhiệm dưới mỗi câu hỏi.
-- [ ] Nâng cấp giao diện Teacher Dashboard: Thêm nút/modal tạo chủ đề tự do, gỡ bỏ giới hạn selectbox 2 môn, tăng slider số lượng câu hỏi lên 25.
-- [ ] Cập nhật giao diện Đăng ký (`auth.html`) cho phép chọn vai trò Giảng viên / Người chia sẻ kiến thức.
 - [ ] Export báo cáo thống kê kết quả học tập ra Excel/PDF cho Giảng viên.
+- [ ] Tích hợp tính năng bình chọn Upvote/Downvote trực tiếp trên thẻ câu hỏi giao diện luyện tập.
 
 ---
 
@@ -716,14 +823,16 @@ Hệ thống học tập thông minh/
 | ADR-010 | Gemini SDK **v1.64.0** (stable 07/2026) | Latest, hỗ trợ ResponseSchema + async |
 | ADR-011 | **Template-First Policy** — Bootstrap 5 + Floating Chat Widget | Không viết UI from scratch; chỉ Data Binding |
 | ADR-012 | CDN cho FontAwesome, SweetAlert2, Highlight.js, Marked.js | Nhẹ, không cài local, luôn cập nhật |
-| ADR-013 | **Git Branching Strategy** (`main`, `refactor-experiment`, `dev-backend`, `dev-frontend`) | Bảo toàn fallback `main` và audit 3rd party `refactor-experiment`; phát triển độc lập backend rồi frontend |
+| ADR-013 | **Git Branching Strategy** (`main`, `refactor-experiment`, `Web_enhancements`) | Giữ nguyên vẹn `main` và audit `refactor-experiment`; tập trung toàn bộ cải tiến web vào `Web_enhancements` |
 | ADR-014 | **24/7 Cloud Availability** (Render + UptimeRobot Keep-Alive) | Khắc phục Spin-down 15p của Render free tier, đảm bảo 744h/tháng luôn online tức thì |
 | ADR-015 | **Universal Multi-Disciplinary Dynamic Topics** | Loại bỏ hardcode môn học, tự động sinh và liên kết Topic trong CSDL khi người dùng nhập bất kỳ chuyên ngành nào |
 | ADR-016 | **Crowdsourced Credibility & Peer Review Model** | Bảng `question_ratings` và `question_comments` tạo cơ chế phản biện xã hội, thanh lọc ảo giác AI dựa trên trí tuệ đám đông |
+| ADR-017 | **BCE Analytical Stereotypes for UML Diagrams** | Áp dụng chuẩn Boundary - Control - Entity trong Biểu đồ tuần tự và Biểu đồ cộng tác phục vụ báo cáo CNPM |
 
 ---
 
 *Cập nhật lần cuối: 2026-09-30 (GMT+7)*
+
 
 ``
 

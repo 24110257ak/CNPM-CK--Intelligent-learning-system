@@ -30,3 +30,7 @@ desktop.ini
 # ── Logs ──
 *.log
 logs/
+
+# ── User uploaded screenshots / images ──
+image/
+

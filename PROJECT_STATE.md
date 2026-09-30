@@ -5,7 +5,7 @@
 ---
 
 ## Current Phase
-**Giai đoạn 9 ✅ HOÀN THÀNH — Bảo Mật & Ổn Định (Security & Resilience Audit) & Vận Hành 24/7 (UptimeRobot Keep-Alive)**
+**Giai đoạn 11 ✅ HOÀN THÀNH — Facebook-Style Academic Composer, Dynamic Topic Provisioning & Thiết Kế Biểu Đồ Tuần Tự / Cộng Tác Chuẩn BCE**
 
 ## Completed Milestones
 - [x] **Phase 0:** Thiết lập nền móng kiến trúc, 12 ADRs, schema.sql 7 bảng 3NF cho SQL Server, pom.xml cấu hình Jetty 11 & Gemini SDK v1.64.0.
@@ -67,17 +67,21 @@
   - Sửa lỗi biên dịch `HttpServletResponse.SC_UNPROCESSABLE_ENTITY` (thay bằng `422` cho tương thích Jakarta Servlet 5.0).
   - Schema CSDL bổ sung Unique index `(session_id, question_id)` chống duplicate answers.
   - Giữ nguyên vẹn nhánh `main` để bảo toàn fallback production.
-- [x] **Phase 10 (Nhánh `dev-backend` — Open Peer-Review Forum & Unlimited Multi-Disciplinary Question Engine):**
-  - **Đăng ký đa vai trò (Multi-Role Registration)**: Mọi người dùng đều có thể tự do đăng ký với role `teacher` (người sáng tạo/chia sẻ đề) hoặc `student`, phá bỏ giới hạn 1 tài khoản giảng viên duy nhất.
-  - **Chuẩn hóa điểm số thang 10**: Sửa triệt để lỗi hiển thị `37.5 / 10` do nhầm lẫn thang % 100 điểm với thang 10. `QuizService` và `QuizDAO` chuẩn hóa lưu trữ và truy vấn KPI thang 10 (ví dụ `3.8 / 10`), tương thích ngược hoàn hảo với dữ liệu cũ.
-  - **Động hóa chủ đề & Ngân hàng câu hỏi liên môn vô hạn**: `TopicDAO.findOrCreate` và `POST /api/topics` cho phép người dùng tự tạo bất kỳ môn học hay chủ đề nào (Toán, Lý, Kinh tế, Lập trình hỗn hợp). AI Prompt Builder được phổ quát hóa không giới hạn môn học, tăng trần sinh câu hỏi từ 5 lên đến 25 câu.
-  - **Diễn đàn Thảo luận & Hệ thống Đánh giá Độ Tin Cậy (Forum & Credibility Engine)**: Bổ sung 2 bảng `question_comments` và `question_ratings` (kèm auto-migration hỗ trợ cả Neon.tech PostgreSQL lẫn SQL Server). Cung cấp đầy đủ API bình luận, thảo luận phản biện, Upvote/Downvote, tính % điểm tín nhiệm và Báo lỗi ảo giác AI để cộng đồng cùng kiểm duyệt chất lượng câu hỏi.
+- [x] **Phase 10 (Hợp nhất nhánh `Web_enhancements` — Open Peer-Review Forum & Multi-Disciplinary Question Engine):**
+  - Đăng ký đa vai trò (`student` / `teacher`), chuẩn hóa điểm số thang 10, động hóa môn học không giới hạn.
+  - Bổ sung CSDL bảng `question_comments`, `question_ratings` và hệ thống đánh giá tín nhiệm câu hỏi.
+- [x] **Phase 11 (Cộng Đồng Học Tập Facebook-Style, Chọn Môn Động Học Thuật & Thiết Kế Biểu Đồ):**
+  - **Facebook-Style Academic Composer**: Thiết kế lại toàn diện modal tạo bài viết (`community.html`, `community.js`):
+    - Cá nhân hóa tên và avatar tác giả: `[Tên] ơi, bạn đang thắc mắc hay muốn chia sẻ điều gì về bài học hôm nay?`
+    - Bộ công cụ chuyên biệt cho học tập: 💻 Chèn khối Code (Java, Python, C++, SQL), 💡 Mẹo né bẫy nhận thức, 📊 Thử thách câu hỏi mini, 📖 Trích dẫn giáo trình/slide, 🏷️ Trạng thái học tập (🚀 Hào hứng, 🆘 Cần trợ giúp, 💡 Đã thông não, 🤯 Đau đầu vì bug, ☕ Cày đêm).
+  - **Cải tiến chọn môn học**: Cho phép tự do nhập tên bất kỳ môn học nào bằng bàn phím + Gợi ý thông minh từ CSDL (`<datalist>`) + Dãy phím tắt chọn nhanh 1-chạm (Java OOP, CTDL & Giải Thuật, Toán Rời Rạc, CSDL SQL, Mạng Máy Tính). `CommunityServlet.java` tự động nhận diện và khởi tạo topic mới vào CSDL nếu chưa có.
+  - **Quyền tự do ngôn luận & Ẩn bài viết**: Chỉ tác giả mới có quyền xóa bài; người dùng khác được cấp nút Ẩn bài viết khỏi bảng tin cá nhân (lưu `localStorage`) và có thể bấm "Hiện lại bài viết" bất kỳ lúc nào.
+  - **Thêm `image/` vào `.gitignore`**: Untrack triệt để các file ảnh chụp màn hình khỏi git index.
+  - **Tài liệu thiết kế `SYSTEM_DIAGRAMS.md` & `README.md`**: Xây dựng đầy đủ Biểu đồ tuần tự (Sequence Diagram) theo mô hình phân tích BCE (Actor $\rightarrow$ Boundary $\rightarrow$ Control $\rightarrow$ Entity $\rightarrow$ Database) kèm phân nhánh `alt`, và Biểu đồ cộng tác (Collaboration Diagram) chuẩn 4 đỉnh phân cấp y hệt form mẫu của người dùng.
 
 ## Pending Tasks (Các bước tiếp theo mở rộng)
-- [ ] Xây dựng giao diện Frontend (nhánh `dev-frontend`) cho Diễn đàn thảo luận và Vote tín nhiệm dưới mỗi câu hỏi.
-- [ ] Nâng cấp giao diện Teacher Dashboard: Thêm nút/modal tạo chủ đề tự do, gỡ bỏ giới hạn selectbox 2 môn, tăng slider số lượng câu hỏi lên 25.
-- [ ] Cập nhật giao diện Đăng ký (`auth.html`) cho phép chọn vai trò Giảng viên / Người chia sẻ kiến thức.
 - [ ] Export báo cáo thống kê kết quả học tập ra Excel/PDF cho Giảng viên.
+- [ ] Tích hợp tính năng bình chọn Upvote/Downvote trực tiếp trên thẻ câu hỏi giao diện luyện tập.
 
 ---
 
@@ -97,11 +101,13 @@
 | ADR-010 | Gemini SDK **v1.64.0** (stable 07/2026) | Latest, hỗ trợ ResponseSchema + async |
 | ADR-011 | **Template-First Policy** — Bootstrap 5 + Floating Chat Widget | Không viết UI from scratch; chỉ Data Binding |
 | ADR-012 | CDN cho FontAwesome, SweetAlert2, Highlight.js, Marked.js | Nhẹ, không cài local, luôn cập nhật |
-| ADR-013 | **Git Branching Strategy** (`main`, `refactor-experiment`, `dev-backend`, `dev-frontend`) | Bảo toàn fallback `main` và audit 3rd party `refactor-experiment`; phát triển độc lập backend rồi frontend |
+| ADR-013 | **Git Branching Strategy** (`main`, `refactor-experiment`, `Web_enhancements`) | Giữ nguyên vẹn `main` và audit `refactor-experiment`; tập trung toàn bộ cải tiến web vào `Web_enhancements` |
 | ADR-014 | **24/7 Cloud Availability** (Render + UptimeRobot Keep-Alive) | Khắc phục Spin-down 15p của Render free tier, đảm bảo 744h/tháng luôn online tức thì |
 | ADR-015 | **Universal Multi-Disciplinary Dynamic Topics** | Loại bỏ hardcode môn học, tự động sinh và liên kết Topic trong CSDL khi người dùng nhập bất kỳ chuyên ngành nào |
 | ADR-016 | **Crowdsourced Credibility & Peer Review Model** | Bảng `question_ratings` và `question_comments` tạo cơ chế phản biện xã hội, thanh lọc ảo giác AI dựa trên trí tuệ đám đông |
+| ADR-017 | **BCE Analytical Stereotypes for UML Diagrams** | Áp dụng chuẩn Boundary - Control - Entity trong Biểu đồ tuần tự và Biểu đồ cộng tác phục vụ báo cáo CNPM |
 
 ---
 
 *Cập nhật lần cuối: 2026-09-30 (GMT+7)*
+

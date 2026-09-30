@@ -278,7 +278,7 @@ public class QuizDAO {
                 System.err.println("[QuizDAO] Lỗi truy vấn KPI sessions: " + e.getMessage());
             }
 
-            // Query 2: Questions
+            // Query 2: Questions & Topics
             try (PreparedStatement ps2 = conn.prepareStatement(sqlQuestions);
                  ResultSet rs2 = ps2.executeQuery()) {
                 if (rs2.next()) {
@@ -286,6 +286,15 @@ public class QuizDAO {
                 }
             } catch (SQLException e) {
                 System.err.println("[QuizDAO] Lỗi truy vấn KPI questions: " + e.getMessage());
+            }
+
+            try (PreparedStatement psTopics = conn.prepareStatement("SELECT COUNT(*) AS total_topics FROM topics");
+                 ResultSet rsTopics = psTopics.executeQuery()) {
+                if (rsTopics.next()) {
+                    kpis.put("totalTopics", rsTopics.getInt("total_topics"));
+                }
+            } catch (SQLException e) {
+                kpis.put("totalTopics", 0);
             }
 
             // Query 3: Guess Rate

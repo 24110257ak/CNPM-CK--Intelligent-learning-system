@@ -179,6 +179,18 @@ function setupEventListeners() {
         });
     });
 
+    // Quick Topic Buttons
+    document.querySelectorAll('.quick-topic-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const topic = btn.getAttribute('data-topic');
+            const input = document.getElementById('ai-topic-input');
+            if (input && topic) {
+                input.value = topic;
+                input.focus();
+            }
+        });
+    });
+
     // Thẩm định môn học / chủ đề bằng AI
     const btnValidateTopic = document.getElementById('btn-validate-topic');
     if (btnValidateTopic) {
@@ -385,17 +397,37 @@ async function loadTeacherStats() {
 
         // 1. Điền 4 KPI Cards
         const kpis = data.kpis || {};
-        document.getElementById('kpi-students').textContent = kpis.totalStudents !== undefined ? kpis.totalStudents : 0;
-        document.getElementById('kpi-questions').textContent = kpis.totalQuestions !== undefined ? kpis.totalQuestions : 0;
-        document.getElementById('kpi-avg-score').textContent = kpis.averageScore !== undefined ? kpis.averageScore : '0.0';
-        document.getElementById('kpi-guess-rate').textContent = kpis.guessRate !== undefined ? kpis.guessRate : '0.0';
+        const kpiStudentsEl = document.getElementById('kpi-students');
+        if (kpiStudentsEl) kpiStudentsEl.textContent = kpis.totalStudents !== undefined ? kpis.totalStudents : 0;
 
-        // 2. Điền số liệu 4 nhóm sai lầm (Misconceptions)
+        const kpiQuestionsEl = document.getElementById('kpi-questions');
+        if (kpiQuestionsEl) kpiQuestionsEl.textContent = kpis.totalQuestions !== undefined ? kpis.totalQuestions : 0;
+
+        const kpiTopicsEl = document.getElementById('kpi-topics');
+        if (kpiTopicsEl) kpiTopicsEl.textContent = kpis.totalTopics !== undefined ? kpis.totalTopics : 0;
+
+        const kpiAvgScoreEl = document.getElementById('kpi-avg-score');
+        if (kpiAvgScoreEl) kpiAvgScoreEl.textContent = kpis.averageScore !== undefined ? kpis.averageScore : '0.0';
+
+        const kpiGuessRateEl = document.getElementById('kpi-guess-rate');
+        if (kpiGuessRateEl) kpiGuessRateEl.textContent = kpis.guessRate !== undefined ? kpis.guessRate : '0.0';
+
+        // 2. Điền số liệu 5 nhóm sai lầm (Misconceptions)
         const mis = data.misconceptions || {};
-        document.getElementById('stat-syntax-swap').textContent = mis.syntax_swap || 0;
-        document.getElementById('stat-boundary-blindness').textContent = mis.boundary_blindness || 0;
-        document.getElementById('stat-mental-model-gap').textContent = mis.mental_model_gap || 0;
-        document.getElementById('stat-logic-flaw').textContent = (mis.logic_flaw || 0) + (mis.other || 0);
+        const statSyntaxEl = document.getElementById('stat-syntax-swap');
+        if (statSyntaxEl) statSyntaxEl.textContent = mis.syntax_swap || 0;
+
+        const statBoundaryEl = document.getElementById('stat-boundary-blindness');
+        if (statBoundaryEl) statBoundaryEl.textContent = mis.boundary_blindness || 0;
+
+        const statMentalEl = document.getElementById('stat-mental-model-gap');
+        if (statMentalEl) statMentalEl.textContent = mis.mental_model_gap || 0;
+
+        const statLogicEl = document.getElementById('stat-logic-flaw');
+        if (statLogicEl) statLogicEl.textContent = mis.logic_flaw || 0;
+
+        const statOtherEl = document.getElementById('stat-other-traps');
+        if (statOtherEl) statOtherEl.textContent = mis.other || 0;
 
         // 3. Điền bảng các bài nộp gần nhất
         renderRecentSessions(data.recentSessions || []);

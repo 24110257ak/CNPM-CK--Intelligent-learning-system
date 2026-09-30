@@ -30,8 +30,7 @@ const AppUI = (() => {
         if (busy) {
             element.dataset.originalHtml ??= element.innerHTML;
             element.disabled = true;
-            element.setAttribute('aria-busy', 'true');
-            element.innerHTML = `<span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>${escapeHtml(label)}`;
+            element.innerHTML = `<span class="lms-spinner lms-spinner-sm me-2 align-middle" aria-hidden="true" style="border-top-color: currentColor; border-right-color: currentColor;"></span><span class="align-middle">${escapeHtml(label)}</span>`;
         } else {
             element.disabled = false;
             element.removeAttribute('aria-busy');

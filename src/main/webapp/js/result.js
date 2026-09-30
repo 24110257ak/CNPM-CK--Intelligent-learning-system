@@ -347,9 +347,23 @@ async function startAdaptiveRemediation() {
 
     const modalBody = document.getElementById('remediation-modal-body');
     modalBody.innerHTML = `
-        <div class="text-center py-5">
-            <div class="spinner-border text-warning mb-3" role="status"></div>
-            <h6>AI đang chọn lọc 3 câu hỏi bài tập phục hồi tối ưu cho bạn...</h6>
+        <div class="text-center py-4 position-relative overflow-hidden">
+            <div class="ai-orb-container mb-3" style="width: 80px; height: 80px;">
+                <div class="ai-orb-ring-outer"></div>
+                <div class="ai-orb-ring-inner"></div>
+                <div class="ai-orb-core" style="width: 52px; height: 52px;">
+                    <i class="fa-solid fa-wand-magic-sparkles fa-lg text-white"></i>
+                </div>
+            </div>
+            <h6 class="fw-bold text-dark mb-1">AI đang tuyển chọn 3 bài tập phục hồi tối ưu...</h6>
+            <p class="text-muted small mb-3">Tự động thiết kế bẫy tư duy phản biện để vá lỗ hổng nhận thức.</p>
+            <div class="loading-progress-track mx-auto mb-2" style="max-width: 280px;">
+                <div class="loading-progress-bar"></div>
+            </div>
+            <div class="d-flex align-items-center justify-content-center gap-2 text-muted small">
+                <div class="typing-dots"><span></span><span></span><span></span></div>
+                <span class="fst-italic" style="font-size: 0.78rem;">Đang kết nối hệ thống Gemini AI...</span>
+            </div>
         </div>
     `;
 

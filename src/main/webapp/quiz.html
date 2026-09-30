@@ -54,11 +54,29 @@
         <div class="row g-4">
             <!-- Cột câu hỏi chính (Left) -->
             <div class="col-lg-8">
-                <!-- Loading Card -->
-                <div id="quiz-loading" class="card border-0 shadow-sm rounded-4 p-5 text-center bg-white">
-                    <div class="spinner-border text-primary mx-auto mb-3" role="status"></div>
-                    <h5>Đang khởi tạo bài kiểm tra...</h5>
-                    <p class="text-muted small">AI đang chuẩn bị các câu hỏi phù hợp cho bạn.</p>
+                <!-- Dynamic Quiz Loading Card with Skeleton Shimmer -->
+                <div id="quiz-loading" class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white position-relative overflow-hidden skeleton-card">
+                    <div class="d-flex align-items-center justify-content-between mb-4">
+                        <div class="skeleton-shimmer skeleton-badge"></div>
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="lms-spinner lms-spinner-sm"></div>
+                            <span class="small fw-semibold text-primary">AI đang khởi tạo đề thi...</span>
+                        </div>
+                    </div>
+                    <div class="skeleton-shimmer skeleton-line title mb-3"></div>
+                    <div class="skeleton-shimmer skeleton-line w-100 mb-2"></div>
+                    <div class="skeleton-shimmer skeleton-line w-75 mb-4"></div>
+                    
+                    <div class="d-flex flex-column gap-2.5 mb-4">
+                        <div class="skeleton-shimmer p-3 rounded-3" style="height: 48px; background: #f8fafc; border: 1px solid #e2e8f0;"></div>
+                        <div class="skeleton-shimmer p-3 rounded-3" style="height: 48px; background: #f8fafc; border: 1px solid #e2e8f0;"></div>
+                        <div class="skeleton-shimmer p-3 rounded-3" style="height: 48px; background: #f8fafc; border: 1px solid #e2e8f0;"></div>
+                        <div class="skeleton-shimmer p-3 rounded-3" style="height: 48px; background: #f8fafc; border: 1px solid #e2e8f0;"></div>
+                    </div>
+                    <div class="d-flex justify-content-center align-items-center gap-2 text-muted small pt-2">
+                        <div class="typing-dots"><span></span><span></span><span></span></div>
+                        <span>Đang tải bộ câu hỏi và bẫy tư duy phân hóa...</span>
+                    </div>
                 </div>
 
                 <!-- Active Question Card -->
@@ -152,13 +170,30 @@
 
     <!-- ── Fullscreen AI Loading Overlay (1.2) ── -->
     <div id="ai-loading-overlay" class="loading-overlay d-none">
-        <div class="loading-card text-center p-5 rounded-4 shadow-lg bg-white">
-            <div class="ai-pulse-circle mx-auto mb-4">
-                <i class="fa-solid fa-brain fa-3x text-primary"></i>
+        <div class="loading-card text-center p-4 p-md-5 rounded-4 shadow-lg bg-white position-relative overflow-hidden">
+            <!-- Dynamic Glowing AI Orb (Multi-layer Rotating Halo & Breathing Brain) -->
+            <div class="ai-orb-container">
+                <div class="ai-orb-ring-outer"></div>
+                <div class="ai-orb-ring-inner"></div>
+                <div class="ai-orb-core">
+                    <i class="fa-solid fa-brain fa-2x"></i>
+                </div>
             </div>
+            
             <h4 class="fw-bold text-dark mb-2" id="ai-loading-title">Đang chấm điểm bài làm...</h4>
             <p class="text-muted small mb-3" id="ai-loading-subtext">Hệ thống đang đối chiếu câu trả lời với bộ dữ liệu chuẩn.</p>
-            <div class="spinner-border text-primary spinner-border-sm" role="status"></div>
+            
+            <!-- Animated Shimmer Progress Bar -->
+            <div class="loading-progress-track mb-3">
+                <div class="loading-progress-bar"></div>
+            </div>
+            
+            <div class="d-flex align-items-center justify-content-center gap-2 text-muted small">
+                <div class="typing-dots">
+                    <span></span><span></span><span></span>
+                </div>
+                <span class="fst-italic" style="font-size: 0.82rem;">Gemini AI đang phân tích lỗ hổng nhận thức...</span>
+            </div>
         </div>
     </div>
 

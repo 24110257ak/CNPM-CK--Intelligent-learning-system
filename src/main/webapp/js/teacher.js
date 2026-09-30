@@ -1204,12 +1204,14 @@ async function handleCopilotChatSubmit(e) {
     loadingBubble.id = 'copilot-loading-bubble';
     loadingBubble.className = 'd-flex gap-3 mb-3';
     loadingBubble.innerHTML = `
-        <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center flex-shrink-0" style="width: 36px; height: 36px;">
+        <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center flex-shrink-0 shadow-sm" style="width: 38px; height: 38px;">
             <i class="fa-solid fa-robot"></i>
         </div>
-        <div class="chat-bubble-ai">
-            <div class="spinner-grow spinner-grow-sm text-primary me-2" role="status"></div>
-            <span class="text-muted small">Co-Pilot đang tư duy & soạn thảo câu trả lời...</span>
+        <div class="chat-bubble-ai d-flex align-items-center gap-2 py-2.5 px-3">
+            <div class="typing-dots">
+                <span></span><span></span><span></span>
+            </div>
+            <span class="text-muted small fst-italic">Co-Pilot đang tư duy & soạn thảo câu trả lời...</span>
         </div>
     `;
     historyContainer.appendChild(loadingBubble);

@@ -1,6 +1,6 @@
 ﻿# TOAN BO MA NGUON DU AN - HE THONG HOC TAP THONG MINH (INTELLIGENT LMS)
 
-> **Thoi gian tao file:** 2026-09-30 21:22:38
+> **Thoi gian tao file:** 2026-09-30 21:38:39
 > **Tong so file:** 58
 > **Muc dich:** Gom toan bo source code thanh 1 file duy nhat de gui cho ben thu ba xem xet, danh gia va gop y.
 
@@ -7848,47 +7848,239 @@ body {
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(15, 23, 42, 0.82);
-    backdrop-filter: blur(8px);
+    background: rgba(15, 23, 42, 0.85);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     z-index: 99999;
     display: flex;
     align-items: center;
     justify-content: center;
+    transition: opacity 0.3s ease;
 }
 .loading-card {
-    max-width: 460px;
+    max-width: 480px;
     width: 90%;
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    animation: fadeInScale 0.3s ease-out;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
+    animation: fadeInScale 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
-.ai-pulse-circle {
-    width: 90px;
-    height: 90px;
-    background: #eef2ff;
+
+/* ── Dynamic AI Orb & Rotating Halo Effect (Hiệu ứng Orb đa tầng chuyển động) ── */
+.ai-orb-container {
+    position: relative;
+    width: 110px;
+    height: 110px;
+    margin: 0 auto 24px auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ai-orb-ring-outer {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 3px solid transparent;
+    border-top-color: #4361ee;
+    border-right-color: #8b5cf6;
+    animation: orbSpin 2s linear infinite;
+}
+
+.ai-orb-ring-inner {
+    position: absolute;
+    width: 80%;
+    height: 80%;
+    border-radius: 50%;
+    border: 2px dashed #4cc9f0;
+    animation: orbSpinReverse 2.6s linear infinite;
+    opacity: 0.85;
+}
+
+.ai-orb-core {
+    position: relative;
+    width: 68px;
+    height: 68px;
+    background: linear-gradient(135deg, #4361ee 0%, #7209b7 50%, #4cc9f0 100%);
+    background-size: 200% 200%;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    animation: pulseGlow 1.5s infinite;
+    color: #ffffff;
+    box-shadow: 0 0 30px rgba(67, 97, 238, 0.5), inset 0 0 15px rgba(255, 255, 255, 0.4);
+    animation: gradientShift 4s ease infinite, orbFloat 2.2s ease-in-out infinite;
 }
-@keyframes pulseGlow {
-    0% {
-        transform: scale(0.95);
-        box-shadow: 0 0 0 0 rgba(67, 97, 238, 0.7);
-    }
-    70% {
-        transform: scale(1.05);
-        box-shadow: 0 0 0 24px rgba(67, 97, 238, 0);
-    }
-    100% {
-        transform: scale(0.95);
-        box-shadow: 0 0 0 0 rgba(67, 97, 238, 0);
-    }
+
+.ai-orb-core i {
+    animation: iconBreath 2s ease-in-out infinite;
+    filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.8));
 }
+
+@keyframes orbSpin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+@keyframes orbSpinReverse {
+    0% { transform: rotate(360deg); }
+    100% { transform: rotate(0deg); }
+}
+
+@keyframes orbFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-7px); }
+}
+
+@keyframes iconBreath {
+    0%, 100% { transform: scale(0.96); filter: drop-shadow(0 0 4px rgba(255,255,255,0.6)); }
+    50% { transform: scale(1.16); filter: drop-shadow(0 0 12px rgba(255,255,255,0.95)); }
+}
+
+@keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
 @keyframes fadeInScale {
-    from { opacity: 0; transform: scale(0.9); }
+    from { opacity: 0; transform: scale(0.88); }
     to { opacity: 1; transform: scale(1); }
 }
+
+/* ── Animated Shimmer Progress Bar ── */
+.loading-progress-track {
+    width: 100%;
+    height: 6px;
+    background: #e2e8f0;
+    border-radius: 99px;
+    overflow: hidden;
+    position: relative;
+}
+
+.loading-progress-bar {
+    height: 100%;
+    width: 100%;
+    background: linear-gradient(90deg, #4361ee 0%, #7209b7 50%, #4cc9f0 100%);
+    background-size: 200% 100%;
+    border-radius: 99px;
+    animation: progressBarMove 2s linear infinite;
+}
+
+@keyframes progressBarMove {
+    0% { background-position: 100% 0; }
+    100% { background-position: -100% 0; }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   SKELETON SHIMMER LOADERS (Thay thế màn hình tĩnh toàn bộ web)
+   ══════════════════════════════════════════════════════════════ */
+.skeleton-card {
+    position: relative;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    overflow: hidden;
+    padding: 24px;
+}
+
+.skeleton-shimmer {
+    position: relative;
+    overflow: hidden;
+}
+
+.skeleton-card::after,
+.skeleton-shimmer::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(90deg, 
+        rgba(255, 255, 255, 0) 0%, 
+        rgba(255, 255, 255, 0.65) 40%, 
+        rgba(255, 255, 255, 0.95) 50%, 
+        rgba(255, 255, 255, 0.65) 60%, 
+        rgba(255, 255, 255, 0) 100%
+    );
+    animation: shimmerSlide 1.6s infinite ease-in-out;
+}
+
+@keyframes shimmerSlide {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+.skeleton-line {
+    height: 12px;
+    background: #e2e8f0;
+    border-radius: 6px;
+    margin-bottom: 10px;
+}
+
+.skeleton-line.sm { height: 8px; }
+.skeleton-line.lg { height: 18px; }
+.skeleton-line.title { height: 22px; width: 60%; margin-bottom: 16px; }
+
+.skeleton-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: #e2e8f0;
+    flex-shrink: 0;
+}
+
+.skeleton-badge {
+    height: 24px;
+    width: 80px;
+    border-radius: 99px;
+    background: #e2e8f0;
+}
+
+/* ── Modern Dual-Tone Spinner & Typing Dots ── */
+.lms-spinner {
+    width: 38px;
+    height: 38px;
+    border: 3.5px solid rgba(67, 97, 238, 0.15);
+    border-top-color: #4361ee;
+    border-right-color: #7209b7;
+    border-radius: 50%;
+    animation: orbSpin 0.75s linear infinite;
+    display: inline-block;
+}
+
+.lms-spinner-sm {
+    width: 20px;
+    height: 20px;
+    border-width: 2.5px;
+}
+
+.typing-dots {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.typing-dots span {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    background: linear-gradient(135deg, #4361ee, #6366f1);
+    border-radius: 50%;
+    animation: typingBounce 1.4s infinite ease-in-out both;
+}
+
+.typing-dots span:nth-child(1) { animation-delay: -0.32s; }
+.typing-dots span:nth-child(2) { animation-delay: -0.16s; }
+.typing-dots span:nth-child(3) { animation-delay: 0s; }
+
+@keyframes typingBounce {
+    0%, 80%, 100% { transform: scale(0.65); opacity: 0.35; }
+    40% { transform: scale(1.25); opacity: 1; }
+}
+
 
 
 
@@ -8369,8 +8561,13 @@ const API = {
         const id = 'chat-loading-' + Date.now();
         const bubble = document.createElement('div');
         bubble.id = id;
-        bubble.className = 'chat-bubble chat-bubble-ai text-muted fst-italic';
-        bubble.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i>AI đang suy nghĩ câu trả lời...';
+        bubble.className = 'chat-bubble chat-bubble-ai d-flex align-items-center gap-2 py-2.5 px-3';
+        bubble.innerHTML = `
+            <div class="typing-dots">
+                <span></span><span></span><span></span>
+            </div>
+            <span class="text-muted small fst-italic">Trợ giảng AI đang suy nghĩ...</span>
+        `;
         chatMessages.appendChild(bubble);
         chatMessages.scrollTop = chatMessages.scrollHeight;
         return id;
@@ -10160,9 +10357,23 @@ async function startAdaptiveRemediation() {
 
     const modalBody = document.getElementById('remediation-modal-body');
     modalBody.innerHTML = `
-        <div class="text-center py-5">
-            <div class="spinner-border text-warning mb-3" role="status"></div>
-            <h6>AI đang chọn lọc 3 câu hỏi bài tập phục hồi tối ưu cho bạn...</h6>
+        <div class="text-center py-4 position-relative overflow-hidden">
+            <div class="ai-orb-container mb-3" style="width: 80px; height: 80px;">
+                <div class="ai-orb-ring-outer"></div>
+                <div class="ai-orb-ring-inner"></div>
+                <div class="ai-orb-core" style="width: 52px; height: 52px;">
+                    <i class="fa-solid fa-wand-magic-sparkles fa-lg text-white"></i>
+                </div>
+            </div>
+            <h6 class="fw-bold text-dark mb-1">AI đang tuyển chọn 3 bài tập phục hồi tối ưu...</h6>
+            <p class="text-muted small mb-3">Tự động thiết kế bẫy tư duy phản biện để vá lỗ hổng nhận thức.</p>
+            <div class="loading-progress-track mx-auto mb-2" style="max-width: 280px;">
+                <div class="loading-progress-bar"></div>
+            </div>
+            <div class="d-flex align-items-center justify-content-center gap-2 text-muted small">
+                <div class="typing-dots"><span></span><span></span><span></span></div>
+                <span class="fst-italic" style="font-size: 0.78rem;">Đang kết nối hệ thống Gemini AI...</span>
+            </div>
         </div>
     `;
 
@@ -11848,12 +12059,14 @@ async function handleCopilotChatSubmit(e) {
     loadingBubble.id = 'copilot-loading-bubble';
     loadingBubble.className = 'd-flex gap-3 mb-3';
     loadingBubble.innerHTML = `
-        <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center flex-shrink-0" style="width: 36px; height: 36px;">
+        <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center flex-shrink-0 shadow-sm" style="width: 38px; height: 38px;">
             <i class="fa-solid fa-robot"></i>
         </div>
-        <div class="chat-bubble-ai">
-            <div class="spinner-grow spinner-grow-sm text-primary me-2" role="status"></div>
-            <span class="text-muted small">Co-Pilot đang tư duy & soạn thảo câu trả lời...</span>
+        <div class="chat-bubble-ai d-flex align-items-center gap-2 py-2.5 px-3">
+            <div class="typing-dots">
+                <span></span><span></span><span></span>
+            </div>
+            <span class="text-muted small fst-italic">Co-Pilot đang tư duy & soạn thảo câu trả lời...</span>
         </div>
     `;
     historyContainer.appendChild(loadingBubble);
@@ -12382,8 +12595,7 @@ const AppUI = (() => {
         if (busy) {
             element.dataset.originalHtml ??= element.innerHTML;
             element.disabled = true;
-            element.setAttribute('aria-busy', 'true');
-            element.innerHTML = `<span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>${escapeHtml(label)}`;
+            element.innerHTML = `<span class="lms-spinner lms-spinner-sm me-2 align-middle" aria-hidden="true" style="border-top-color: currentColor; border-right-color: currentColor;"></span><span class="align-middle">${escapeHtml(label)}</span>`;
         } else {
             element.disabled = false;
             element.removeAttribute('aria-busy');
@@ -12992,12 +13204,48 @@ const AppUI = (() => {
                     </button>
                 </div>
 
-                <!-- Loading Spinner -->
-                <div id="posts-loading" class="text-center py-5">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Loading...</span>
+                <!-- Dynamic Posts Loading (Facebook Style Skeleton Shimmer) -->
+                <div id="posts-loading" class="d-flex flex-column gap-3 mb-3">
+                    <div class="d-flex align-items-center justify-content-center gap-2 py-2 text-muted small">
+                        <div class="lms-spinner lms-spinner-sm"></div>
+                        <span class="fw-semibold">Đang cập nhật dòng thời gian thảo luận...</span>
                     </div>
-                    <p class="text-muted mt-2 small">Đang tải các cuộc thảo luận...</p>
+                    <!-- Skeleton Post Card 1 -->
+                    <div class="skeleton-card shadow-sm rounded-4 p-4 bg-white">
+                        <div class="d-flex align-items-center gap-3 mb-3">
+                            <div class="skeleton-shimmer skeleton-avatar"></div>
+                            <div class="flex-grow-1">
+                                <div class="skeleton-shimmer skeleton-line w-50 mb-2"></div>
+                                <div class="skeleton-shimmer skeleton-line sm w-25"></div>
+                            </div>
+                            <div class="skeleton-shimmer skeleton-badge"></div>
+                        </div>
+                        <div class="skeleton-shimmer skeleton-line title mb-2"></div>
+                        <div class="skeleton-shimmer skeleton-line w-100 mb-2"></div>
+                        <div class="skeleton-shimmer skeleton-line w-80 mb-3"></div>
+                        <div class="d-flex justify-content-between pt-3 border-top">
+                            <div class="skeleton-shimmer skeleton-line sm w-25"></div>
+                            <div class="skeleton-shimmer skeleton-line sm w-25"></div>
+                        </div>
+                    </div>
+                    <!-- Skeleton Post Card 2 -->
+                    <div class="skeleton-card shadow-sm rounded-4 p-4 bg-white">
+                        <div class="d-flex align-items-center gap-3 mb-3">
+                            <div class="skeleton-shimmer skeleton-avatar"></div>
+                            <div class="flex-grow-1">
+                                <div class="skeleton-shimmer skeleton-line w-40 mb-2"></div>
+                                <div class="skeleton-shimmer skeleton-line sm w-20"></div>
+                            </div>
+                            <div class="skeleton-shimmer skeleton-badge"></div>
+                        </div>
+                        <div class="skeleton-shimmer skeleton-line title mb-2"></div>
+                        <div class="skeleton-shimmer skeleton-line w-100 mb-2"></div>
+                        <div class="skeleton-shimmer skeleton-line w-60 mb-3"></div>
+                        <div class="d-flex justify-content-between pt-3 border-top">
+                            <div class="skeleton-shimmer skeleton-line sm w-25"></div>
+                            <div class="skeleton-shimmer skeleton-line sm w-25"></div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Empty State -->
@@ -13364,7 +13612,8 @@ const AppUI = (() => {
                     <tbody id="history-tbody">
                         <tr>
                             <td colspan="6" class="text-center py-5 text-muted">
-                                <div class="spinner-border spinner-border-sm text-primary me-2"></div>Đang tải lịch sử...
+                                <div class="lms-spinner lms-spinner-sm me-2 align-middle"></div>
+                                <span class="align-middle fw-semibold">Đang tải lịch sử & thống kê tiến độ học tập...</span>
                             </td>
                         </tr>
                     </tbody>
@@ -13611,12 +13860,65 @@ const AppUI = (() => {
                 <span class="text-muted small" id="topics-count">Đang tải chủ đề...</span>
             </div>
 
-            <!-- Loading Spinner -->
-            <div id="topics-loading" class="text-center py-5">
-                <div class="spinner-border text-primary" role="status">
-                    <span class="visually-hidden">Loading...</span>
+            <!-- Dynamic Topics Loading (Shimmer Skeleton Cards) -->
+            <div id="topics-loading" class="py-2">
+                <div class="d-flex align-items-center justify-content-center gap-2 mb-4 text-muted small">
+                    <div class="lms-spinner lms-spinner-sm"></div>
+                    <span class="fw-semibold">Đang đồng bộ danh mục chủ đề học tập...</span>
                 </div>
-                <p class="text-muted mt-2">Đang tải danh sách bài học...</p>
+                <div class="row g-4">
+                    <div class="col-md-6 col-lg-4">
+                        <div class="skeleton-card shadow-sm h-100 p-4">
+                            <div class="d-flex align-items-center gap-3 mb-3">
+                                <div class="skeleton-shimmer skeleton-avatar"></div>
+                                <div class="flex-grow-1">
+                                    <div class="skeleton-shimmer skeleton-line w-75 mb-2"></div>
+                                    <div class="skeleton-shimmer skeleton-line sm w-50"></div>
+                                </div>
+                            </div>
+                            <div class="skeleton-shimmer skeleton-line w-100 mb-2"></div>
+                            <div class="skeleton-shimmer skeleton-line w-85 mb-4"></div>
+                            <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                                <div class="skeleton-shimmer skeleton-badge"></div>
+                                <div class="skeleton-shimmer skeleton-badge"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-4">
+                        <div class="skeleton-card shadow-sm h-100 p-4">
+                            <div class="d-flex align-items-center gap-3 mb-3">
+                                <div class="skeleton-shimmer skeleton-avatar"></div>
+                                <div class="flex-grow-1">
+                                    <div class="skeleton-shimmer skeleton-line w-75 mb-2"></div>
+                                    <div class="skeleton-shimmer skeleton-line sm w-50"></div>
+                                </div>
+                            </div>
+                            <div class="skeleton-shimmer skeleton-line w-100 mb-2"></div>
+                            <div class="skeleton-shimmer skeleton-line w-85 mb-4"></div>
+                            <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                                <div class="skeleton-shimmer skeleton-badge"></div>
+                                <div class="skeleton-shimmer skeleton-badge"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-4 d-none d-lg-block">
+                        <div class="skeleton-card shadow-sm h-100 p-4">
+                            <div class="d-flex align-items-center gap-3 mb-3">
+                                <div class="skeleton-shimmer skeleton-avatar"></div>
+                                <div class="flex-grow-1">
+                                    <div class="skeleton-shimmer skeleton-line w-75 mb-2"></div>
+                                    <div class="skeleton-shimmer skeleton-line sm w-50"></div>
+                                </div>
+                            </div>
+                            <div class="skeleton-shimmer skeleton-line w-100 mb-2"></div>
+                            <div class="skeleton-shimmer skeleton-line w-85 mb-4"></div>
+                            <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                                <div class="skeleton-shimmer skeleton-badge"></div>
+                                <div class="skeleton-shimmer skeleton-badge"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Topic Cards Grid -->
@@ -13830,11 +14132,29 @@ const AppUI = (() => {
         <div class="row g-4">
             <!-- Cột câu hỏi chính (Left) -->
             <div class="col-lg-8">
-                <!-- Loading Card -->
-                <div id="quiz-loading" class="card border-0 shadow-sm rounded-4 p-5 text-center bg-white">
-                    <div class="spinner-border text-primary mx-auto mb-3" role="status"></div>
-                    <h5>Đang khởi tạo bài kiểm tra...</h5>
-                    <p class="text-muted small">AI đang chuẩn bị các câu hỏi phù hợp cho bạn.</p>
+                <!-- Dynamic Quiz Loading Card with Skeleton Shimmer -->
+                <div id="quiz-loading" class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white position-relative overflow-hidden skeleton-card">
+                    <div class="d-flex align-items-center justify-content-between mb-4">
+                        <div class="skeleton-shimmer skeleton-badge"></div>
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="lms-spinner lms-spinner-sm"></div>
+                            <span class="small fw-semibold text-primary">AI đang khởi tạo đề thi...</span>
+                        </div>
+                    </div>
+                    <div class="skeleton-shimmer skeleton-line title mb-3"></div>
+                    <div class="skeleton-shimmer skeleton-line w-100 mb-2"></div>
+                    <div class="skeleton-shimmer skeleton-line w-75 mb-4"></div>
+                    
+                    <div class="d-flex flex-column gap-2.5 mb-4">
+                        <div class="skeleton-shimmer p-3 rounded-3" style="height: 48px; background: #f8fafc; border: 1px solid #e2e8f0;"></div>
+                        <div class="skeleton-shimmer p-3 rounded-3" style="height: 48px; background: #f8fafc; border: 1px solid #e2e8f0;"></div>
+                        <div class="skeleton-shimmer p-3 rounded-3" style="height: 48px; background: #f8fafc; border: 1px solid #e2e8f0;"></div>
+                        <div class="skeleton-shimmer p-3 rounded-3" style="height: 48px; background: #f8fafc; border: 1px solid #e2e8f0;"></div>
+                    </div>
+                    <div class="d-flex justify-content-center align-items-center gap-2 text-muted small pt-2">
+                        <div class="typing-dots"><span></span><span></span><span></span></div>
+                        <span>Đang tải bộ câu hỏi và bẫy tư duy phân hóa...</span>
+                    </div>
                 </div>
 
                 <!-- Active Question Card -->
@@ -13928,13 +14248,30 @@ const AppUI = (() => {
 
     <!-- ── Fullscreen AI Loading Overlay (1.2) ── -->
     <div id="ai-loading-overlay" class="loading-overlay d-none">
-        <div class="loading-card text-center p-5 rounded-4 shadow-lg bg-white">
-            <div class="ai-pulse-circle mx-auto mb-4">
-                <i class="fa-solid fa-brain fa-3x text-primary"></i>
+        <div class="loading-card text-center p-4 p-md-5 rounded-4 shadow-lg bg-white position-relative overflow-hidden">
+            <!-- Dynamic Glowing AI Orb (Multi-layer Rotating Halo & Breathing Brain) -->
+            <div class="ai-orb-container">
+                <div class="ai-orb-ring-outer"></div>
+                <div class="ai-orb-ring-inner"></div>
+                <div class="ai-orb-core">
+                    <i class="fa-solid fa-brain fa-2x"></i>
+                </div>
             </div>
+            
             <h4 class="fw-bold text-dark mb-2" id="ai-loading-title">Đang chấm điểm bài làm...</h4>
             <p class="text-muted small mb-3" id="ai-loading-subtext">Hệ thống đang đối chiếu câu trả lời với bộ dữ liệu chuẩn.</p>
-            <div class="spinner-border text-primary spinner-border-sm" role="status"></div>
+            
+            <!-- Animated Shimmer Progress Bar -->
+            <div class="loading-progress-track mb-3">
+                <div class="loading-progress-bar"></div>
+            </div>
+            
+            <div class="d-flex align-items-center justify-content-center gap-2 text-muted small">
+                <div class="typing-dots">
+                    <span></span><span></span><span></span>
+                </div>
+                <span class="fst-italic" style="font-size: 0.82rem;">Gemini AI đang phân tích lỗ hổng nhận thức...</span>
+            </div>
         </div>
     </div>
 
@@ -14434,7 +14771,8 @@ const AppUI = (() => {
                                 <tbody id="questions-tbody">
                                     <tr>
                                         <td colspan="6" class="text-center py-5 text-muted">
-                                            <div class="spinner-border spinner-border-sm text-primary me-2"></div>Đang tải dữ liệu câu hỏi...
+                                            <div class="lms-spinner lms-spinner-sm me-2 align-middle"></div>
+                                            <span class="align-middle fw-semibold">Đang tải dữ liệu ngân hàng câu hỏi...</span>
                                         </td>
                                     </tr>
                                 </tbody>
@@ -14571,7 +14909,8 @@ const AppUI = (() => {
                                 <tbody id="recent-sessions-tbody">
                                     <tr>
                                         <td colspan="6" class="text-center py-4 text-muted">
-                                            <div class="spinner-border spinner-border-sm text-primary me-2"></div>Đang tải danh sách bài nộp...
+                                            <div class="lms-spinner lms-spinner-sm me-2 align-middle"></div>
+                                            <span class="align-middle fw-semibold">Đang tải danh sách bài nộp...</span>
                                         </td>
                                     </tr>
                                 </tbody>
@@ -14842,7 +15181,8 @@ const AppUI = (() => {
                                 <tbody id="reports-tbody">
                                     <tr>
                                         <td colspan="5" class="text-center py-4 text-muted">
-                                            <div class="spinner-border spinner-border-sm text-danger me-2"></div>Đang tải danh sách báo lỗi...
+                                            <div class="lms-spinner lms-spinner-sm me-2 align-middle" style="border-top-color: #ef4444; border-right-color: #f97316;"></div>
+                                            <span class="align-middle fw-semibold">Đang tải danh sách câu hỏi bị báo lỗi...</span>
                                         </td>
                                     </tr>
                                 </tbody>

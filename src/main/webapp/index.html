@@ -108,12 +108,65 @@
                 <span class="text-muted small" id="topics-count">Đang tải chủ đề...</span>
             </div>
 
-            <!-- Loading Spinner -->
-            <div id="topics-loading" class="text-center py-5">
-                <div class="spinner-border text-primary" role="status">
-                    <span class="visually-hidden">Loading...</span>
+            <!-- Dynamic Topics Loading (Shimmer Skeleton Cards) -->
+            <div id="topics-loading" class="py-2">
+                <div class="d-flex align-items-center justify-content-center gap-2 mb-4 text-muted small">
+                    <div class="lms-spinner lms-spinner-sm"></div>
+                    <span class="fw-semibold">Đang đồng bộ danh mục chủ đề học tập...</span>
                 </div>
-                <p class="text-muted mt-2">Đang tải danh sách bài học...</p>
+                <div class="row g-4">
+                    <div class="col-md-6 col-lg-4">
+                        <div class="skeleton-card shadow-sm h-100 p-4">
+                            <div class="d-flex align-items-center gap-3 mb-3">
+                                <div class="skeleton-shimmer skeleton-avatar"></div>
+                                <div class="flex-grow-1">
+                                    <div class="skeleton-shimmer skeleton-line w-75 mb-2"></div>
+                                    <div class="skeleton-shimmer skeleton-line sm w-50"></div>
+                                </div>
+                            </div>
+                            <div class="skeleton-shimmer skeleton-line w-100 mb-2"></div>
+                            <div class="skeleton-shimmer skeleton-line w-85 mb-4"></div>
+                            <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                                <div class="skeleton-shimmer skeleton-badge"></div>
+                                <div class="skeleton-shimmer skeleton-badge"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-4">
+                        <div class="skeleton-card shadow-sm h-100 p-4">
+                            <div class="d-flex align-items-center gap-3 mb-3">
+                                <div class="skeleton-shimmer skeleton-avatar"></div>
+                                <div class="flex-grow-1">
+                                    <div class="skeleton-shimmer skeleton-line w-75 mb-2"></div>
+                                    <div class="skeleton-shimmer skeleton-line sm w-50"></div>
+                                </div>
+                            </div>
+                            <div class="skeleton-shimmer skeleton-line w-100 mb-2"></div>
+                            <div class="skeleton-shimmer skeleton-line w-85 mb-4"></div>
+                            <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                                <div class="skeleton-shimmer skeleton-badge"></div>
+                                <div class="skeleton-shimmer skeleton-badge"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-lg-4 d-none d-lg-block">
+                        <div class="skeleton-card shadow-sm h-100 p-4">
+                            <div class="d-flex align-items-center gap-3 mb-3">
+                                <div class="skeleton-shimmer skeleton-avatar"></div>
+                                <div class="flex-grow-1">
+                                    <div class="skeleton-shimmer skeleton-line w-75 mb-2"></div>
+                                    <div class="skeleton-shimmer skeleton-line sm w-50"></div>
+                                </div>
+                            </div>
+                            <div class="skeleton-shimmer skeleton-line w-100 mb-2"></div>
+                            <div class="skeleton-shimmer skeleton-line w-85 mb-4"></div>
+                            <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                                <div class="skeleton-shimmer skeleton-badge"></div>
+                                <div class="skeleton-shimmer skeleton-badge"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Topic Cards Grid -->

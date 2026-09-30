@@ -131,8 +131,13 @@
         const id = 'chat-loading-' + Date.now();
         const bubble = document.createElement('div');
         bubble.id = id;
-        bubble.className = 'chat-bubble chat-bubble-ai text-muted fst-italic';
-        bubble.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i>AI đang suy nghĩ câu trả lời...';
+        bubble.className = 'chat-bubble chat-bubble-ai d-flex align-items-center gap-2 py-2.5 px-3';
+        bubble.innerHTML = `
+            <div class="typing-dots">
+                <span></span><span></span><span></span>
+            </div>
+            <span class="text-muted small fst-italic">Trợ giảng AI đang suy nghĩ...</span>
+        `;
         chatMessages.appendChild(bubble);
         chatMessages.scrollTop = chatMessages.scrollHeight;
         return id;

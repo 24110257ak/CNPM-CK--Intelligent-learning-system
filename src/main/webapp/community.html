@@ -279,12 +279,48 @@
                     </button>
                 </div>
 
-                <!-- Loading Spinner -->
-                <div id="posts-loading" class="text-center py-5">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Loading...</span>
+                <!-- Dynamic Posts Loading (Facebook Style Skeleton Shimmer) -->
+                <div id="posts-loading" class="d-flex flex-column gap-3 mb-3">
+                    <div class="d-flex align-items-center justify-content-center gap-2 py-2 text-muted small">
+                        <div class="lms-spinner lms-spinner-sm"></div>
+                        <span class="fw-semibold">Đang cập nhật dòng thời gian thảo luận...</span>
                     </div>
-                    <p class="text-muted mt-2 small">Đang tải các cuộc thảo luận...</p>
+                    <!-- Skeleton Post Card 1 -->
+                    <div class="skeleton-card shadow-sm rounded-4 p-4 bg-white">
+                        <div class="d-flex align-items-center gap-3 mb-3">
+                            <div class="skeleton-shimmer skeleton-avatar"></div>
+                            <div class="flex-grow-1">
+                                <div class="skeleton-shimmer skeleton-line w-50 mb-2"></div>
+                                <div class="skeleton-shimmer skeleton-line sm w-25"></div>
+                            </div>
+                            <div class="skeleton-shimmer skeleton-badge"></div>
+                        </div>
+                        <div class="skeleton-shimmer skeleton-line title mb-2"></div>
+                        <div class="skeleton-shimmer skeleton-line w-100 mb-2"></div>
+                        <div class="skeleton-shimmer skeleton-line w-80 mb-3"></div>
+                        <div class="d-flex justify-content-between pt-3 border-top">
+                            <div class="skeleton-shimmer skeleton-line sm w-25"></div>
+                            <div class="skeleton-shimmer skeleton-line sm w-25"></div>
+                        </div>
+                    </div>
+                    <!-- Skeleton Post Card 2 -->
+                    <div class="skeleton-card shadow-sm rounded-4 p-4 bg-white">
+                        <div class="d-flex align-items-center gap-3 mb-3">
+                            <div class="skeleton-shimmer skeleton-avatar"></div>
+                            <div class="flex-grow-1">
+                                <div class="skeleton-shimmer skeleton-line w-40 mb-2"></div>
+                                <div class="skeleton-shimmer skeleton-line sm w-20"></div>
+                            </div>
+                            <div class="skeleton-shimmer skeleton-badge"></div>
+                        </div>
+                        <div class="skeleton-shimmer skeleton-line title mb-2"></div>
+                        <div class="skeleton-shimmer skeleton-line w-100 mb-2"></div>
+                        <div class="skeleton-shimmer skeleton-line w-60 mb-3"></div>
+                        <div class="d-flex justify-content-between pt-3 border-top">
+                            <div class="skeleton-shimmer skeleton-line sm w-25"></div>
+                            <div class="skeleton-shimmer skeleton-line sm w-25"></div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Empty State -->

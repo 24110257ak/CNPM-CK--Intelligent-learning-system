@@ -161,15 +161,21 @@ public class QuizService {
             }
         }
 
-        double score = totalQuestions > 0 ? ((double) correctCount / totalQuestions) * 100.0 : 0.0;
-        quizDAO.completeSession(sessionId, correctCount, Math.round(score * 10.0) / 10.0);
+        // Chuẩn hóa điểm về thang 10 chuẩn (vd: 3.8/10 hoặc 8.5/10)
+        double score10 = totalQuestions > 0 ? ((double) correctCount / totalQuestions) * 10.0 : 0.0;
+        double roundedScore10 = Math.round(score10 * 10.0) / 10.0;
+        double percentage = totalQuestions > 0 ? ((double) correctCount / totalQuestions) * 100.0 : 0.0;
+        double roundedPercentage = Math.round(percentage * 10.0) / 10.0;
+
+        quizDAO.completeSession(sessionId, correctCount, roundedScore10);
 
         Map<String, Object> response = new HashMap<>();
         response.put("sessionId", sessionId);
         response.put("userId", userId);
         response.put("totalQuestions", totalQuestions);
         response.put("correctCount", correctCount);
-        response.put("score", Math.round(score * 10.0) / 10.0);
+        response.put("score", roundedScore10);
+        response.put("percentage", roundedPercentage);
         response.put("gradedAnswers", gradedAnswers);
         response.put("remedialLessons", remedialLessons);
 

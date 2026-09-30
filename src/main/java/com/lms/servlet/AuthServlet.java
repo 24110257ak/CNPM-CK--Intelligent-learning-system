@@ -113,10 +113,11 @@ public class AuthServlet extends HttpServlet {
         String password = body.get("password").getAsString();
         String fullName = body.has("fullName") ? body.get("fullName").getAsString() : username;
         String email = body.has("email") ? body.get("email").getAsString() : null;
+        String role = body.has("role") && !body.get("role").isJsonNull() ? body.get("role").getAsString().trim().toLowerCase() : "student";
         String interests = body.has("interests") ? body.get("interests").getAsString() : null;
 
         try {
-            User newUser = userService.register(username, password, fullName, email, interests);
+            User newUser = userService.register(username, password, fullName, email, role, interests);
             // Tự động duy trì đăng nhập sau khi tạo tài khoản
             HttpSession session = req.getSession(true);
             session.setAttribute("user", newUser);

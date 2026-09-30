@@ -269,8 +269,10 @@ public class QuizDAO {
                  ResultSet rs1 = ps1.executeQuery()) {
                 if (rs1.next()) {
                     kpis.put("totalStudents", rs1.getInt("total_students"));
-                    double avgScore = Math.round(rs1.getDouble("avg_score") * 10.0) / 10.0;
-                    kpis.put("averageScore", avgScore);
+                    double rawAvg = rs1.getDouble("avg_score");
+                    // Chuẩn hóa về thang 10: nếu dữ liệu cũ tính theo thang 100 (> 10.0), chia cho 10
+                    double avgScore10 = rawAvg > 10.0 ? (rawAvg / 10.0) : rawAvg;
+                    kpis.put("averageScore", Math.round(avgScore10 * 10.0) / 10.0);
                 }
             } catch (SQLException e) {
                 System.err.println("[QuizDAO] Lỗi truy vấn KPI sessions: " + e.getMessage());
@@ -360,7 +362,9 @@ public class QuizDAO {
                     item.put("topicName", rs.getString("topic_name"));
                     item.put("totalQuestions", rs.getInt("total_questions"));
                     item.put("correctCount", rs.getInt("correct_count"));
-                    item.put("score", rs.getDouble("score"));
+                    double rawScore = rs.getDouble("score");
+                    double score10 = rawScore > 10.0 ? (rawScore / 10.0) : rawScore;
+                    item.put("score", Math.round(score10 * 10.0) / 10.0);
                     Timestamp completedAt = rs.getTimestamp("completed_at");
                     item.put("completedAt", completedAt != null ? completedAt.toString() : "");
                     list.add(item);

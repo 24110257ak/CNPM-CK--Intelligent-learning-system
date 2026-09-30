@@ -1,7 +1,7 @@
 ﻿# TOAN BO MA NGUON DU AN - HE THONG HOC TAP THONG MINH (INTELLIGENT LMS)
 
-> **Thoi gian tao file:** 2026-09-30 14:29:17
-> **Tong so file:** 48
+> **Thoi gian tao file:** 2026-09-30 15:29:50
+> **Tong so file:** 52
 > **Muc dich:** Gom toan bo source code thanh 1 file duy nhat de gui cho ben thu ba xem xet, danh gia va gop y.
 
 ---
@@ -17,45 +17,49 @@
 7. [src\main\resources\db\schema.sql](#src-main-resources-db-schema-sql)
 8. [src\main\java\com\lms\model\ChatMessage.java](#src-main-java-com-lms-model-chatmessage-java)
 9. [src\main\java\com\lms\model\Question.java](#src-main-java-com-lms-model-question-java)
-10. [src\main\java\com\lms\model\QuizSession.java](#src-main-java-com-lms-model-quizsession-java)
-11. [src\main\java\com\lms\model\RemedialLesson.java](#src-main-java-com-lms-model-remediallesson-java)
-12. [src\main\java\com\lms\model\Topic.java](#src-main-java-com-lms-model-topic-java)
-13. [src\main\java\com\lms\model\User.java](#src-main-java-com-lms-model-user-java)
-14. [src\main\java\com\lms\model\UserAnswer.java](#src-main-java-com-lms-model-useranswer-java)
-15. [src\main\java\com\lms\util\ConfigLoader.java](#src-main-java-com-lms-util-configloader-java)
-16. [src\main\java\com\lms\util\JsonHelper.java](#src-main-java-com-lms-util-jsonhelper-java)
-17. [src\main\java\com\lms\dao\ChatDAO.java](#src-main-java-com-lms-dao-chatdao-java)
-18. [src\main\java\com\lms\dao\DatabaseUtil.java](#src-main-java-com-lms-dao-databaseutil-java)
-19. [src\main\java\com\lms\dao\QuestionDAO.java](#src-main-java-com-lms-dao-questiondao-java)
-20. [src\main\java\com\lms\dao\QuizDAO.java](#src-main-java-com-lms-dao-quizdao-java)
-21. [src\main\java\com\lms\dao\TopicDAO.java](#src-main-java-com-lms-dao-topicdao-java)
-22. [src\main\java\com\lms\dao\UserDAO.java](#src-main-java-com-lms-dao-userdao-java)
-23. [src\main\java\com\lms\service\AIService.java](#src-main-java-com-lms-service-aiservice-java)
-24. [src\main\java\com\lms\service\FallbackService.java](#src-main-java-com-lms-service-fallbackservice-java)
-25. [src\main\java\com\lms\service\PromptBuilder.java](#src-main-java-com-lms-service-promptbuilder-java)
-26. [src\main\java\com\lms\service\QuizService.java](#src-main-java-com-lms-service-quizservice-java)
-27. [src\main\java\com\lms\service\UserService.java](#src-main-java-com-lms-service-userservice-java)
-28. [src\main\java\com\lms\filter\AuthFilter.java](#src-main-java-com-lms-filter-authfilter-java)
-29. [src\main\java\com\lms\filter\CorsFilter.java](#src-main-java-com-lms-filter-corsfilter-java)
-30. [src\main\java\com\lms\servlet\AuthServlet.java](#src-main-java-com-lms-servlet-authservlet-java)
-31. [src\main\java\com\lms\servlet\ChatServlet.java](#src-main-java-com-lms-servlet-chatservlet-java)
-32. [src\main\java\com\lms\servlet\QuestionServlet.java](#src-main-java-com-lms-servlet-questionservlet-java)
-33. [src\main\java\com\lms\servlet\QuizServlet.java](#src-main-java-com-lms-servlet-quizservlet-java)
-34. [src\main\java\com\lms\servlet\TeacherServlet.java](#src-main-java-com-lms-servlet-teacherservlet-java)
-35. [src\main\java\com\lms\servlet\TopicServlet.java](#src-main-java-com-lms-servlet-topicservlet-java)
-36. [src\main\webapp\css\app.css](#src-main-webapp-css-app-css)
-37. [src\main\webapp\js\api.js](#src-main-webapp-js-api-js)
-38. [src\main\webapp\js\chat-widget.js](#src-main-webapp-js-chat-widget-js)
-39. [src\main\webapp\js\quiz.js](#src-main-webapp-js-quiz-js)
-40. [src\main\webapp\js\result.js](#src-main-webapp-js-result-js)
-41. [src\main\webapp\js\teacher.js](#src-main-webapp-js-teacher-js)
-42. [src\main\webapp\js\ui.js](#src-main-webapp-js-ui-js)
-43. [src\main\webapp\auth.html](#src-main-webapp-auth-html)
-44. [src\main\webapp\history.html](#src-main-webapp-history-html)
-45. [src\main\webapp\index.html](#src-main-webapp-index-html)
-46. [src\main\webapp\quiz.html](#src-main-webapp-quiz-html)
-47. [src\main\webapp\result.html](#src-main-webapp-result-html)
-48. [src\main\webapp\teacher-dashboard.html](#src-main-webapp-teacher-dashboard-html)
+10. [src\main\java\com\lms\model\QuestionComment.java](#src-main-java-com-lms-model-questioncomment-java)
+11. [src\main\java\com\lms\model\QuestionRating.java](#src-main-java-com-lms-model-questionrating-java)
+12. [src\main\java\com\lms\model\QuizSession.java](#src-main-java-com-lms-model-quizsession-java)
+13. [src\main\java\com\lms\model\RemedialLesson.java](#src-main-java-com-lms-model-remediallesson-java)
+14. [src\main\java\com\lms\model\Topic.java](#src-main-java-com-lms-model-topic-java)
+15. [src\main\java\com\lms\model\User.java](#src-main-java-com-lms-model-user-java)
+16. [src\main\java\com\lms\model\UserAnswer.java](#src-main-java-com-lms-model-useranswer-java)
+17. [src\main\java\com\lms\util\ConfigLoader.java](#src-main-java-com-lms-util-configloader-java)
+18. [src\main\java\com\lms\util\JsonHelper.java](#src-main-java-com-lms-util-jsonhelper-java)
+19. [src\main\java\com\lms\dao\ChatDAO.java](#src-main-java-com-lms-dao-chatdao-java)
+20. [src\main\java\com\lms\dao\DatabaseUtil.java](#src-main-java-com-lms-dao-databaseutil-java)
+21. [src\main\java\com\lms\dao\DiscussionDAO.java](#src-main-java-com-lms-dao-discussiondao-java)
+22. [src\main\java\com\lms\dao\QuestionDAO.java](#src-main-java-com-lms-dao-questiondao-java)
+23. [src\main\java\com\lms\dao\QuizDAO.java](#src-main-java-com-lms-dao-quizdao-java)
+24. [src\main\java\com\lms\dao\TopicDAO.java](#src-main-java-com-lms-dao-topicdao-java)
+25. [src\main\java\com\lms\dao\UserDAO.java](#src-main-java-com-lms-dao-userdao-java)
+26. [src\main\java\com\lms\service\AIService.java](#src-main-java-com-lms-service-aiservice-java)
+27. [src\main\java\com\lms\service\FallbackService.java](#src-main-java-com-lms-service-fallbackservice-java)
+28. [src\main\java\com\lms\service\PromptBuilder.java](#src-main-java-com-lms-service-promptbuilder-java)
+29. [src\main\java\com\lms\service\QuizService.java](#src-main-java-com-lms-service-quizservice-java)
+30. [src\main\java\com\lms\service\UserService.java](#src-main-java-com-lms-service-userservice-java)
+31. [src\main\java\com\lms\filter\AuthFilter.java](#src-main-java-com-lms-filter-authfilter-java)
+32. [src\main\java\com\lms\filter\CorsFilter.java](#src-main-java-com-lms-filter-corsfilter-java)
+33. [src\main\java\com\lms\servlet\AuthServlet.java](#src-main-java-com-lms-servlet-authservlet-java)
+34. [src\main\java\com\lms\servlet\ChatServlet.java](#src-main-java-com-lms-servlet-chatservlet-java)
+35. [src\main\java\com\lms\servlet\DiscussionServlet.java](#src-main-java-com-lms-servlet-discussionservlet-java)
+36. [src\main\java\com\lms\servlet\QuestionServlet.java](#src-main-java-com-lms-servlet-questionservlet-java)
+37. [src\main\java\com\lms\servlet\QuizServlet.java](#src-main-java-com-lms-servlet-quizservlet-java)
+38. [src\main\java\com\lms\servlet\TeacherServlet.java](#src-main-java-com-lms-servlet-teacherservlet-java)
+39. [src\main\java\com\lms\servlet\TopicServlet.java](#src-main-java-com-lms-servlet-topicservlet-java)
+40. [src\main\webapp\css\app.css](#src-main-webapp-css-app-css)
+41. [src\main\webapp\js\api.js](#src-main-webapp-js-api-js)
+42. [src\main\webapp\js\chat-widget.js](#src-main-webapp-js-chat-widget-js)
+43. [src\main\webapp\js\quiz.js](#src-main-webapp-js-quiz-js)
+44. [src\main\webapp\js\result.js](#src-main-webapp-js-result-js)
+45. [src\main\webapp\js\teacher.js](#src-main-webapp-js-teacher-js)
+46. [src\main\webapp\js\ui.js](#src-main-webapp-js-ui-js)
+47. [src\main\webapp\auth.html](#src-main-webapp-auth-html)
+48. [src\main\webapp\history.html](#src-main-webapp-history-html)
+49. [src\main\webapp\index.html](#src-main-webapp-index-html)
+50. [src\main\webapp\quiz.html](#src-main-webapp-quiz-html)
+51. [src\main\webapp\result.html](#src-main-webapp-result-html)
+52. [src\main\webapp\teacher-dashboard.html](#src-main-webapp-teacher-dashboard-html)
 
 ---
 
@@ -676,11 +680,17 @@ Hệ thống học tập thông minh/
   - Sửa lỗi biên dịch `HttpServletResponse.SC_UNPROCESSABLE_ENTITY` (thay bằng `422` cho tương thích Jakarta Servlet 5.0).
   - Schema CSDL bổ sung Unique index `(session_id, question_id)` chống duplicate answers.
   - Giữ nguyên vẹn nhánh `main` để bảo toàn fallback production.
+- [x] **Phase 10 (Nhánh `dev-backend` — Open Peer-Review Forum & Unlimited Multi-Disciplinary Question Engine):**
+  - **Đăng ký đa vai trò (Multi-Role Registration)**: Mọi người dùng đều có thể tự do đăng ký với role `teacher` (người sáng tạo/chia sẻ đề) hoặc `student`, phá bỏ giới hạn 1 tài khoản giảng viên duy nhất.
+  - **Chuẩn hóa điểm số thang 10**: Sửa triệt để lỗi hiển thị `37.5 / 10` do nhầm lẫn thang % 100 điểm với thang 10. `QuizService` và `QuizDAO` chuẩn hóa lưu trữ và truy vấn KPI thang 10 (ví dụ `3.8 / 10`), tương thích ngược hoàn hảo với dữ liệu cũ.
+  - **Động hóa chủ đề & Ngân hàng câu hỏi liên môn vô hạn**: `TopicDAO.findOrCreate` và `POST /api/topics` cho phép người dùng tự tạo bất kỳ môn học hay chủ đề nào (Toán, Lý, Kinh tế, Lập trình hỗn hợp). AI Prompt Builder được phổ quát hóa không giới hạn môn học, tăng trần sinh câu hỏi từ 5 lên đến 25 câu.
+  - **Diễn đàn Thảo luận & Hệ thống Đánh giá Độ Tin Cậy (Forum & Credibility Engine)**: Bổ sung 2 bảng `question_comments` và `question_ratings` (kèm auto-migration hỗ trợ cả Neon.tech PostgreSQL lẫn SQL Server). Cung cấp đầy đủ API bình luận, thảo luận phản biện, Upvote/Downvote, tính % điểm tín nhiệm và Báo lỗi ảo giác AI để cộng đồng cùng kiểm duyệt chất lượng câu hỏi.
 
 ## Pending Tasks (Các bước tiếp theo mở rộng)
+- [ ] Xây dựng giao diện Frontend (nhánh `dev-frontend`) cho Diễn đàn thảo luận và Vote tín nhiệm dưới mỗi câu hỏi.
+- [ ] Nâng cấp giao diện Teacher Dashboard: Thêm nút/modal tạo chủ đề tự do, gỡ bỏ giới hạn selectbox 2 môn, tăng slider số lượng câu hỏi lên 25.
+- [ ] Cập nhật giao diện Đăng ký (`auth.html`) cho phép chọn vai trò Giảng viên / Người chia sẻ kiến thức.
 - [ ] Export báo cáo thống kê kết quả học tập ra Excel/PDF cho Giảng viên.
-- [ ] Bổ sung thêm ngân hàng câu hỏi phân loại theo các chủ đề chuyên sâu mới.
-- [ ] Tích hợp tính năng Voice Input / Audio cho Trợ Giảng AI.
 
 ---
 
@@ -700,8 +710,10 @@ Hệ thống học tập thông minh/
 | ADR-010 | Gemini SDK **v1.64.0** (stable 07/2026) | Latest, hỗ trợ ResponseSchema + async |
 | ADR-011 | **Template-First Policy** — Bootstrap 5 + Floating Chat Widget | Không viết UI from scratch; chỉ Data Binding |
 | ADR-012 | CDN cho FontAwesome, SweetAlert2, Highlight.js, Marked.js | Nhẹ, không cài local, luôn cập nhật |
-| ADR-013 | **Git Branching Strategy** (`main` vs `refactor-experiment`) | Giữ `main` làm Production Fallback ổn định, nhánh phụ để audit & kiểm thử |
+| ADR-013 | **Git Branching Strategy** (`main`, `refactor-experiment`, `dev-backend`, `dev-frontend`) | Bảo toàn fallback `main` và audit 3rd party `refactor-experiment`; phát triển độc lập backend rồi frontend |
 | ADR-014 | **24/7 Cloud Availability** (Render + UptimeRobot Keep-Alive) | Khắc phục Spin-down 15p của Render free tier, đảm bảo 744h/tháng luôn online tức thì |
+| ADR-015 | **Universal Multi-Disciplinary Dynamic Topics** | Loại bỏ hardcode môn học, tự động sinh và liên kết Topic trong CSDL khi người dùng nhập bất kỳ chuyên ngành nào |
+| ADR-016 | **Crowdsourced Credibility & Peer Review Model** | Bảng `question_ratings` và `question_comments` tạo cơ chế phản biện xã hội, thanh lọc ảo giác AI dựa trên trí tuệ đám đông |
 
 ---
 
@@ -845,6 +857,37 @@ CREATE UNIQUE INDEX IF NOT EXISTS UQ_user_answers_session_question ON user_answe
 CREATE INDEX IF NOT EXISTS IX_remedial_user        ON remedial_lessons(user_id);
 CREATE INDEX IF NOT EXISTS IX_chat_history_user    ON chat_history(user_id);
 CREATE INDEX IF NOT EXISTS IX_chat_history_session ON chat_history(session_id);
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- BẢNG 8: QUESTION_COMMENTS (Bình luận & Thảo luận câu hỏi - Diễn đàn mở)
+-- ─────────────────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS question_comments (
+    comment_id        SERIAL PRIMARY KEY,
+    question_id       INT           NOT NULL REFERENCES questions(question_id) ON DELETE CASCADE,
+    user_id           INT           NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    parent_comment_id INT           NULL REFERENCES question_comments(comment_id) ON DELETE CASCADE,
+    content           TEXT          NOT NULL,
+    created_at        TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- BẢNG 9: QUESTION_RATINGS (Đánh giá độ tin cậy, Upvote / Downvote & Báo lỗi)
+-- ─────────────────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS question_ratings (
+    rating_id         SERIAL PRIMARY KEY,
+    question_id       INT           NOT NULL REFERENCES questions(question_id) ON DELETE CASCADE,
+    user_id           INT           NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    rating_type       VARCHAR(20)   NOT NULL
+                      CONSTRAINT CK_question_ratings_type CHECK (rating_type IN ('UPVOTE', 'DOWNVOTE', 'REPORT_ERROR')),
+    report_reason     TEXT          NULL,
+    created_at        TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT UQ_question_user_rating UNIQUE (question_id, user_id)
+);
+
+CREATE INDEX IF NOT EXISTS IX_question_comments_qid ON question_comments(question_id);
+CREATE INDEX IF NOT EXISTS IX_question_comments_uid ON question_comments(user_id);
+CREATE INDEX IF NOT EXISTS IX_question_ratings_qid ON question_ratings(question_id);
+CREATE INDEX IF NOT EXISTS IX_question_ratings_uid ON question_ratings(user_id);
 
 -- ═══════════════════════════════════════════════════════════════════════════════
 -- DỮ LIỆU MẪU KHỞI TẠO (SEED DATA)
@@ -1184,6 +1227,122 @@ public class Question {
     public boolean isCorrectAnswer(String answer) {
         return correctAnswer != null && correctAnswer.trim().equalsIgnoreCase(answer != null ? answer.trim() : "");
     }
+}
+
+``
+
+---
+
+## src\main\java\com\lms\model\QuestionComment.java
+<a id='src-main-java-com-lms-model-questioncomment-java'></a>
+
+``java
+package com.lms.model;
+
+import java.time.LocalDateTime;
+
+/**
+ * POJO đại diện bảng [question_comments] - Thảo luận và bình luận phản biện từng câu hỏi.
+ */
+public class QuestionComment {
+
+    private int commentId;
+    private int questionId;
+    private int userId;
+    private String username;
+    private String userFullName;
+    private String userRole;
+    private Integer parentCommentId;
+    private String content;
+    private LocalDateTime createdAt;
+
+    public QuestionComment() {}
+
+    public QuestionComment(int questionId, int userId, Integer parentCommentId, String content) {
+        this.questionId = questionId;
+        this.userId = userId;
+        this.parentCommentId = parentCommentId;
+        this.content = content;
+    }
+
+    public int getCommentId() { return commentId; }
+    public void setCommentId(int commentId) { this.commentId = commentId; }
+
+    public int getQuestionId() { return questionId; }
+    public void setQuestionId(int questionId) { this.questionId = questionId; }
+
+    public int getUserId() { return userId; }
+    public void setUserId(int userId) { this.userId = userId; }
+
+    public String getUsername() { return username; }
+    public void setUsername(String username) { this.username = username; }
+
+    public String getUserFullName() { return userFullName; }
+    public void setUserFullName(String userFullName) { this.userFullName = userFullName; }
+
+    public String getUserRole() { return userRole; }
+    public void setUserRole(String userRole) { this.userRole = userRole; }
+
+    public Integer getParentCommentId() { return parentCommentId; }
+    public void setParentCommentId(Integer parentCommentId) { this.parentCommentId = parentCommentId; }
+
+    public String getContent() { return content; }
+    public void setContent(String content) { this.content = content; }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+}
+
+``
+
+---
+
+## src\main\java\com\lms\model\QuestionRating.java
+<a id='src-main-java-com-lms-model-questionrating-java'></a>
+
+``java
+package com.lms.model;
+
+import java.time.LocalDateTime;
+
+/**
+ * POJO đại diện bảng [question_ratings] - Đánh giá độ tin cậy, Upvote / Downvote và Báo lỗi câu hỏi.
+ */
+public class QuestionRating {
+
+    private int ratingId;
+    private int questionId;
+    private int userId;
+    private String ratingType;   // UPVOTE | DOWNVOTE | REPORT_ERROR
+    private String reportReason; // Lý do báo lỗi / ảo giác AI
+    private LocalDateTime createdAt;
+
+    public QuestionRating() {}
+
+    public QuestionRating(int questionId, int userId, String ratingType, String reportReason) {
+        this.questionId = questionId;
+        this.userId = userId;
+        this.ratingType = ratingType;
+        this.reportReason = reportReason;
+    }
+
+    public int getRatingId() { return ratingId; }
+    public void setRatingId(int ratingId) { this.ratingId = ratingId; }
+
+    public int getQuestionId() { return questionId; }
+    public void setQuestionId(int questionId) { this.questionId = questionId; }
+
+    public int getUserId() { return userId; }
+    public void setUserId(int userId) { this.userId = userId; }
+
+    public String getRatingType() { return ratingType; }
+    public void setRatingType(String ratingType) { this.ratingType = ratingType; }
+
+    public String getReportReason() { return reportReason; }
+    public void setReportReason(String reportReason) { this.reportReason = reportReason; }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 }
 
 ``
@@ -2025,7 +2184,29 @@ public class DatabaseUtil {
                 try {
                     stmt.execute(pgSeedTagsSql);
                 } catch (Exception ignored) {}
-                System.out.println("[DatabaseUtil] ✅ PostgreSQL Auto-Migration: Cột [misconception_tag] đã sẵn sàng!");
+
+                // PostgreSQL: Bảng thảo luận & bình luận câu hỏi (Forum)
+                stmt.execute("CREATE TABLE IF NOT EXISTS question_comments ("
+                        + "comment_id SERIAL PRIMARY KEY, "
+                        + "question_id INT NOT NULL REFERENCES questions(question_id) ON DELETE CASCADE, "
+                        + "user_id INT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE, "
+                        + "parent_comment_id INT NULL REFERENCES question_comments(comment_id) ON DELETE CASCADE, "
+                        + "content TEXT NOT NULL, "
+                        + "created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP"
+                        + ");");
+
+                // PostgreSQL: Bảng đánh giá độ tin cậy / Upvote / Báo lỗi
+                stmt.execute("CREATE TABLE IF NOT EXISTS question_ratings ("
+                        + "rating_id SERIAL PRIMARY KEY, "
+                        + "question_id INT NOT NULL REFERENCES questions(question_id) ON DELETE CASCADE, "
+                        + "user_id INT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE, "
+                        + "rating_type VARCHAR(20) NOT NULL, "
+                        + "report_reason TEXT NULL, "
+                        + "created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, "
+                        + "CONSTRAINT UQ_question_user_rating UNIQUE (question_id, user_id)"
+                        + ");");
+
+                System.out.println("[DatabaseUtil] ✅ PostgreSQL Auto-Migration: Cột [misconception_tag] và bảng [question_comments, question_ratings] đã sẵn sàng!");
 
             } else {
                 // SQL Server migration
@@ -2050,12 +2231,39 @@ public class DatabaseUtil {
                         + "    ALTER TABLE user_answers ADD CONSTRAINT CK_user_answers_answer CHECK (user_answer IN (N'A', N'B', N'C', N'D', N'', N' '));\n"
                         + "END";
 
+                String sqlServerDiscussionTables = "IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'question_comments')\n"
+                        + "BEGIN\n"
+                        + "    CREATE TABLE question_comments (\n"
+                        + "        comment_id INT IDENTITY(1,1) PRIMARY KEY,\n"
+                        + "        question_id INT NOT NULL FOREIGN KEY REFERENCES questions(question_id) ON DELETE CASCADE,\n"
+                        + "        user_id INT NOT NULL FOREIGN KEY REFERENCES users(user_id) ON DELETE CASCADE,\n"
+                        + "        parent_comment_id INT NULL FOREIGN KEY REFERENCES question_comments(comment_id),\n"
+                        + "        content NVARCHAR(MAX) NOT NULL,\n"
+                        + "        created_at DATETIME DEFAULT GETDATE()\n"
+                        + "    );\n"
+                        + "END;\n"
+                        + "IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'question_ratings')\n"
+                        + "BEGIN\n"
+                        + "    CREATE TABLE question_ratings (\n"
+                        + "        rating_id INT IDENTITY(1,1) PRIMARY KEY,\n"
+                        + "        question_id INT NOT NULL FOREIGN KEY REFERENCES questions(question_id) ON DELETE CASCADE,\n"
+                        + "        user_id INT NOT NULL FOREIGN KEY REFERENCES users(user_id) ON DELETE CASCADE,\n"
+                        + "        rating_type VARCHAR(20) NOT NULL,\n"
+                        + "        report_reason NVARCHAR(MAX) NULL,\n"
+                        + "        created_at DATETIME DEFAULT GETDATE(),\n"
+                        + "        CONSTRAINT UQ_question_user_rating UNIQUE (question_id, user_id)\n"
+                        + "    );\n"
+                        + "END;";
+
                 stmt.execute(checkColumnSql);
                 stmt.execute(seedTagsSql);
                 try {
                     stmt.execute(checkConstraintSql);
                 } catch (Exception ignored) {}
-                System.out.println("[DatabaseUtil] ✅ SQL Server Auto-Migration: Cột [misconception_tag] đã sẵn sàng!");
+                try {
+                    stmt.execute(sqlServerDiscussionTables);
+                } catch (Exception ignored) {}
+                System.out.println("[DatabaseUtil] ✅ SQL Server Auto-Migration: Cột [misconception_tag] và bảng [question_comments, question_ratings] đã sẵn sàng!");
             }
         } catch (Exception e) {
             System.err.println("[DatabaseUtil] ⚠️ Cảnh báo Auto-Migration: " + e.getMessage());
@@ -2087,6 +2295,310 @@ public class DatabaseUtil {
             dataSource.close();
             System.out.println("[DatabaseUtil] 🔒 HikariCP Pool đã đóng.");
         }
+    }
+}
+
+``
+
+---
+
+## src\main\java\com\lms\dao\DiscussionDAO.java
+<a id='src-main-java-com-lms-dao-discussiondao-java'></a>
+
+``java
+package com.lms.dao;
+
+import com.lms.model.QuestionComment;
+import com.lms.model.QuestionRating;
+
+import java.sql.*;
+import java.util.*;
+
+/**
+ * Data Access Object quản lý Diễn đàn thảo luận và Hệ thống tín nhiệm / Báo lỗi câu hỏi.
+ */
+public class DiscussionDAO {
+
+    /**
+     * Thêm bình luận mới vào câu hỏi.
+     */
+    public int addComment(QuestionComment comment) {
+        String sql = "INSERT INTO question_comments (question_id, user_id, parent_comment_id, content) VALUES (?, ?, ?, ?)";
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+
+            ps.setInt(1, comment.getQuestionId());
+            ps.setInt(2, comment.getUserId());
+            if (comment.getParentCommentId() != null && comment.getParentCommentId() > 0) {
+                ps.setInt(3, comment.getParentCommentId());
+            } else {
+                ps.setNull(3, Types.INTEGER);
+            }
+            ps.setString(4, comment.getContent());
+
+            int affected = ps.executeUpdate();
+            if (affected > 0) {
+                try (ResultSet rs = ps.getGeneratedKeys()) {
+                    if (rs.next()) {
+                        int id = rs.getInt(1);
+                        comment.setCommentId(id);
+                        return id;
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return -1;
+    }
+
+    /**
+     * Lấy toàn bộ bình luận của 1 câu hỏi, kèm thông tin người gửi (họ tên, username, role).
+     */
+    public List<QuestionComment> getCommentsByQuestion(int questionId) {
+        List<QuestionComment> list = new ArrayList<>();
+        String sql = "SELECT c.comment_id, c.question_id, c.user_id, c.parent_comment_id, c.content, c.created_at, "
+                + "       u.username, u.full_name, u.role "
+                + "FROM question_comments c "
+                + "JOIN users u ON c.user_id = u.user_id "
+                + "WHERE c.question_id = ? "
+                + "ORDER BY c.created_at ASC";
+
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, questionId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    QuestionComment qc = new QuestionComment();
+                    qc.setCommentId(rs.getInt("comment_id"));
+                    qc.setQuestionId(rs.getInt("question_id"));
+                    qc.setUserId(rs.getInt("user_id"));
+
+                    int parentId = rs.getInt("parent_comment_id");
+                    qc.setParentCommentId(rs.wasNull() ? null : parentId);
+
+                    qc.setContent(rs.getString("content"));
+                    Timestamp ts = rs.getTimestamp("created_at");
+                    if (ts != null) {
+                        qc.setCreatedAt(ts.toLocalDateTime());
+                    }
+                    qc.setUsername(rs.getString("username"));
+                    qc.setUserFullName(rs.getString("full_name"));
+                    qc.setUserRole(rs.getString("role"));
+
+                    list.add(qc);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    /**
+     * Xóa bình luận nếu là tác giả hoặc admin/teacher.
+     */
+    public boolean deleteComment(int commentId, int userId, boolean isPrivileged) {
+        String sql = isPrivileged
+                ? "DELETE FROM question_comments WHERE comment_id = ?"
+                : "DELETE FROM question_comments WHERE comment_id = ? AND user_id = ?";
+
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, commentId);
+            if (!isPrivileged) {
+                ps.setInt(2, userId);
+            }
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * Đánh giá độ tin cậy (UPVOTE, DOWNVOTE, REPORT_ERROR).
+     * Tương thích cả PostgreSQL lẫn SQL Server bằng cách kiểm tra trước.
+     */
+    public boolean rateQuestion(int questionId, int userId, String ratingType, String reportReason) {
+        String checkSql = "SELECT rating_id, rating_type FROM question_ratings WHERE question_id = ? AND user_id = ?";
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement checkPs = conn.prepareStatement(checkSql)) {
+
+            checkPs.setInt(1, questionId);
+            checkPs.setInt(2, userId);
+            try (ResultSet rs = checkPs.executeQuery()) {
+                if (rs.next()) {
+                    int existingId = rs.getInt("rating_id");
+                    String oldType = rs.getString("rating_type");
+
+                    // Nếu click lại cùng loại vote (UPVOTE / DOWNVOTE) thì hủy vote (toggle)
+                    if (oldType.equalsIgnoreCase(ratingType) && !"REPORT_ERROR".equalsIgnoreCase(ratingType)) {
+                        String delSql = "DELETE FROM question_ratings WHERE rating_id = ?";
+                        try (PreparedStatement delPs = conn.prepareStatement(delSql)) {
+                            delPs.setInt(1, existingId);
+                            return delPs.executeUpdate() > 0;
+                        }
+                    } else {
+                        // Cập nhật rating mới
+                        String updateSql = "UPDATE question_ratings SET rating_type = ?, report_reason = ?, created_at = CURRENT_TIMESTAMP WHERE rating_id = ?";
+                        try (PreparedStatement updPs = conn.prepareStatement(updateSql)) {
+                            updPs.setString(1, ratingType);
+                            updPs.setString(2, reportReason);
+                            updPs.setInt(3, existingId);
+                            return updPs.executeUpdate() > 0;
+                        }
+                    }
+                } else {
+                    // Thêm mới
+                    String insertSql = "INSERT INTO question_ratings (question_id, user_id, rating_type, report_reason) VALUES (?, ?, ?, ?)";
+                    try (PreparedStatement insPs = conn.prepareStatement(insertSql)) {
+                        insPs.setInt(1, questionId);
+                        insPs.setInt(2, userId);
+                        insPs.setString(3, ratingType);
+                        insPs.setString(4, reportReason);
+                        return insPs.executeUpdate() > 0;
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    /**
+     * Lấy trạng thái vote của người dùng hiện tại đối với câu hỏi.
+     */
+    public Optional<QuestionRating> getUserRating(int questionId, int userId) {
+        String sql = "SELECT rating_id, question_id, user_id, rating_type, report_reason, created_at "
+                + "FROM question_ratings WHERE question_id = ? AND user_id = ?";
+
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, questionId);
+            ps.setInt(2, userId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    QuestionRating r = new QuestionRating();
+                    r.setRatingId(rs.getInt("rating_id"));
+                    r.setQuestionId(rs.getInt("question_id"));
+                    r.setUserId(rs.getInt("user_id"));
+                    r.setRatingType(rs.getString("rating_type"));
+                    r.setReportReason(rs.getString("report_reason"));
+                    Timestamp ts = rs.getTimestamp("created_at");
+                    if (ts != null) r.setCreatedAt(ts.toLocalDateTime());
+                    return Optional.of(r);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return Optional.empty();
+    }
+
+    /**
+     * Thống kê độ tín nhiệm của câu hỏi (Upvotes, Downvotes, Báo lỗi, % Điểm tín nhiệm).
+     */
+    public Map<String, Object> getQuestionCredibility(int questionId) {
+        Map<String, Object> stats = new HashMap<>();
+        String sql = "SELECT rating_type, COUNT(*) as cnt FROM question_ratings WHERE question_id = ? GROUP BY rating_type";
+
+        int upvotes = 0;
+        int downvotes = 0;
+        int reports = 0;
+
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, questionId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    String type = rs.getString("rating_type");
+                    int count = rs.getInt("cnt");
+                    if ("UPVOTE".equalsIgnoreCase(type)) upvotes = count;
+                    else if ("DOWNVOTE".equalsIgnoreCase(type)) downvotes = count;
+                    else if ("REPORT_ERROR".equalsIgnoreCase(type)) reports = count;
+                }
+            }
+
+            stats.put("upvotes", upvotes);
+            stats.put("downvotes", downvotes);
+            stats.put("reports", reports);
+
+            int totalVotes = upvotes + downvotes;
+            double scorePercent = 100.0;
+            if (totalVotes > 0) {
+                scorePercent = ((double) upvotes / totalVotes) * 100.0;
+            }
+            stats.put("scorePercent", Math.round(scorePercent * 10.0) / 10.0);
+
+            // Lấy danh sách báo lỗi gần nhất
+            if (reports > 0) {
+                String repSql = "SELECT r.report_reason, r.created_at, u.username, u.full_name "
+                        + "FROM question_ratings r JOIN users u ON r.user_id = u.user_id "
+                        + "WHERE r.question_id = ? AND r.rating_type = 'REPORT_ERROR' AND r.report_reason IS NOT NULL "
+                        + "ORDER BY r.created_at DESC LIMIT 5";
+                List<Map<String, String>> reportList = new ArrayList<>();
+                try (PreparedStatement repPs = conn.prepareStatement(repSql)) {
+                    repPs.setInt(1, questionId);
+                    try (ResultSet repRs = repPs.executeQuery()) {
+                        while (repRs.next()) {
+                            Map<String, String> rep = new HashMap<>();
+                            rep.put("reporter", repRs.getString("full_name") + " (" + repRs.getString("username") + ")");
+                            rep.put("reason", repRs.getString("report_reason"));
+                            rep.put("time", String.valueOf(repRs.getTimestamp("created_at")));
+                            reportList.add(rep);
+                        }
+                    }
+                }
+                stats.put("recentReports", reportList);
+            } else {
+                stats.put("recentReports", Collections.emptyList());
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return stats;
+    }
+
+    /**
+     * Danh sách các câu hỏi bị cộng đồng báo lỗi (để Giảng viên/Kiểm duyệt viên rà soát).
+     */
+    public List<Map<String, Object>> getReportedQuestions(int limit) {
+        List<Map<String, Object>> list = new ArrayList<>();
+        String sql = "SELECT q.question_id, q.question_text, q.topic_id, t.topic_name, COUNT(r.rating_id) AS report_count "
+                + "FROM questions q "
+                + "JOIN topics t ON q.topic_id = t.topic_id "
+                + "JOIN question_ratings r ON q.question_id = r.question_id "
+                + "WHERE r.rating_type = 'REPORT_ERROR' "
+                + "GROUP BY q.question_id, q.question_text, q.topic_id, t.topic_name "
+                + "ORDER BY report_count DESC "
+                + "LIMIT ?";
+
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, Math.max(limit, 1));
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("questionId", rs.getInt("question_id"));
+                    map.put("questionText", rs.getString("question_text"));
+                    map.put("topicId", rs.getInt("topic_id"));
+                    map.put("topicName", rs.getString("topic_name"));
+                    map.put("reportCount", rs.getInt("report_count"));
+                    list.add(map);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
     }
 }
 
@@ -2731,8 +3243,10 @@ public class QuizDAO {
                  ResultSet rs1 = ps1.executeQuery()) {
                 if (rs1.next()) {
                     kpis.put("totalStudents", rs1.getInt("total_students"));
-                    double avgScore = Math.round(rs1.getDouble("avg_score") * 10.0) / 10.0;
-                    kpis.put("averageScore", avgScore);
+                    double rawAvg = rs1.getDouble("avg_score");
+                    // Chuẩn hóa về thang 10: nếu dữ liệu cũ tính theo thang 100 (> 10.0), chia cho 10
+                    double avgScore10 = rawAvg > 10.0 ? (rawAvg / 10.0) : rawAvg;
+                    kpis.put("averageScore", Math.round(avgScore10 * 10.0) / 10.0);
                 }
             } catch (SQLException e) {
                 System.err.println("[QuizDAO] Lỗi truy vấn KPI sessions: " + e.getMessage());
@@ -2822,7 +3336,9 @@ public class QuizDAO {
                     item.put("topicName", rs.getString("topic_name"));
                     item.put("totalQuestions", rs.getInt("total_questions"));
                     item.put("correctCount", rs.getInt("correct_count"));
-                    item.put("score", rs.getDouble("score"));
+                    double rawScore = rs.getDouble("score");
+                    double score10 = rawScore > 10.0 ? (rawScore / 10.0) : rawScore;
+                    item.put("score", Math.round(score10 * 10.0) / 10.0);
                     Timestamp completedAt = rs.getTimestamp("completed_at");
                     item.put("completedAt", completedAt != null ? completedAt.toString() : "");
                     list.add(item);
@@ -2944,7 +3460,72 @@ public class TopicDAO {
     }
 
     /**
-     * Đếm số câu hỏi trong một chủ đề.
+     * Tìm chủ đề theo tên (case-insensitive).
+     */
+    public Optional<Topic> findByName(String topicName) {
+        if (topicName == null || topicName.isBlank()) return Optional.empty();
+        String sql = "SELECT * FROM topics WHERE LOWER(topic_name) = LOWER(?) LIMIT 1";
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, topicName.trim());
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return Optional.of(mapTopic(rs));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return Optional.empty();
+    }
+
+    /**
+     * Tạo chủ đề / môn học mới.
+     */
+    public Topic create(Topic topic) {
+        String sql = "INSERT INTO topics (topic_name, description, parent_topic_id, display_order) "
+                   + "VALUES (?, ?, ?, ?) RETURNING topic_id, created_at";
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, topic.getTopicName().trim());
+            ps.setString(2, topic.getDescription());
+            if (topic.getParentTopicId() != null) {
+                ps.setInt(3, topic.getParentTopicId());
+            } else {
+                ps.setNull(3, Types.INTEGER);
+            }
+            ps.setInt(4, topic.getDisplayOrder() > 0 ? topic.getDisplayOrder() : 99);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    topic.setTopicId(rs.getInt("topic_id"));
+                    Timestamp ca = rs.getTimestamp("created_at");
+                    topic.setCreatedAt(ca != null ? ca.toLocalDateTime() : null);
+                    return topic;
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return topic;
+    }
+
+    /**
+     * Tìm chủ đề theo tên hoặc tự động tạo mới nếu chưa tồn tại.
+     */
+    public Topic findOrCreate(String topicName, String description) {
+        Optional<Topic> existing = findByName(topicName);
+        if (existing.isPresent()) {
+            return existing.get();
+        }
+        Topic newTopic = new Topic();
+        newTopic.setTopicName(topicName.trim());
+        newTopic.setDescription(description != null ? description : "Chủ đề do người dùng khởi tạo");
+        newTopic.setDisplayOrder(99);
+        return create(newTopic);
+    }
+
+    /**
+     * Đếm số câu hỏi thuộc về một chủ đề.
      */
     public int countQuestions(int topicId) {
         String sql = "SELECT COUNT(*) FROM questions WHERE topic_id = ?";
@@ -3604,38 +4185,40 @@ public class PromptBuilder {
     }
 
     /**
-     * Prompt yêu cầu AI sinh danh sách câu hỏi trắc nghiệm chuẩn theo yêu cầu của Giảng viên.
+     * Prompt yêu cầu AI sinh danh sách câu hỏi trắc nghiệm chuẩn theo yêu cầu của Giảng viên/Người đóng góp.
+     * Hỗ trợ mọi môn học, chủ đề tùy ý hoặc đề thi hỗn hợp đa lĩnh vực.
      */
     public static String buildTeacherQuestionGenPrompt(String topicName, String difficulty, String misconceptionTag, int count, String promptHint) {
         StringBuilder sb = new StringBuilder();
-        sb.append("Hãy tạo chính xác ").append(count).append(" câu hỏi trắc nghiệm lập trình chất lượng cao dành cho kỳ thi/bài kiểm tra.\n\n");
+        sb.append("Hãy tạo chính xác ").append(count).append(" câu hỏi trắc nghiệm học tập chất lượng cao dành cho kỳ thi/bài kiểm tra/diễn đàn học tập.\n\n");
         sb.append("--- Yêu cầu thông số ---\n");
-        sb.append("- Chủ đề môn học: ").append(topicName != null && !topicName.isBlank() ? topicName : "Lập trình Java / Cấu trúc dữ liệu").append("\n");
+        sb.append("- Chủ đề / Môn học (hoặc đề hỗn hợp): ").append(topicName != null && !topicName.isBlank() ? topicName : "Kiến thức tổng hợp").append("\n");
         sb.append("- Mức độ khó: ").append(difficulty != null && !difficulty.isBlank() ? difficulty : "medium").append(" (easy / medium / hard)\n");
         if (misconceptionTag != null && !misconceptionTag.isBlank() && !misconceptionTag.equalsIgnoreCase("all")) {
-            sb.append("- Nhóm bẫy nhận thức mục tiêu cần kiểm tra: ").append(misconceptionTag).append(" (syntax_swap / boundary_blindness / mental_model_gap / logic_flaw)\n");
+            sb.append("- Nhóm bẫy nhận thức mục tiêu cần kiểm tra: ").append(misconceptionTag).append(" (syntax_swap / boundary_blindness / mental_model_gap / logic_flaw / other)\n");
         }
         if (promptHint != null && !promptHint.isBlank()) {
-            sb.append("- Yêu cầu bổ sung từ giảng viên: ").append(promptHint).append("\n");
+            sb.append("- Yêu cầu bổ sung hoặc chủ đề kết hợp: ").append(promptHint).append("\n");
         }
 
         sb.append("""
 
             --- Nguyên tắc thiết kế câu hỏi ---
-            1. Đề bài (question_text) cần rõ ràng, thực tế. Nếu là câu hỏi đọc hiểu code, bắt buộc đặt đoạn code trong khối Markdown ```java ... ```.
-            2. Có đủ 4 phương án A, B, C, D phân hóa rõ rệt, không đặt phương án ngớ ngẩn hoặc quá lộ liễu.
+            1. Đề bài (question_text) cần rõ ràng, súc tích, thực tế. Nếu là câu hỏi kỹ thuật/lập trình, hãy đặt code trong khối Markdown thích hợp (vd: ```java, ```python, ```sql...). Nếu là toán học/kinh tế/khoa học, hãy trình bày công thức và dữ kiện rõ ràng.
+            2. Có đủ 4 phương án A, B, C, D phân hóa rõ rệt, tính hợp lý cao, không đặt phương án vô lý hoặc quá lộ liễu.
             3. Đáp án đúng (correct_answer) là một trong các chữ cái: 'A', 'B', 'C', hoặc 'D'.
-            4. Lời giải thích (explanation) phải giải thích chi tiết: vì sao đáp án đó là đúng, và các phương án sai đã đánh trúng bẫy tư duy nào.
-            5. Gắn nhãn misconception_tag vào 1 trong 4 nhóm:
-               - syntax_swap (nhầm lẫn cú pháp, toán tử, keyword)
-               - boundary_blindness (quên điều kiện biên, index mảng, null pointer)
-               - mental_model_gap (lỗ hổng mô hình tư duy OOP, tham chiếu vs giá trị, stack/heap)
-               - logic_flaw (sai sót điều kiện rẽ nhánh, luồng vòng lặp)
+            4. Lời giải thích (explanation) phải chi tiết, chuẩn mực sư phạm: vì sao đáp án đó là đúng, và các phương án sai đã đánh trúng bẫy tư duy nào.
+            5. Gắn nhãn misconception_tag vào 1 trong các nhóm:
+               - syntax_swap (nhầm lẫn cú pháp, công thức, thuật ngữ, keyword)
+               - boundary_blindness (quên điều kiện biên, giới hạn, giá trị ngoại lệ, null)
+               - mental_model_gap (lỗ hổng mô hình tư duy, bản chất nguyên lý, trừu tượng hóa)
+               - logic_flaw (sai sót lập luận điều kiện, phân tích logic, luồng suy luận)
+               - other (lỗi kiến thức sự kiện, phân tích tổng hợp)
 
             Hãy trả về một JSON Array chứa danh sách các câu hỏi, đúng cấu trúc JSON sau (không kèm text nào ngoài JSON):
             [
               {
-                "question_text": "string (nội dung câu hỏi, có thể chứa markdown code)",
+                "question_text": "string (nội dung câu hỏi, có thể chứa markdown)",
                 "option_a": "string",
                 "option_b": "string",
                 "option_c": "string",
@@ -3643,7 +4226,7 @@ public class PromptBuilder {
                 "correct_answer": "A hoặc B hoặc C hoặc D",
                 "explanation": "string (giải thích chi tiết sư phạm)",
                 "difficulty": "easy hoặc medium hoặc hard",
-                "misconception_tag": "syntax_swap hoặc boundary_blindness hoặc mental_model_gap hoặc logic_flaw"
+                "misconception_tag": "syntax_swap hoặc boundary_blindness hoặc mental_model_gap hoặc logic_flaw hoặc other"
               }
             ]
             """);
@@ -3823,15 +4406,21 @@ public class QuizService {
             }
         }
 
-        double score = totalQuestions > 0 ? ((double) correctCount / totalQuestions) * 100.0 : 0.0;
-        quizDAO.completeSession(sessionId, correctCount, Math.round(score * 10.0) / 10.0);
+        // Chuẩn hóa điểm về thang 10 chuẩn (vd: 3.8/10 hoặc 8.5/10)
+        double score10 = totalQuestions > 0 ? ((double) correctCount / totalQuestions) * 10.0 : 0.0;
+        double roundedScore10 = Math.round(score10 * 10.0) / 10.0;
+        double percentage = totalQuestions > 0 ? ((double) correctCount / totalQuestions) * 100.0 : 0.0;
+        double roundedPercentage = Math.round(percentage * 10.0) / 10.0;
+
+        quizDAO.completeSession(sessionId, correctCount, roundedScore10);
 
         Map<String, Object> response = new HashMap<>();
         response.put("sessionId", sessionId);
         response.put("userId", userId);
         response.put("totalQuestions", totalQuestions);
         response.put("correctCount", correctCount);
-        response.put("score", Math.round(score * 10.0) / 10.0);
+        response.put("score", roundedScore10);
+        response.put("percentage", roundedPercentage);
         response.put("gradedAnswers", gradedAnswers);
         response.put("remedialLessons", remedialLessons);
 
@@ -3894,11 +4483,15 @@ public class UserService {
         this.userDAO = userDAO;
     }
 
+    public User register(String username, String rawPassword, String fullName, String email, String interests) throws IllegalArgumentException {
+        return register(username, rawPassword, fullName, email, "student", interests);
+    }
+
     /**
-     * Đăng ký người dùng mới.
+     * Đăng ký người dùng mới với vai trò chỉ định (student / teacher).
      * Kiểm tra username trùng lặp, băm mật khẩu bằng BCrypt cost factor 12.
      */
-    public User register(String username, String rawPassword, String fullName, String email, String interests) throws IllegalArgumentException {
+    public User register(String username, String rawPassword, String fullName, String email, String role, String interests) throws IllegalArgumentException {
         if (username == null || username.trim().length() < 3) {
             throw new IllegalArgumentException("Tên đăng nhập phải có ít nhất 3 ký tự.");
         }
@@ -3916,7 +4509,8 @@ public class UserService {
         newUser.setPasswordHash(passwordHash);
         newUser.setFullName(fullName != null ? fullName.trim() : username.trim());
         newUser.setEmail(email != null ? email.trim() : null);
-        newUser.setRole("student");
+        String safeRole = "teacher".equalsIgnoreCase(role) ? "teacher" : "student";
+        newUser.setRole(safeRole);
         newUser.setInterests(interests != null ? interests.trim() : null);
 
         return userDAO.create(newUser);
@@ -4216,10 +4810,11 @@ public class AuthServlet extends HttpServlet {
         String password = body.get("password").getAsString();
         String fullName = body.has("fullName") ? body.get("fullName").getAsString() : username;
         String email = body.has("email") ? body.get("email").getAsString() : null;
+        String role = body.has("role") && !body.get("role").isJsonNull() ? body.get("role").getAsString().trim().toLowerCase() : "student";
         String interests = body.has("interests") ? body.get("interests").getAsString() : null;
 
         try {
-            User newUser = userService.register(username, password, fullName, email, interests);
+            User newUser = userService.register(username, password, fullName, email, role, interests);
             // Tự động duy trì đăng nhập sau khi tạo tài khoản
             HttpSession session = req.getSession(true);
             session.setAttribute("user", newUser);
@@ -4427,6 +5022,249 @@ public class ChatServlet extends HttpServlet {
         }
         resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         resp.getWriter().write(JsonHelper.error("Chưa đăng nhập."));
+        return null;
+    }
+}
+
+``
+
+---
+
+## src\main\java\com\lms\servlet\DiscussionServlet.java
+<a id='src-main-java-com-lms-servlet-discussionservlet-java'></a>
+
+``java
+package com.lms.servlet;
+
+import com.google.gson.JsonObject;
+import com.lms.dao.DiscussionDAO;
+import com.lms.model.QuestionComment;
+import com.lms.model.QuestionRating;
+import com.lms.model.User;
+import com.lms.util.JsonHelper;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+/**
+ * RESTful Controller cho Diễn đàn thảo luận và Hệ thống tín nhiệm / Báo lỗi câu hỏi.
+ * Mọi thành viên (giảng viên, sinh viên, người học tự do) đều có thể trao đổi và đánh giá.
+ */
+@WebServlet(name = "DiscussionServlet", urlPatterns = {"/api/discussion", "/api/discussion/*"})
+public class DiscussionServlet extends HttpServlet {
+
+    private final DiscussionDAO discussionDAO = new DiscussionDAO();
+
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        resp.setContentType("application/json;charset=UTF-8");
+        String pathInfo = req.getPathInfo();
+        if (pathInfo == null) pathInfo = "";
+
+        if (pathInfo.equals("/comments")) {
+            handleGetComments(req, resp);
+        } else if (pathInfo.equals("/credibility")) {
+            handleGetCredibility(req, resp);
+        } else if (pathInfo.equals("/reported")) {
+            handleGetReportedQuestions(req, resp);
+        } else {
+            resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            resp.getWriter().write(JsonHelper.error("Không tìm thấy endpoint GET: " + pathInfo));
+        }
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        resp.setContentType("application/json;charset=UTF-8");
+        User user = getAuthenticatedUser(req, resp);
+        if (user == null) return;
+
+        String pathInfo = req.getPathInfo();
+        if (pathInfo == null) pathInfo = "";
+
+        if (pathInfo.equals("/comments")) {
+            handleAddComment(req, resp, user);
+        } else if (pathInfo.equals("/rate")) {
+            handleRateQuestion(req, resp, user);
+        } else {
+            resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            resp.getWriter().write(JsonHelper.error("Không tìm thấy endpoint POST: " + pathInfo));
+        }
+    }
+
+    @Override
+    protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        resp.setContentType("application/json;charset=UTF-8");
+        User user = getAuthenticatedUser(req, resp);
+        if (user == null) return;
+
+        String pathInfo = req.getPathInfo();
+        if (pathInfo != null && pathInfo.startsWith("/comments/")) {
+            try {
+                int commentId = Integer.parseInt(pathInfo.substring("/comments/".length()));
+                boolean isPrivileged = "teacher".equalsIgnoreCase(user.getRole()) || "admin".equalsIgnoreCase(user.getRole());
+                boolean ok = discussionDAO.deleteComment(commentId, user.getUserId(), isPrivileged);
+                if (ok) {
+                    resp.getWriter().write(JsonHelper.success("Đã xóa bình luận thành công!"));
+                } else {
+                    resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                    resp.getWriter().write(JsonHelper.error("Không thể xóa bình luận hoặc bạn không có quyền."));
+                }
+            } catch (NumberFormatException e) {
+                resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                resp.getWriter().write(JsonHelper.error("Mã bình luận không hợp lệ."));
+            }
+        } else {
+            resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+            resp.getWriter().write(JsonHelper.error("Không tìm thấy endpoint DELETE: " + pathInfo));
+        }
+    }
+
+    private void handleGetComments(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        String qIdStr = req.getParameter("questionId");
+        if (qIdStr == null || qIdStr.isBlank()) {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            resp.getWriter().write(JsonHelper.error("Thiếu tham số questionId."));
+            return;
+        }
+
+        try {
+            int questionId = Integer.parseInt(qIdStr.trim());
+            List<QuestionComment> comments = discussionDAO.getCommentsByQuestion(questionId);
+            resp.getWriter().write(JsonHelper.success("Danh sách bình luận", comments));
+        } catch (NumberFormatException e) {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            resp.getWriter().write(JsonHelper.error("questionId không hợp lệ."));
+        }
+    }
+
+    private void handleGetCredibility(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        String qIdStr = req.getParameter("questionId");
+        if (qIdStr == null || qIdStr.isBlank()) {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            resp.getWriter().write(JsonHelper.error("Thiếu tham số questionId."));
+            return;
+        }
+
+        try {
+            int questionId = Integer.parseInt(qIdStr.trim());
+            Map<String, Object> credibility = discussionDAO.getQuestionCredibility(questionId);
+
+            // Kiểm tra vote của user nếu đã đăng nhập
+            HttpSession session = req.getSession(false);
+            if (session != null && session.getAttribute("user") != null) {
+                User user = (User) session.getAttribute("user");
+                Optional<QuestionRating> userRating = discussionDAO.getUserRating(questionId, user.getUserId());
+                credibility.put("userRating", userRating.map(QuestionRating::getRatingType).orElse(null));
+                credibility.put("userReportReason", userRating.map(QuestionRating::getReportReason).orElse(null));
+            } else {
+                credibility.put("userRating", null);
+            }
+
+            resp.getWriter().write(JsonHelper.success("Chỉ số độ tin cậy câu hỏi", credibility));
+        } catch (NumberFormatException e) {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            resp.getWriter().write(JsonHelper.error("questionId không hợp lệ."));
+        }
+    }
+
+    private void handleGetReportedQuestions(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        int limit = 50;
+        String limitStr = req.getParameter("limit");
+        if (limitStr != null && !limitStr.isBlank()) {
+            try { limit = Integer.parseInt(limitStr.trim()); } catch (NumberFormatException ignored) {}
+        }
+
+        List<Map<String, Object>> reported = discussionDAO.getReportedQuestions(limit);
+        resp.getWriter().write(JsonHelper.success("Danh sách câu hỏi bị báo lỗi", reported));
+    }
+
+    private void handleAddComment(HttpServletRequest req, HttpServletResponse resp, User user) throws IOException {
+        JsonObject body = JsonHelper.parseRequestBody(req);
+        if (body == null || !body.has("questionId") || !body.has("content")) {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            resp.getWriter().write(JsonHelper.error("Dữ liệu gửi lên thiếu questionId hoặc content."));
+            return;
+        }
+
+        int questionId = body.get("questionId").getAsInt();
+        String content = body.get("content").getAsString().trim();
+
+        if (content.isEmpty()) {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            resp.getWriter().write(JsonHelper.error("Nội dung bình luận không được để trống."));
+            return;
+        }
+
+        Integer parentCommentId = null;
+        if (body.has("parentCommentId") && !body.get("parentCommentId").isJsonNull()) {
+            parentCommentId = body.get("parentCommentId").getAsInt();
+        }
+
+        QuestionComment comment = new QuestionComment(questionId, user.getUserId(), parentCommentId, content);
+        int commentId = discussionDAO.addComment(comment);
+
+        if (commentId > 0) {
+            Map<String, Object> data = new HashMap<>();
+            data.put("commentId", commentId);
+            data.put("userFullName", user.getFullName());
+            data.put("username", user.getUsername());
+            data.put("userRole", user.getRole());
+            resp.setStatus(HttpServletResponse.SC_CREATED);
+            resp.getWriter().write(JsonHelper.success("Đã đăng bình luận thành công!", data));
+        } else {
+            resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            resp.getWriter().write(JsonHelper.error("Không thể lưu bình luận vào cơ sở dữ liệu."));
+        }
+    }
+
+    private void handleRateQuestion(HttpServletRequest req, HttpServletResponse resp, User user) throws IOException {
+        JsonObject body = JsonHelper.parseRequestBody(req);
+        if (body == null || !body.has("questionId") || !body.has("ratingType")) {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            resp.getWriter().write(JsonHelper.error("Dữ liệu gửi lên thiếu questionId hoặc ratingType."));
+            return;
+        }
+
+        int questionId = body.get("questionId").getAsInt();
+        String ratingType = body.get("ratingType").getAsString().trim().toUpperCase();
+
+        if (!"UPVOTE".equals(ratingType) && !"DOWNVOTE".equals(ratingType) && !"REPORT_ERROR".equals(ratingType)) {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            resp.getWriter().write(JsonHelper.error("ratingType chỉ chấp nhận UPVOTE, DOWNVOTE hoặc REPORT_ERROR."));
+            return;
+        }
+
+        String reportReason = null;
+        if (body.has("reportReason") && !body.get("reportReason").isJsonNull()) {
+            reportReason = body.get("reportReason").getAsString().trim();
+        }
+
+        boolean ok = discussionDAO.rateQuestion(questionId, user.getUserId(), ratingType, reportReason);
+        if (ok) {
+            Map<String, Object> updatedCredibility = discussionDAO.getQuestionCredibility(questionId);
+            resp.getWriter().write(JsonHelper.success("Cập nhật đánh giá câu hỏi thành công!", updatedCredibility));
+        } else {
+            resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            resp.getWriter().write(JsonHelper.error("Lỗi khi lưu đánh giá câu hỏi."));
+        }
+    }
+
+    private User getAuthenticatedUser(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        HttpSession session = req.getSession(false);
+        if (session != null && session.getAttribute("user") != null) {
+            return (User) session.getAttribute("user");
+        }
+        resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        resp.getWriter().write(JsonHelper.error("Vui lòng đăng nhập để thực hiện thao tác này."));
         return null;
     }
 }
@@ -4987,6 +5825,7 @@ import java.util.Map;
 public class TeacherServlet extends HttpServlet {
 
     private final QuizDAO quizDAO = new QuizDAO();
+    private final com.lms.dao.TopicDAO topicDAO = new com.lms.dao.TopicDAO();
     private final AIService aiService = new AIService();
 
     @Override
@@ -5057,11 +5896,15 @@ public class TeacherServlet extends HttpServlet {
         String misconceptionTag = body.has("misconceptionTag") && !body.get("misconceptionTag").isJsonNull()
                 ? body.get("misconceptionTag").getAsString().trim() : "all";
         int count = body.has("count") && !body.get("count").isJsonNull()
-                ? Math.min(Math.max(body.get("count").getAsInt(), 1), 5) : 3;
+                ? Math.min(Math.max(body.get("count").getAsInt(), 1), 25) : 5;
         String promptHint = body.has("promptHint") && !body.get("promptHint").isJsonNull()
                 ? body.get("promptHint").getAsString().trim() : "";
 
         try {
+            // Đảm bảo chủ đề luôn tồn tại trong DB để gán topicId hợp lệ
+            com.lms.model.Topic topic = topicDAO.findOrCreate(topicName, "Chủ đề mở do người dùng khởi tạo");
+            int topicId = topic != null ? topic.getTopicId() : 1;
+
             List<Map<String, Object>> generatedList = aiService.generateQuestionsForTeacher(
                     topicName, difficulty, misconceptionTag, count, promptHint
             );
@@ -5070,6 +5913,14 @@ public class TeacherServlet extends HttpServlet {
                 resp.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
                 resp.getWriter().write(JsonHelper.error("AI tạm thời không phản hồi hoặc chưa cấu hình API Key. Vui lòng thử lại sau."));
                 return;
+            }
+
+            // Gán topicId và topicName vào từng câu hỏi để người dùng có thể lưu ngay vào DB
+            for (Map<String, Object> q : generatedList) {
+                if (!q.containsKey("topicId") || q.get("topicId") == null) {
+                    q.put("topicId", topicId);
+                }
+                q.put("topicName", topicName);
             }
 
             resp.getWriter().write(JsonHelper.success("Khởi tạo danh sách câu hỏi bằng AI thành công", generatedList));
@@ -5166,6 +6017,31 @@ public class TopicServlet extends HttpServlet {
         } else {
             handleGetTopicDetail(pathInfo.substring(1), resp);
         }
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        resp.setContentType("application/json;charset=UTF-8");
+        JsonObject body = JsonHelper.parseRequestBody(req);
+        if (body == null || !body.has("topicName") || body.get("topicName").getAsString().trim().isEmpty()) {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            resp.getWriter().write(JsonHelper.error("Tên chủ đề không được để trống."));
+            return;
+        }
+
+        String topicName = body.get("topicName").getAsString().trim();
+        String description = body.has("description") && !body.get("description").isJsonNull()
+                ? body.get("description").getAsString().trim() : "";
+
+        Topic created = topicDAO.findOrCreate(topicName, description);
+        JsonObject data = new JsonObject();
+        data.addProperty("topicId", created.getTopicId());
+        data.addProperty("topicName", created.getTopicName());
+        data.addProperty("description", created.getDescription());
+        data.addProperty("displayOrder", created.getDisplayOrder());
+
+        resp.setStatus(HttpServletResponse.SC_CREATED);
+        resp.getWriter().write(JsonHelper.success("Chủ đề đã sẵn sàng", data));
     }
 
     private void handleListTopics(HttpServletResponse resp) throws IOException {
@@ -5715,8 +6591,8 @@ const API = {
             if (res.data) localStorage.setItem('lms_user', JSON.stringify(res.data));
             return res;
         },
-        async register(username, password, fullName, email, interests) {
-            const res = await API.request('/auth/register', { method: 'POST', body: JSON.stringify({ username, password, fullName, email, interests }) });
+        async register(username, password, fullName, email, interests, role = 'student') {
+            const res = await API.request('/auth/register', { method: 'POST', body: JSON.stringify({ username, password, fullName, email, interests, role }) });
             if (res.data) localStorage.setItem('lms_user', JSON.stringify(res.data));
             return res;
         },
@@ -5727,12 +6603,24 @@ const API = {
         requireTeacher() { const u=this.requireAuth(); if(!u)return null; const r=String(u.role||'').toUpperCase(); if(!['TEACHER','ADMIN'].includes(r)){ window.location.href='index.html'; return null; } return u; },
         isTeacher() { const u=this.getUser(); return !!u && ['TEACHER','ADMIN'].includes(String(u.role||'').toUpperCase()); }
     },
-    topics: { list: () => API.request('/topics/list'), get: id => API.request(`/topics/${encodeURIComponent(id)}`) },
+    topics: {
+        list: () => API.request('/topics/list'),
+        get: id => API.request(`/topics/${encodeURIComponent(id)}`),
+        create: data => API.request('/topics', { method: 'POST', body: JSON.stringify(data) })
+    },
     questions: {
         list: (topicId=null) => API.request(`/questions${topicId ? `?topicId=${encodeURIComponent(topicId)}` : ''}`),
         create: data => API.request('/questions', { method:'POST', body:JSON.stringify(data) }),
         update: (id,data) => API.request(`/questions/${encodeURIComponent(id)}`, { method:'PUT', body:JSON.stringify(data) }),
         delete: id => API.request(`/questions/${encodeURIComponent(id)}`, { method:'DELETE' })
+    },
+    discussion: {
+        getComments: questionId => API.request(`/discussion/comments?questionId=${encodeURIComponent(questionId)}`),
+        addComment: (questionId, content, parentCommentId = null) => API.request('/discussion/comments', { method: 'POST', body: JSON.stringify({ questionId, content, parentCommentId }) }),
+        deleteComment: commentId => API.request(`/discussion/comments/${encodeURIComponent(commentId)}`, { method: 'DELETE' }),
+        getCredibility: questionId => API.request(`/discussion/credibility?questionId=${encodeURIComponent(questionId)}`),
+        rateQuestion: (questionId, ratingType, reportReason = null) => API.request('/discussion/rate', { method: 'POST', body: JSON.stringify({ questionId, ratingType, reportReason }) }),
+        getReported: (limit = 50) => API.request(`/discussion/reported?limit=${encodeURIComponent(limit)}`)
     },
     teacher: {
         stats: () => API.request('/teacher/stats'),

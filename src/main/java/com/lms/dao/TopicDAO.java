@@ -51,7 +51,72 @@ public class TopicDAO {
     }
 
     /**
-     * Đếm số câu hỏi trong một chủ đề.
+     * Tìm chủ đề theo tên (case-insensitive).
+     */
+    public Optional<Topic> findByName(String topicName) {
+        if (topicName == null || topicName.isBlank()) return Optional.empty();
+        String sql = "SELECT * FROM topics WHERE LOWER(topic_name) = LOWER(?) LIMIT 1";
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, topicName.trim());
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return Optional.of(mapTopic(rs));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return Optional.empty();
+    }
+
+    /**
+     * Tạo chủ đề / môn học mới.
+     */
+    public Topic create(Topic topic) {
+        String sql = "INSERT INTO topics (topic_name, description, parent_topic_id, display_order) "
+                   + "VALUES (?, ?, ?, ?) RETURNING topic_id, created_at";
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, topic.getTopicName().trim());
+            ps.setString(2, topic.getDescription());
+            if (topic.getParentTopicId() != null) {
+                ps.setInt(3, topic.getParentTopicId());
+            } else {
+                ps.setNull(3, Types.INTEGER);
+            }
+            ps.setInt(4, topic.getDisplayOrder() > 0 ? topic.getDisplayOrder() : 99);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    topic.setTopicId(rs.getInt("topic_id"));
+                    Timestamp ca = rs.getTimestamp("created_at");
+                    topic.setCreatedAt(ca != null ? ca.toLocalDateTime() : null);
+                    return topic;
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return topic;
+    }
+
+    /**
+     * Tìm chủ đề theo tên hoặc tự động tạo mới nếu chưa tồn tại.
+     */
+    public Topic findOrCreate(String topicName, String description) {
+        Optional<Topic> existing = findByName(topicName);
+        if (existing.isPresent()) {
+            return existing.get();
+        }
+        Topic newTopic = new Topic();
+        newTopic.setTopicName(topicName.trim());
+        newTopic.setDescription(description != null ? description : "Chủ đề do người dùng khởi tạo");
+        newTopic.setDisplayOrder(99);
+        return create(newTopic);
+    }
+
+    /**
+     * Đếm số câu hỏi thuộc về một chủ đề.
      */
     public int countQuestions(int topicId) {
         String sql = "SELECT COUNT(*) FROM questions WHERE topic_id = ?";

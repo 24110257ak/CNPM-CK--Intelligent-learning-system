@@ -97,8 +97,8 @@ const API = {
             if (res.data) localStorage.setItem('lms_user', JSON.stringify(res.data));
             return res;
         },
-        async register(username, password, fullName, email, interests) {
-            const res = await API.request('/auth/register', { method: 'POST', body: JSON.stringify({ username, password, fullName, email, interests }) });
+        async register(username, password, fullName, email, interests, role = 'student') {
+            const res = await API.request('/auth/register', { method: 'POST', body: JSON.stringify({ username, password, fullName, email, interests, role }) });
             if (res.data) localStorage.setItem('lms_user', JSON.stringify(res.data));
             return res;
         },
@@ -109,12 +109,24 @@ const API = {
         requireTeacher() { const u=this.requireAuth(); if(!u)return null; const r=String(u.role||'').toUpperCase(); if(!['TEACHER','ADMIN'].includes(r)){ window.location.href='index.html'; return null; } return u; },
         isTeacher() { const u=this.getUser(); return !!u && ['TEACHER','ADMIN'].includes(String(u.role||'').toUpperCase()); }
     },
-    topics: { list: () => API.request('/topics/list'), get: id => API.request(`/topics/${encodeURIComponent(id)}`) },
+    topics: {
+        list: () => API.request('/topics/list'),
+        get: id => API.request(`/topics/${encodeURIComponent(id)}`),
+        create: data => API.request('/topics', { method: 'POST', body: JSON.stringify(data) })
+    },
     questions: {
         list: (topicId=null) => API.request(`/questions${topicId ? `?topicId=${encodeURIComponent(topicId)}` : ''}`),
         create: data => API.request('/questions', { method:'POST', body:JSON.stringify(data) }),
         update: (id,data) => API.request(`/questions/${encodeURIComponent(id)}`, { method:'PUT', body:JSON.stringify(data) }),
         delete: id => API.request(`/questions/${encodeURIComponent(id)}`, { method:'DELETE' })
+    },
+    discussion: {
+        getComments: questionId => API.request(`/discussion/comments?questionId=${encodeURIComponent(questionId)}`),
+        addComment: (questionId, content, parentCommentId = null) => API.request('/discussion/comments', { method: 'POST', body: JSON.stringify({ questionId, content, parentCommentId }) }),
+        deleteComment: commentId => API.request(`/discussion/comments/${encodeURIComponent(commentId)}`, { method: 'DELETE' }),
+        getCredibility: questionId => API.request(`/discussion/credibility?questionId=${encodeURIComponent(questionId)}`),
+        rateQuestion: (questionId, ratingType, reportReason = null) => API.request('/discussion/rate', { method: 'POST', body: JSON.stringify({ questionId, ratingType, reportReason }) }),
+        getReported: (limit = 50) => API.request(`/discussion/reported?limit=${encodeURIComponent(limit)}`)
     },
     teacher: {
         stats: () => API.request('/teacher/stats'),

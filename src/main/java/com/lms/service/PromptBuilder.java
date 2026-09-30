@@ -110,38 +110,40 @@ public class PromptBuilder {
     }
 
     /**
-     * Prompt yêu cầu AI sinh danh sách câu hỏi trắc nghiệm chuẩn theo yêu cầu của Giảng viên.
+     * Prompt yêu cầu AI sinh danh sách câu hỏi trắc nghiệm chuẩn theo yêu cầu của Giảng viên/Người đóng góp.
+     * Hỗ trợ mọi môn học, chủ đề tùy ý hoặc đề thi hỗn hợp đa lĩnh vực.
      */
     public static String buildTeacherQuestionGenPrompt(String topicName, String difficulty, String misconceptionTag, int count, String promptHint) {
         StringBuilder sb = new StringBuilder();
-        sb.append("Hãy tạo chính xác ").append(count).append(" câu hỏi trắc nghiệm lập trình chất lượng cao dành cho kỳ thi/bài kiểm tra.\n\n");
+        sb.append("Hãy tạo chính xác ").append(count).append(" câu hỏi trắc nghiệm học tập chất lượng cao dành cho kỳ thi/bài kiểm tra/diễn đàn học tập.\n\n");
         sb.append("--- Yêu cầu thông số ---\n");
-        sb.append("- Chủ đề môn học: ").append(topicName != null && !topicName.isBlank() ? topicName : "Lập trình Java / Cấu trúc dữ liệu").append("\n");
+        sb.append("- Chủ đề / Môn học (hoặc đề hỗn hợp): ").append(topicName != null && !topicName.isBlank() ? topicName : "Kiến thức tổng hợp").append("\n");
         sb.append("- Mức độ khó: ").append(difficulty != null && !difficulty.isBlank() ? difficulty : "medium").append(" (easy / medium / hard)\n");
         if (misconceptionTag != null && !misconceptionTag.isBlank() && !misconceptionTag.equalsIgnoreCase("all")) {
-            sb.append("- Nhóm bẫy nhận thức mục tiêu cần kiểm tra: ").append(misconceptionTag).append(" (syntax_swap / boundary_blindness / mental_model_gap / logic_flaw)\n");
+            sb.append("- Nhóm bẫy nhận thức mục tiêu cần kiểm tra: ").append(misconceptionTag).append(" (syntax_swap / boundary_blindness / mental_model_gap / logic_flaw / other)\n");
         }
         if (promptHint != null && !promptHint.isBlank()) {
-            sb.append("- Yêu cầu bổ sung từ giảng viên: ").append(promptHint).append("\n");
+            sb.append("- Yêu cầu bổ sung hoặc chủ đề kết hợp: ").append(promptHint).append("\n");
         }
 
         sb.append("""
 
             --- Nguyên tắc thiết kế câu hỏi ---
-            1. Đề bài (question_text) cần rõ ràng, thực tế. Nếu là câu hỏi đọc hiểu code, bắt buộc đặt đoạn code trong khối Markdown ```java ... ```.
-            2. Có đủ 4 phương án A, B, C, D phân hóa rõ rệt, không đặt phương án ngớ ngẩn hoặc quá lộ liễu.
+            1. Đề bài (question_text) cần rõ ràng, súc tích, thực tế. Nếu là câu hỏi kỹ thuật/lập trình, hãy đặt code trong khối Markdown thích hợp (vd: ```java, ```python, ```sql...). Nếu là toán học/kinh tế/khoa học, hãy trình bày công thức và dữ kiện rõ ràng.
+            2. Có đủ 4 phương án A, B, C, D phân hóa rõ rệt, tính hợp lý cao, không đặt phương án vô lý hoặc quá lộ liễu.
             3. Đáp án đúng (correct_answer) là một trong các chữ cái: 'A', 'B', 'C', hoặc 'D'.
-            4. Lời giải thích (explanation) phải giải thích chi tiết: vì sao đáp án đó là đúng, và các phương án sai đã đánh trúng bẫy tư duy nào.
-            5. Gắn nhãn misconception_tag vào 1 trong 4 nhóm:
-               - syntax_swap (nhầm lẫn cú pháp, toán tử, keyword)
-               - boundary_blindness (quên điều kiện biên, index mảng, null pointer)
-               - mental_model_gap (lỗ hổng mô hình tư duy OOP, tham chiếu vs giá trị, stack/heap)
-               - logic_flaw (sai sót điều kiện rẽ nhánh, luồng vòng lặp)
+            4. Lời giải thích (explanation) phải chi tiết, chuẩn mực sư phạm: vì sao đáp án đó là đúng, và các phương án sai đã đánh trúng bẫy tư duy nào.
+            5. Gắn nhãn misconception_tag vào 1 trong các nhóm:
+               - syntax_swap (nhầm lẫn cú pháp, công thức, thuật ngữ, keyword)
+               - boundary_blindness (quên điều kiện biên, giới hạn, giá trị ngoại lệ, null)
+               - mental_model_gap (lỗ hổng mô hình tư duy, bản chất nguyên lý, trừu tượng hóa)
+               - logic_flaw (sai sót lập luận điều kiện, phân tích logic, luồng suy luận)
+               - other (lỗi kiến thức sự kiện, phân tích tổng hợp)
 
             Hãy trả về một JSON Array chứa danh sách các câu hỏi, đúng cấu trúc JSON sau (không kèm text nào ngoài JSON):
             [
               {
-                "question_text": "string (nội dung câu hỏi, có thể chứa markdown code)",
+                "question_text": "string (nội dung câu hỏi, có thể chứa markdown)",
                 "option_a": "string",
                 "option_b": "string",
                 "option_c": "string",
@@ -149,7 +151,7 @@ public class PromptBuilder {
                 "correct_answer": "A hoặc B hoặc C hoặc D",
                 "explanation": "string (giải thích chi tiết sư phạm)",
                 "difficulty": "easy hoặc medium hoặc hard",
-                "misconception_tag": "syntax_swap hoặc boundary_blindness hoặc mental_model_gap hoặc logic_flaw"
+                "misconception_tag": "syntax_swap hoặc boundary_blindness hoặc mental_model_gap hoặc logic_flaw hoặc other"
               }
             ]
             """);

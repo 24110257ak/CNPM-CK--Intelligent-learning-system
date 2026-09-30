@@ -146,7 +146,29 @@ public class DatabaseUtil {
                 try {
                     stmt.execute(pgSeedTagsSql);
                 } catch (Exception ignored) {}
-                System.out.println("[DatabaseUtil] ✅ PostgreSQL Auto-Migration: Cột [misconception_tag] đã sẵn sàng!");
+
+                // PostgreSQL: Bảng thảo luận & bình luận câu hỏi (Forum)
+                stmt.execute("CREATE TABLE IF NOT EXISTS question_comments ("
+                        + "comment_id SERIAL PRIMARY KEY, "
+                        + "question_id INT NOT NULL REFERENCES questions(question_id) ON DELETE CASCADE, "
+                        + "user_id INT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE, "
+                        + "parent_comment_id INT NULL REFERENCES question_comments(comment_id) ON DELETE CASCADE, "
+                        + "content TEXT NOT NULL, "
+                        + "created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP"
+                        + ");");
+
+                // PostgreSQL: Bảng đánh giá độ tin cậy / Upvote / Báo lỗi
+                stmt.execute("CREATE TABLE IF NOT EXISTS question_ratings ("
+                        + "rating_id SERIAL PRIMARY KEY, "
+                        + "question_id INT NOT NULL REFERENCES questions(question_id) ON DELETE CASCADE, "
+                        + "user_id INT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE, "
+                        + "rating_type VARCHAR(20) NOT NULL, "
+                        + "report_reason TEXT NULL, "
+                        + "created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, "
+                        + "CONSTRAINT UQ_question_user_rating UNIQUE (question_id, user_id)"
+                        + ");");
+
+                System.out.println("[DatabaseUtil] ✅ PostgreSQL Auto-Migration: Cột [misconception_tag] và bảng [question_comments, question_ratings] đã sẵn sàng!");
 
             } else {
                 // SQL Server migration
@@ -171,12 +193,39 @@ public class DatabaseUtil {
                         + "    ALTER TABLE user_answers ADD CONSTRAINT CK_user_answers_answer CHECK (user_answer IN (N'A', N'B', N'C', N'D', N'', N' '));\n"
                         + "END";
 
+                String sqlServerDiscussionTables = "IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'question_comments')\n"
+                        + "BEGIN\n"
+                        + "    CREATE TABLE question_comments (\n"
+                        + "        comment_id INT IDENTITY(1,1) PRIMARY KEY,\n"
+                        + "        question_id INT NOT NULL FOREIGN KEY REFERENCES questions(question_id) ON DELETE CASCADE,\n"
+                        + "        user_id INT NOT NULL FOREIGN KEY REFERENCES users(user_id) ON DELETE CASCADE,\n"
+                        + "        parent_comment_id INT NULL FOREIGN KEY REFERENCES question_comments(comment_id),\n"
+                        + "        content NVARCHAR(MAX) NOT NULL,\n"
+                        + "        created_at DATETIME DEFAULT GETDATE()\n"
+                        + "    );\n"
+                        + "END;\n"
+                        + "IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'question_ratings')\n"
+                        + "BEGIN\n"
+                        + "    CREATE TABLE question_ratings (\n"
+                        + "        rating_id INT IDENTITY(1,1) PRIMARY KEY,\n"
+                        + "        question_id INT NOT NULL FOREIGN KEY REFERENCES questions(question_id) ON DELETE CASCADE,\n"
+                        + "        user_id INT NOT NULL FOREIGN KEY REFERENCES users(user_id) ON DELETE CASCADE,\n"
+                        + "        rating_type VARCHAR(20) NOT NULL,\n"
+                        + "        report_reason NVARCHAR(MAX) NULL,\n"
+                        + "        created_at DATETIME DEFAULT GETDATE(),\n"
+                        + "        CONSTRAINT UQ_question_user_rating UNIQUE (question_id, user_id)\n"
+                        + "    );\n"
+                        + "END;";
+
                 stmt.execute(checkColumnSql);
                 stmt.execute(seedTagsSql);
                 try {
                     stmt.execute(checkConstraintSql);
                 } catch (Exception ignored) {}
-                System.out.println("[DatabaseUtil] ✅ SQL Server Auto-Migration: Cột [misconception_tag] đã sẵn sàng!");
+                try {
+                    stmt.execute(sqlServerDiscussionTables);
+                } catch (Exception ignored) {}
+                System.out.println("[DatabaseUtil] ✅ SQL Server Auto-Migration: Cột [misconception_tag] và bảng [question_comments, question_ratings] đã sẵn sàng!");
             }
         } catch (Exception e) {
             System.err.println("[DatabaseUtil] ⚠️ Cảnh báo Auto-Migration: " + e.getMessage());

@@ -21,11 +21,15 @@ public class UserService {
         this.userDAO = userDAO;
     }
 
+    public User register(String username, String rawPassword, String fullName, String email, String interests) throws IllegalArgumentException {
+        return register(username, rawPassword, fullName, email, "student", interests);
+    }
+
     /**
-     * Đăng ký người dùng mới.
+     * Đăng ký người dùng mới với vai trò chỉ định (student / teacher).
      * Kiểm tra username trùng lặp, băm mật khẩu bằng BCrypt cost factor 12.
      */
-    public User register(String username, String rawPassword, String fullName, String email, String interests) throws IllegalArgumentException {
+    public User register(String username, String rawPassword, String fullName, String email, String role, String interests) throws IllegalArgumentException {
         if (username == null || username.trim().length() < 3) {
             throw new IllegalArgumentException("Tên đăng nhập phải có ít nhất 3 ký tự.");
         }
@@ -43,7 +47,8 @@ public class UserService {
         newUser.setPasswordHash(passwordHash);
         newUser.setFullName(fullName != null ? fullName.trim() : username.trim());
         newUser.setEmail(email != null ? email.trim() : null);
-        newUser.setRole("student");
+        String safeRole = "teacher".equalsIgnoreCase(role) ? "teacher" : "student";
+        newUser.setRole(safeRole);
         newUser.setInterests(interests != null ? interests.trim() : null);
 
         return userDAO.create(newUser);

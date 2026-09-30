@@ -24,6 +24,7 @@ import java.util.Map;
 public class TeacherServlet extends HttpServlet {
 
     private final QuizDAO quizDAO = new QuizDAO();
+    private final com.lms.dao.TopicDAO topicDAO = new com.lms.dao.TopicDAO();
     private final AIService aiService = new AIService();
 
     @Override
@@ -94,11 +95,15 @@ public class TeacherServlet extends HttpServlet {
         String misconceptionTag = body.has("misconceptionTag") && !body.get("misconceptionTag").isJsonNull()
                 ? body.get("misconceptionTag").getAsString().trim() : "all";
         int count = body.has("count") && !body.get("count").isJsonNull()
-                ? Math.min(Math.max(body.get("count").getAsInt(), 1), 5) : 3;
+                ? Math.min(Math.max(body.get("count").getAsInt(), 1), 25) : 5;
         String promptHint = body.has("promptHint") && !body.get("promptHint").isJsonNull()
                 ? body.get("promptHint").getAsString().trim() : "";
 
         try {
+            // Đảm bảo chủ đề luôn tồn tại trong DB để gán topicId hợp lệ
+            com.lms.model.Topic topic = topicDAO.findOrCreate(topicName, "Chủ đề mở do người dùng khởi tạo");
+            int topicId = topic != null ? topic.getTopicId() : 1;
+
             List<Map<String, Object>> generatedList = aiService.generateQuestionsForTeacher(
                     topicName, difficulty, misconceptionTag, count, promptHint
             );
@@ -107,6 +112,14 @@ public class TeacherServlet extends HttpServlet {
                 resp.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
                 resp.getWriter().write(JsonHelper.error("AI tạm thời không phản hồi hoặc chưa cấu hình API Key. Vui lòng thử lại sau."));
                 return;
+            }
+
+            // Gán topicId và topicName vào từng câu hỏi để người dùng có thể lưu ngay vào DB
+            for (Map<String, Object> q : generatedList) {
+                if (!q.containsKey("topicId") || q.get("topicId") == null) {
+                    q.put("topicId", topicId);
+                }
+                q.put("topicName", topicName);
             }
 
             resp.getWriter().write(JsonHelper.success("Khởi tạo danh sách câu hỏi bằng AI thành công", generatedList));

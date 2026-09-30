@@ -129,6 +129,37 @@ CREATE INDEX IF NOT EXISTS IX_remedial_user        ON remedial_lessons(user_id);
 CREATE INDEX IF NOT EXISTS IX_chat_history_user    ON chat_history(user_id);
 CREATE INDEX IF NOT EXISTS IX_chat_history_session ON chat_history(session_id);
 
+-- ─────────────────────────────────────────────────────────────────────────────
+-- BẢNG 8: QUESTION_COMMENTS (Bình luận & Thảo luận câu hỏi - Diễn đàn mở)
+-- ─────────────────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS question_comments (
+    comment_id        SERIAL PRIMARY KEY,
+    question_id       INT           NOT NULL REFERENCES questions(question_id) ON DELETE CASCADE,
+    user_id           INT           NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    parent_comment_id INT           NULL REFERENCES question_comments(comment_id) ON DELETE CASCADE,
+    content           TEXT          NOT NULL,
+    created_at        TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- BẢNG 9: QUESTION_RATINGS (Đánh giá độ tin cậy, Upvote / Downvote & Báo lỗi)
+-- ─────────────────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS question_ratings (
+    rating_id         SERIAL PRIMARY KEY,
+    question_id       INT           NOT NULL REFERENCES questions(question_id) ON DELETE CASCADE,
+    user_id           INT           NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    rating_type       VARCHAR(20)   NOT NULL
+                      CONSTRAINT CK_question_ratings_type CHECK (rating_type IN ('UPVOTE', 'DOWNVOTE', 'REPORT_ERROR')),
+    report_reason     TEXT          NULL,
+    created_at        TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT UQ_question_user_rating UNIQUE (question_id, user_id)
+);
+
+CREATE INDEX IF NOT EXISTS IX_question_comments_qid ON question_comments(question_id);
+CREATE INDEX IF NOT EXISTS IX_question_comments_uid ON question_comments(user_id);
+CREATE INDEX IF NOT EXISTS IX_question_ratings_qid ON question_ratings(question_id);
+CREATE INDEX IF NOT EXISTS IX_question_ratings_uid ON question_ratings(user_id);
+
 -- ═══════════════════════════════════════════════════════════════════════════════
 -- DỮ LIỆU MẪU KHỞI TẠO (SEED DATA)
 -- ═══════════════════════════════════════════════════════════════════════════════

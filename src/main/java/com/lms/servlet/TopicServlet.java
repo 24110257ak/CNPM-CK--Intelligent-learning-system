@@ -34,6 +34,31 @@ public class TopicServlet extends HttpServlet {
         }
     }
 
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        resp.setContentType("application/json;charset=UTF-8");
+        JsonObject body = JsonHelper.parseRequestBody(req);
+        if (body == null || !body.has("topicName") || body.get("topicName").getAsString().trim().isEmpty()) {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            resp.getWriter().write(JsonHelper.error("Tên chủ đề không được để trống."));
+            return;
+        }
+
+        String topicName = body.get("topicName").getAsString().trim();
+        String description = body.has("description") && !body.get("description").isJsonNull()
+                ? body.get("description").getAsString().trim() : "";
+
+        Topic created = topicDAO.findOrCreate(topicName, description);
+        JsonObject data = new JsonObject();
+        data.addProperty("topicId", created.getTopicId());
+        data.addProperty("topicName", created.getTopicName());
+        data.addProperty("description", created.getDescription());
+        data.addProperty("displayOrder", created.getDisplayOrder());
+
+        resp.setStatus(HttpServletResponse.SC_CREATED);
+        resp.getWriter().write(JsonHelper.success("Chủ đề đã sẵn sàng", data));
+    }
+
     private void handleListTopics(HttpServletResponse resp) throws IOException {
         List<Topic> topics = topicDAO.findAll();
         JsonArray array = new JsonArray();

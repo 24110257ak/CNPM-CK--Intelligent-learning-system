@@ -460,10 +460,13 @@ async function submitQuiz(force = false) {
         if (!confirm.isConfirmed) return;
     }
 
-    // 1.2. Kích hoạt Fullscreen Modal / Overlay Loading với chu kỳ thông điệp 1.5s
+    // 1.2. Kích hoạt Fullscreen Modal / Overlay Loading với chu kỳ thông điệp động mượt mà
     const overlay = document.getElementById('ai-loading-overlay');
     const loadingTitle = document.getElementById('ai-loading-title');
     const loadingSubtext = document.getElementById('ai-loading-subtext');
+    const progressFill = document.getElementById('ai-progress-bar-fill');
+    const progressPercent = document.getElementById('ai-progress-percent');
+    const textBox = document.getElementById('ai-stage-text-box');
 
     const loadingStages = [
         {
@@ -480,20 +483,63 @@ async function submitQuiz(force = false) {
         }
     ];
 
+    const updateStageUI = (idx) => {
+        // Cập nhật 3 step pills
+        const step1 = document.getElementById('ai-step-1');
+        const step2 = document.getElementById('ai-step-2');
+        const step3 = document.getElementById('ai-step-3');
+        const steps = [step1, step2, step3];
+        steps.forEach((el, i) => {
+            if (!el) return;
+            if (i < idx) {
+                el.className = 'ai-step-pill completed';
+            } else if (i === idx) {
+                el.className = 'ai-step-pill active';
+            } else {
+                el.className = 'ai-step-pill';
+            }
+        });
+
+        // Hiệu ứng trượt và mờ chữ mượt mà (slide & fade)
+        if (textBox) {
+            textBox.classList.add('text-changing');
+            setTimeout(() => {
+                if (loadingTitle && loadingStages[idx]) loadingTitle.textContent = loadingStages[idx].title;
+                if (loadingSubtext && loadingStages[idx]) loadingSubtext.textContent = loadingStages[idx].sub;
+                textBox.classList.remove('text-changing');
+                textBox.classList.add('text-entering');
+                setTimeout(() => textBox.classList.remove('text-entering'), 250);
+            }, 180);
+        } else {
+            if (loadingTitle && loadingStages[idx]) loadingTitle.textContent = loadingStages[idx].title;
+            if (loadingSubtext && loadingStages[idx]) loadingSubtext.textContent = loadingStages[idx].sub;
+        }
+    };
+
+    let progressValue = 18;
+    if (progressFill) progressFill.style.width = '18%';
+    if (progressPercent) progressPercent.textContent = '18%';
+
     if (overlay) {
         overlay.classList.remove('d-none');
-        loadingTitle.textContent = loadingStages[0].title;
-        loadingSubtext.textContent = loadingStages[0].sub;
+        updateStageUI(0);
     }
+
+    // Thanh tiến trình chạy liên tục từ 18% lên 92%
+    const progressTimer = setInterval(() => {
+        if (progressValue < 92) {
+            progressValue += Math.floor(Math.random() * 5) + 3;
+            if (progressValue > 92) progressValue = 92;
+            if (progressFill) progressFill.style.width = `${progressValue}%`;
+            if (progressPercent) progressPercent.textContent = `${progressValue}%`;
+        }
+    }, 350);
 
     let stageIndex = 0;
     const cycleTimer = setInterval(() => {
         stageIndex = (stageIndex + 1) % loadingStages.length;
-        if (loadingTitle && loadingSubtext) {
-            loadingTitle.textContent = loadingStages[stageIndex].title;
-            loadingSubtext.textContent = loadingStages[stageIndex].sub;
-        }
-    }, 1500);
+        updateStageUI(stageIndex);
+    }, 1800);
 
     const answersPayload = questions.map(q => {
         const ans = userAnswers[q.questionId];
@@ -514,6 +560,19 @@ async function submitQuiz(force = false) {
 
         // Dọn dẹp cycle timer
         clearInterval(cycleTimer);
+        clearInterval(progressTimer);
+
+        // Hiển thị trạng thái 100% hoàn thành mượt mà
+        if (progressFill) progressFill.style.width = '100%';
+        if (progressPercent) progressPercent.textContent = '100%';
+        const step1 = document.getElementById('ai-step-1');
+        const step2 = document.getElementById('ai-step-2');
+        const step3 = document.getElementById('ai-step-3');
+        if (step1) step1.className = 'ai-step-pill completed';
+        if (step2) step2.className = 'ai-step-pill completed';
+        if (step3) step3.className = 'ai-step-pill completed';
+        if (loadingTitle) loadingTitle.textContent = 'Chấm điểm hoàn tất!';
+        if (loadingSubtext) loadingSubtext.textContent = 'Đang chuyển hướng tới trang kết quả bài làm...';
 
         // Đảm bảo dọn dẹp triệt để localStorage
         localStorage.removeItem(storageKey);
@@ -521,11 +580,15 @@ async function submitQuiz(force = false) {
         // Lưu kết quả vào sessionStorage để trang result.html hiển thị
         sessionStorage.setItem('last_quiz_result', JSON.stringify(res.data));
 
+        // Chờ 450ms để học sinh quan sát trạng thái 100% rồi mới chuyển trang
+        await new Promise(resolve => setTimeout(resolve, 450));
+
         // Chuyển hướng sang trang kết quả
         window.location.href = `result.html?sessionId=${sessionId}`;
 
     } catch (err) {
         clearInterval(cycleTimer);
+        clearInterval(progressTimer);
         const msg = (err.message || '').toLowerCase();
 
         // 1. Nếu hệ thống báo phiên đã được nộp hoặc đã hoàn tất:

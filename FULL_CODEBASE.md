@@ -1,6 +1,6 @@
 ﻿# TOAN BO MA NGUON DU AN - HE THONG HOC TAP THONG MINH (INTELLIGENT LMS)
 
-> **Thoi gian tao file:** 2026-09-30 22:14:00
+> **Thoi gian tao file:** 2026-09-30 22:22:28
 > **Tong so file:** 58
 > **Muc dich:** Gom toan bo source code thanh 1 file duy nhat de gui cho ben thu ba xem xet, danh gia va gop y.
 
@@ -10065,10 +10065,13 @@ async function submitQuiz(force = false) {
         if (!confirm.isConfirmed) return;
     }
 
-    // 1.2. Kích hoạt Fullscreen Modal / Overlay Loading với chu kỳ thông điệp 1.5s
+    // 1.2. Kích hoạt Fullscreen Modal / Overlay Loading với chu kỳ thông điệp động mượt mà
     const overlay = document.getElementById('ai-loading-overlay');
     const loadingTitle = document.getElementById('ai-loading-title');
     const loadingSubtext = document.getElementById('ai-loading-subtext');
+    const progressFill = document.getElementById('ai-progress-bar-fill');
+    const progressPercent = document.getElementById('ai-progress-percent');
+    const textBox = document.getElementById('ai-stage-text-box');
 
     const loadingStages = [
         {
@@ -10085,20 +10088,63 @@ async function submitQuiz(force = false) {
         }
     ];
 
+    const updateStageUI = (idx) => {
+        // Cập nhật 3 step pills
+        const step1 = document.getElementById('ai-step-1');
+        const step2 = document.getElementById('ai-step-2');
+        const step3 = document.getElementById('ai-step-3');
+        const steps = [step1, step2, step3];
+        steps.forEach((el, i) => {
+            if (!el) return;
+            if (i < idx) {
+                el.className = 'ai-step-pill completed';
+            } else if (i === idx) {
+                el.className = 'ai-step-pill active';
+            } else {
+                el.className = 'ai-step-pill';
+            }
+        });
+
+        // Hiệu ứng trượt và mờ chữ mượt mà (slide & fade)
+        if (textBox) {
+            textBox.classList.add('text-changing');
+            setTimeout(() => {
+                if (loadingTitle && loadingStages[idx]) loadingTitle.textContent = loadingStages[idx].title;
+                if (loadingSubtext && loadingStages[idx]) loadingSubtext.textContent = loadingStages[idx].sub;
+                textBox.classList.remove('text-changing');
+                textBox.classList.add('text-entering');
+                setTimeout(() => textBox.classList.remove('text-entering'), 250);
+            }, 180);
+        } else {
+            if (loadingTitle && loadingStages[idx]) loadingTitle.textContent = loadingStages[idx].title;
+            if (loadingSubtext && loadingStages[idx]) loadingSubtext.textContent = loadingStages[idx].sub;
+        }
+    };
+
+    let progressValue = 18;
+    if (progressFill) progressFill.style.width = '18%';
+    if (progressPercent) progressPercent.textContent = '18%';
+
     if (overlay) {
         overlay.classList.remove('d-none');
-        loadingTitle.textContent = loadingStages[0].title;
-        loadingSubtext.textContent = loadingStages[0].sub;
+        updateStageUI(0);
     }
+
+    // Thanh tiến trình chạy liên tục từ 18% lên 92%
+    const progressTimer = setInterval(() => {
+        if (progressValue < 92) {
+            progressValue += Math.floor(Math.random() * 5) + 3;
+            if (progressValue > 92) progressValue = 92;
+            if (progressFill) progressFill.style.width = `${progressValue}%`;
+            if (progressPercent) progressPercent.textContent = `${progressValue}%`;
+        }
+    }, 350);
 
     let stageIndex = 0;
     const cycleTimer = setInterval(() => {
         stageIndex = (stageIndex + 1) % loadingStages.length;
-        if (loadingTitle && loadingSubtext) {
-            loadingTitle.textContent = loadingStages[stageIndex].title;
-            loadingSubtext.textContent = loadingStages[stageIndex].sub;
-        }
-    }, 1500);
+        updateStageUI(stageIndex);
+    }, 1800);
 
     const answersPayload = questions.map(q => {
         const ans = userAnswers[q.questionId];
@@ -10119,6 +10165,19 @@ async function submitQuiz(force = false) {
 
         // Dọn dẹp cycle timer
         clearInterval(cycleTimer);
+        clearInterval(progressTimer);
+
+        // Hiển thị trạng thái 100% hoàn thành mượt mà
+        if (progressFill) progressFill.style.width = '100%';
+        if (progressPercent) progressPercent.textContent = '100%';
+        const step1 = document.getElementById('ai-step-1');
+        const step2 = document.getElementById('ai-step-2');
+        const step3 = document.getElementById('ai-step-3');
+        if (step1) step1.className = 'ai-step-pill completed';
+        if (step2) step2.className = 'ai-step-pill completed';
+        if (step3) step3.className = 'ai-step-pill completed';
+        if (loadingTitle) loadingTitle.textContent = 'Chấm điểm hoàn tất!';
+        if (loadingSubtext) loadingSubtext.textContent = 'Đang chuyển hướng tới trang kết quả bài làm...';
 
         // Đảm bảo dọn dẹp triệt để localStorage
         localStorage.removeItem(storageKey);
@@ -10126,11 +10185,15 @@ async function submitQuiz(force = false) {
         // Lưu kết quả vào sessionStorage để trang result.html hiển thị
         sessionStorage.setItem('last_quiz_result', JSON.stringify(res.data));
 
+        // Chờ 450ms để học sinh quan sát trạng thái 100% rồi mới chuyển trang
+        await new Promise(resolve => setTimeout(resolve, 450));
+
         // Chuyển hướng sang trang kết quả
         window.location.href = `result.html?sessionId=${sessionId}`;
 
     } catch (err) {
         clearInterval(cycleTimer);
+        clearInterval(progressTimer);
         const msg = (err.message || '').toLowerCase();
 
         // 1. Nếu hệ thống báo phiên đã được nộp hoặc đã hoàn tất:
@@ -14317,9 +14380,9 @@ const AppUI = (() => {
             left: 0;
             width: 100vw;
             height: 100vh;
-            background: rgba(15, 23, 42, 0.75);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
+            background: rgba(10, 15, 30, 0.82);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             z-index: 9999;
             display: flex;
             align-items: center;
@@ -14327,65 +14390,189 @@ const AppUI = (() => {
         }
 
         .loading-card {
-            max-width: 480px;
-            width: 90%;
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            max-width: 490px;
+            width: 92%;
+            background: linear-gradient(145deg, #0f172a 0%, #1e1b4b 60%, #0f172a 100%);
+            border: 1px solid rgba(129, 140, 248, 0.3) !important;
+            box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.85), 0 0 50px rgba(99, 102, 241, 0.25);
             animation: fadeInScale 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
 
-        .ai-orb-container {
+        .ai-ambient-glow {
+            position: absolute;
+            top: 30%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 260px;
+            height: 260px;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.35) 0%, rgba(139, 92, 246, 0.15) 50%, transparent 70%);
+            pointer-events: none;
+            filter: blur(25px);
+            z-index: 0;
+        }
+
+        /* ── Step Indicator Pills ── */
+        .ai-step-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 99px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            background: rgba(255, 255, 255, 0.06);
+            color: #94a3b8;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            transition: all 0.35s ease;
             position: relative;
-            width: 110px;
-            height: 110px;
-            margin: 0 auto 20px auto;
+            z-index: 1;
+        }
+        .ai-step-pill .step-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #64748b;
+            transition: all 0.35s ease;
+        }
+        .ai-step-pill.active {
+            background: rgba(99, 102, 241, 0.25);
+            color: #c7d2fe;
+            border-color: rgba(129, 140, 248, 0.6);
+            box-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
+        }
+        .ai-step-pill.active .step-dot {
+            background: #38bdf8;
+            box-shadow: 0 0 8px #38bdf8;
+            -webkit-animation: stepPulse 1s ease-in-out infinite alternate;
+            animation: stepPulse 1s ease-in-out infinite alternate;
+        }
+        .ai-step-pill.completed {
+            background: rgba(16, 185, 129, 0.15);
+            color: #6ee7b7;
+            border-color: rgba(16, 185, 129, 0.45);
+        }
+        .ai-step-pill.completed .step-dot {
+            background: #10b981;
+            box-shadow: 0 0 6px #10b981;
+        }
+        @-webkit-keyframes stepPulse {
+            from { -webkit-transform: scale(0.8); opacity: 0.7; }
+            to { -webkit-transform: scale(1.35); opacity: 1; }
+        }
+        @keyframes stepPulse {
+            from { transform: scale(0.8); opacity: 0.7; }
+            to { transform: scale(1.35); opacity: 1; }
+        }
+
+        /* ── Quantum Holographic AI Orb ── */
+        .ai-orb-stage {
+            position: relative;
+            width: 130px;
+            height: 130px;
+            margin: 0 auto;
             display: flex;
             align-items: center;
             justify-content: center;
+            z-index: 1;
         }
 
-        .ai-orb-ring-outer {
+        .ai-pulse-wave {
             position: absolute;
             width: 100%;
             height: 100%;
             border-radius: 50%;
-            border: 3px solid transparent;
-            border-top-color: #4361ee;
-            border-right-color: #8b5cf6;
-            -webkit-animation: orbSpin 2s linear infinite;
-            animation: orbSpin 2s linear infinite;
+            border: 1.5px solid rgba(99, 102, 241, 0.5);
+            -webkit-animation: aiPulseRipple 2.4s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+            animation: aiPulseRipple 2.4s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+        }
+        .ai-pulse-wave.wave-2 {
+            -webkit-animation-delay: -1.2s;
+            animation-delay: -1.2s;
+        }
+        @-webkit-keyframes aiPulseRipple {
+            0% { -webkit-transform: scale(0.6); opacity: 0.9; }
+            100% { -webkit-transform: scale(1.55); opacity: 0; }
+        }
+        @keyframes aiPulseRipple {
+            0% { transform: scale(0.6); opacity: 0.9; }
+            100% { transform: scale(1.55); opacity: 0; }
         }
 
-        .ai-orb-ring-inner {
+        .ai-orbit-ring.ring-outer {
             position: absolute;
-            width: 80%;
-            height: 80%;
+            width: 118px;
+            height: 118px;
             border-radius: 50%;
-            border: 2.5px dashed #4cc9f0;
-            -webkit-animation: orbSpinReverse 2.5s linear infinite;
-            animation: orbSpinReverse 2.5s linear infinite;
-            opacity: 0.85;
+            border: 2px solid transparent;
+            border-top-color: #6366f1;
+            border-right-color: #a855f7;
+            -webkit-animation: orbSpin 2.2s linear infinite;
+            animation: orbSpin 2.2s linear infinite;
+        }
+        .orbit-particle.particle-1 {
+            position: absolute;
+            top: -4px;
+            left: 50%;
+            width: 8px;
+            height: 8px;
+            background: #38bdf8;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #38bdf8, 0 0 20px #38bdf8;
         }
 
-        .ai-orb-core {
+        .ai-orbit-ring.ring-inner {
+            position: absolute;
+            width: 94px;
+            height: 94px;
+            border-radius: 50%;
+            border: 2px dashed rgba(56, 189, 248, 0.65);
+            -webkit-animation: orbSpinReverse 2.8s linear infinite;
+            animation: orbSpinReverse 2.8s linear infinite;
+        }
+        .orbit-particle.particle-2 {
+            position: absolute;
+            bottom: -4px;
+            right: 50%;
+            width: 6px;
+            height: 6px;
+            background: #ec4899;
+            border-radius: 50%;
+            box-shadow: 0 0 8px #ec4899;
+        }
+
+        .ai-core-sphere {
             position: relative;
-            width: 66px;
-            height: 66px;
-            background: linear-gradient(135deg, #4361ee 0%, #7209b7 50%, #4cc9f0 100%);
-            background-size: 200% 200%;
+            width: 72px;
+            height: 72px;
+            background: radial-gradient(circle at 35% 35%, #818cf8 0%, #4f46e5 50%, #312e81 100%);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #ffffff;
-            box-shadow: 0 0 25px rgba(67, 97, 238, 0.6), inset 0 0 12px rgba(255, 255, 255, 0.4);
-            -webkit-animation: orbFloat 2.2s ease-in-out infinite;
-            animation: orbFloat 2.2s ease-in-out infinite;
+            overflow: hidden;
+            box-shadow: 0 0 35px rgba(99, 102, 241, 0.75), inset 0 0 15px rgba(255, 255, 255, 0.5);
+            -webkit-animation: coreFloat 2.4s ease-in-out infinite;
+            animation: coreFloat 2.4s ease-in-out infinite;
         }
 
-        .ai-orb-core i {
-            -webkit-animation: iconBreath 2s ease-in-out infinite;
-            animation: iconBreath 2s ease-in-out infinite;
-            filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.9));
+        .ai-laser-scanner {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, #38bdf8, #ffffff, #38bdf8, transparent);
+            box-shadow: 0 0 10px #38bdf8;
+            -webkit-animation: laserScan 1.6s ease-in-out infinite alternate;
+            animation: laserScan 1.6s ease-in-out infinite alternate;
+        }
+
+        .ai-brain-icon {
+            color: #ffffff;
+            font-size: 1.85rem;
+            -webkit-animation: brainPulse 2s ease-in-out infinite;
+            animation: brainPulse 2s ease-in-out infinite;
+            filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.85));
         }
 
         @-webkit-keyframes orbSpin {
@@ -14406,57 +14593,78 @@ const AppUI = (() => {
             100% { transform: rotate(0deg); }
         }
 
-        @-webkit-keyframes orbFloat {
+        @-webkit-keyframes coreFloat {
             0%, 100% { -webkit-transform: translateY(0); }
-            50% { -webkit-transform: translateY(-6px); }
+            50% { -webkit-transform: translateY(-5px); }
         }
-        @keyframes orbFloat {
+        @keyframes coreFloat {
             0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-6px); }
+            50% { transform: translateY(-5px); }
         }
 
-        @-webkit-keyframes iconBreath {
-            0%, 100% { -webkit-transform: scale(0.94); }
-            50% { -webkit-transform: scale(1.15); }
+        @-webkit-keyframes laserScan {
+            0% { top: 5%; opacity: 0.3; }
+            50% { opacity: 1; }
+            100% { top: 90%; opacity: 0.3; }
         }
-        @keyframes iconBreath {
-            0%, 100% { transform: scale(0.94); }
-            50% { transform: scale(1.15); }
+        @keyframes laserScan {
+            0% { top: 5%; opacity: 0.3; }
+            50% { opacity: 1; }
+            100% { top: 90%; opacity: 0.3; }
         }
 
+        @-webkit-keyframes brainPulse {
+            0%, 100% { -webkit-transform: scale(0.94); opacity: 0.92; }
+            50% { -webkit-transform: scale(1.1); opacity: 1; filter: drop-shadow(0 0 14px rgba(255, 255, 255, 1)); }
+        }
+        @keyframes brainPulse {
+            0%, 100% { transform: scale(0.94); opacity: 0.92; }
+            50% { transform: scale(1.1); opacity: 1; filter: drop-shadow(0 0 14px rgba(255, 255, 255, 1)); }
+        }
+
+        /* ── Dynamic Text Slide Transitions ── */
+        .ai-text-transition-container {
+            min-height: 68px;
+            transition: opacity 0.22s ease, transform 0.22s ease;
+            position: relative;
+            z-index: 1;
+        }
+        .ai-text-transition-container.text-changing {
+            opacity: 0;
+            transform: translateY(-8px);
+        }
+        .ai-text-transition-container.text-entering {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* ── Progress Bar & Meter ── */
+        .ai-meter-wrapper {
+            position: relative;
+            z-index: 1;
+        }
         .loading-progress-track {
             width: 100%;
-            height: 6px;
-            background: #e2e8f0;
+            height: 7px;
+            background: rgba(255, 255, 255, 0.1);
             border-radius: 99px;
             overflow: hidden;
             position: relative;
         }
-
         .loading-progress-bar {
             height: 100%;
-            width: 100%;
-            background: linear-gradient(90deg, #4361ee 0%, #7209b7 50%, #4cc9f0 100%);
-            background-size: 200% 100%;
+            background: linear-gradient(90deg, #4361ee 0%, #8b5cf6 50%, #06b6d4 100%);
             border-radius: 99px;
-            -webkit-animation: progressBarMove 1.8s linear infinite;
-            animation: progressBarMove 1.8s linear infinite;
+            transition: width 0.35s ease;
+            box-shadow: 0 0 12px rgba(6, 182, 212, 0.6);
         }
 
-        @-webkit-keyframes progressBarMove {
-            0% { background-position: 100% 0; }
-            100% { background-position: -100% 0; }
-        }
-        @keyframes progressBarMove {
-            0% { background-position: 100% 0; }
-            100% { background-position: -100% 0; }
-        }
-
+        /* ── Typing Dots ── */
         .typing-dots span {
             display: inline-block;
             width: 6px;
             height: 6px;
-            background: #4361ee;
+            background: #818cf8;
             border-radius: 50%;
             -webkit-animation: typingBounce 1.2s infinite ease-in-out both;
             animation: typingBounce 1.2s infinite ease-in-out both;
@@ -14631,29 +14839,69 @@ const AppUI = (() => {
 
     <!-- ── Fullscreen AI Loading Overlay (1.2) ── -->
     <div id="ai-loading-overlay" class="loading-overlay d-none">
-        <div class="loading-card text-center p-4 p-md-5 rounded-4 shadow-lg bg-white position-relative overflow-hidden">
-            <!-- Dynamic Glowing AI Orb (Multi-layer Rotating Halo & Breathing Brain) -->
-            <div class="ai-orb-container">
-                <div class="ai-orb-ring-outer"></div>
-                <div class="ai-orb-ring-inner"></div>
-                <div class="ai-orb-core">
-                    <i class="fa-solid fa-brain fa-2x"></i>
+        <div class="loading-card text-center p-4 p-md-5 rounded-4 shadow-2xl position-relative overflow-hidden">
+            <!-- Background Ambient Glow Aura -->
+            <div class="ai-ambient-glow"></div>
+
+            <!-- Pipeline 3-Step Indicator -->
+            <div class="d-flex align-items-center justify-content-center gap-2 mb-4">
+                <div class="ai-step-pill active" id="ai-step-1">
+                    <span class="step-dot"></span>
+                    <span class="step-label">1. Chấm điểm</span>
+                </div>
+                <i class="fa-solid fa-chevron-right text-white-50 small opacity-50" style="font-size: 0.65rem;"></i>
+                <div class="ai-step-pill" id="ai-step-2">
+                    <span class="step-dot"></span>
+                    <span class="step-label">2. Phân tích AI</span>
+                </div>
+                <i class="fa-solid fa-chevron-right text-white-50 small opacity-50" style="font-size: 0.65rem;"></i>
+                <div class="ai-step-pill" id="ai-step-3">
+                    <span class="step-dot"></span>
+                    <span class="step-label">3. Lập lộ trình</span>
+                </div>
+            </div>
+
+            <!-- Quantum Holographic AI Orb -->
+            <div class="ai-orb-stage mb-4">
+                <div class="ai-pulse-wave wave-1"></div>
+                <div class="ai-pulse-wave wave-2"></div>
+                
+                <div class="ai-orbit-ring ring-outer">
+                    <div class="orbit-particle particle-1"></div>
+                </div>
+                <div class="ai-orbit-ring ring-inner">
+                    <div class="orbit-particle particle-2"></div>
+                </div>
+
+                <div class="ai-core-sphere">
+                    <div class="ai-laser-scanner"></div>
+                    <i class="fa-solid fa-brain ai-brain-icon"></i>
                 </div>
             </div>
             
-            <h4 class="fw-bold text-dark mb-2" id="ai-loading-title">Đang chấm điểm bài làm...</h4>
-            <p class="text-muted small mb-3" id="ai-loading-subtext">Hệ thống đang đối chiếu câu trả lời với bộ dữ liệu chuẩn.</p>
-            
-            <!-- Animated Shimmer Progress Bar -->
-            <div class="loading-progress-track mb-3">
-                <div class="loading-progress-bar"></div>
+            <!-- Dynamic Smooth Stage Text with Slide Transition -->
+            <div id="ai-stage-text-box" class="ai-text-transition-container mb-3">
+                <h4 class="fw-bold text-white mb-2" id="ai-loading-title">Đang chấm điểm bài làm...</h4>
+                <p class="text-white-50 small mb-0" id="ai-loading-subtext">Hệ thống đang đối chiếu câu trả lời với bộ dữ liệu chuẩn.</p>
             </div>
             
-            <div class="d-flex align-items-center justify-content-center gap-2 text-muted small">
+            <!-- Dynamic Progress Meter (Smooth width + percentage counter) -->
+            <div class="ai-meter-wrapper mb-3">
+                <div class="d-flex justify-content-between align-items-center small mb-1 px-1">
+                    <span class="text-white-50 font-monospace" style="font-size: 0.72rem;">TIẾN TRÌNH XỬ LÝ</span>
+                    <span class="text-info fw-bold font-monospace" id="ai-progress-percent">15%</span>
+                </div>
+                <div class="loading-progress-track">
+                    <div class="loading-progress-bar" id="ai-progress-bar-fill" style="width: 15%;"></div>
+                </div>
+            </div>
+            
+            <!-- Real-time Status Badge & Typing Dots -->
+            <div class="d-flex align-items-center justify-content-center gap-2 text-white-50 small">
                 <div class="typing-dots">
                     <span></span><span></span><span></span>
                 </div>
-                <span class="fst-italic" style="font-size: 0.82rem;">Gemini AI đang phân tích lỗ hổng nhận thức...</span>
+                <span class="fst-italic" id="ai-footer-note" style="font-size: 0.82rem;">Gemini AI đang phân tích lỗ hổng nhận thức...</span>
             </div>
         </div>
     </div>

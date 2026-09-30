@@ -237,31 +237,31 @@ function renderPostCard(p) {
     const isTeacher = (p.authorRole || '').toLowerCase() === 'teacher' || (p.authorRole || '').toLowerCase() === 'admin';
     const avatarClass = isTeacher ? 'author-avatar avatar-teacher' : 'author-avatar avatar-student';
     const roleBadge = isTeacher
-        ? '<span class="badge bg-indigo text-white px-2 py-0 small ms-1" style="background-color: #6366f1; font-size: 0.68rem;"><i class="fa-solid fa-award me-1"></i>Giảng Viên</span>'
-        : '<span class="badge bg-secondary-subtle text-secondary px-2 py-0 small ms-1" style="font-size: 0.68rem;">Sinh Viên</span>';
+        ? '<span class="badge bg-indigo text-white px-2 py-1 small rounded-pill" style="background-color: #6366f1; font-size: 0.7rem;"><i class="fa-solid fa-award me-1"></i>Giảng Viên</span>'
+        : '<span class="badge bg-light text-secondary border px-2 py-1 small rounded-pill" style="font-size: 0.7rem;"><i class="fa-solid fa-user-graduate me-1 text-primary"></i>Sinh Viên</span>';
 
     const initial = (p.authorName || p.authorUsername || 'U').charAt(0).toUpperCase();
     const timeAgo = formatTimeAgo(p.createdAt);
 
     let channelBadge = '';
     if (p.channel === 'qna') {
-        channelBadge = '<span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-2 py-1 small me-1"># hỏi-đáp</span>';
+        channelBadge = '<span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-2.5 py-1 small"><i class="fa-solid fa-circle-question me-1"></i>Hỏi & Đáp</span>';
     } else if (p.channel === 'tips') {
-        channelBadge = '<span class="badge bg-warning-subtle text-dark border border-warning-subtle rounded-pill px-2 py-1 small me-1"># mẹo-né-bẫy</span>';
+        channelBadge = '<span class="badge bg-warning-subtle text-dark border border-warning-subtle rounded-pill px-2.5 py-1 small"><i class="fa-solid fa-lightbulb me-1 text-warning"></i>Mẹo Né Bẫy</span>';
     } else if (p.channel === 'showcase') {
-        channelBadge = '<span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-1 small me-1"># đề-xuất-đề</span>';
+        channelBadge = '<span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2.5 py-1 small"><i class="fa-solid fa-code-compare me-1"></i>Đề Xuất Câu Hỏi</span>';
     } else {
-        channelBadge = '<span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2 py-1 small me-1"># thảo-luận</span>';
+        channelBadge = '<span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2.5 py-1 small"><i class="fa-solid fa-hashtag me-1"></i>Thảo Luận Chung</span>';
     }
 
     const topicBadge = p.topicName
-        ? `<span class="badge bg-light text-muted border rounded-pill px-2 py-1 small"><i class="fa-solid fa-book-bookmark me-1 text-primary"></i>${escapeHtml(p.topicName)}</span>`
+        ? `<span class="badge bg-light text-dark border rounded-pill px-2.5 py-1 small"><i class="fa-solid fa-book-bookmark me-1 text-primary"></i>${escapeHtml(p.topicName)}</span>`
         : '';
 
     // Quyền xóa bài (chính chủ hoặc Giảng viên/Admin)
     const canDelete = currentUser && (currentUser.userId === p.userId || API.auth.isTeacher());
     const deleteBtn = canDelete ? `
-        <button class="btn btn-link btn-sm text-danger p-0 text-decoration-none" title="Xóa bài viết" onclick="handleDeletePost(${p.postId})">
+        <button class="btn btn-outline-danger btn-sm border-0 rounded-circle" style="width: 32px; height: 32px; padding: 0;" title="Xóa bài viết" onclick="handleDeletePost(${p.postId})">
             <i class="fa-regular fa-trash-can"></i>
         </button>
     ` : '';
@@ -281,31 +281,37 @@ function renderPostCard(p) {
     }
 
     return `
-        <div class="card post-card p-4 shadow-sm" id="post-card-${p.postId}">
-            <!-- Header bài viết -->
-            <div class="d-flex justify-content-between align-items-start mb-3">
+        <div class="card post-card p-4 shadow-sm mb-3" id="post-card-${p.postId}">
+            <!-- Header bài viết: Tác giả & Hành động -->
+            <div class="d-flex justify-content-between align-items-center mb-2">
                 <div class="d-flex align-items-center gap-3">
                     <div class="${avatarClass}">
                         ${initial}
                     </div>
                     <div>
-                        <div class="d-flex align-items-center flex-wrap">
-                            <span class="fw-bold text-dark me-1">${escapeHtml(p.authorName || p.authorUsername)}</span>
+                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                            <span class="fw-bold text-dark">${escapeHtml(p.authorName || p.authorUsername)}</span>
                             ${roleBadge}
                         </div>
-                        <small class="text-muted" style="font-size: 0.75rem;">@${escapeHtml(p.authorUsername)} &bull; ${timeAgo}</small>
+                        <div class="text-muted" style="font-size: 0.78rem;">
+                            <span>@${escapeHtml(p.authorUsername)}</span>
+                            <span class="mx-1">&bull;</span>
+                            <span>${timeAgo}</span>
+                        </div>
                     </div>
                 </div>
-                <div class="d-flex align-items-center gap-2">
-                    ${channelBadge}
-                    ${topicBadge}
-                    ${deleteBtn}
-                </div>
+                ${deleteBtn ? `<div>${deleteBtn}</div>` : ''}
+            </div>
+
+            <!-- Tags Kênh & Môn học (Gọn gàng ngay dưới phần tác giả, không làm chật chội avatar) -->
+            <div class="d-flex flex-wrap align-items-center gap-2 my-2">
+                ${channelBadge}
+                ${topicBadge}
             </div>
 
             <!-- Tiêu đề & Nội dung bài viết -->
-            <h5 class="fw-bold text-dark mb-2">${escapeHtml(p.title)}</h5>
-            <div class="text-secondary small mb-3 post-body-content" style="line-height: 1.6;">
+            <h5 class="fw-bold text-dark mt-2 mb-2" style="font-size: 1.15rem; line-height: 1.4;">${escapeHtml(p.title)}</h5>
+            <div class="text-secondary post-body-content mb-3" style="font-size: 0.92rem; line-height: 1.65;">
                 ${renderedContent}
             </div>
 

@@ -81,6 +81,68 @@ function setupEventListeners() {
 
     // Nút nộp bài
     document.getElementById('btn-submit-quiz').addEventListener('click', () => submitQuiz(false));
+
+    // Nút báo lỗi câu hỏi tới Giảng viên
+    const btnReport = document.getElementById('btn-quiz-report');
+    if (btnReport) {
+        btnReport.addEventListener('click', handleQuizReportQuestion);
+    }
+}
+
+/**
+ * Báo lỗi câu hỏi hiện tại cho Giảng viên kiểm duyệt
+ */
+async function handleQuizReportQuestion() {
+    const q = questions[currentIndex];
+    if (!q) return;
+
+    const { value: formValues } = await Swal.fire({
+        title: '<i class="fa-solid fa-flag text-danger me-2"></i>Báo Lỗi Câu Hỏi',
+        html: `
+            <p class="small text-muted mb-3 text-start">
+                Bạn nhận thấy câu hỏi này có sai sót? Phản hồi của bạn sẽ được gửi trực tiếp tới <strong>Bảng Quản Trị Giảng Viên</strong> để kiểm duyệt và chỉnh sửa.
+            </p>
+            <div class="mb-3 text-start">
+                <label class="form-label small fw-bold">Dạng lỗi phát hiện:</label>
+                <select id="swal-report-type" class="form-select form-select-sm">
+                    <option value="Đáp án chuẩn bị sai / Gây tranh cãi">Đáp án chuẩn bị sai / Gây tranh cãi</option>
+                    <option value="Đề bài tối nghĩa / Lỗi diễn đạt hoặc ngữ pháp">Đề bài tối nghĩa / Lỗi diễn đạt hoặc ngữ pháp</option>
+                    <option value="Ảo giác AI (AI Hallucination) / Code sai logic">Ảo giác AI (AI Hallucination) / Code sai logic</option>
+                    <option value="Khác">Lý do khác</option>
+                </select>
+            </div>
+            <div class="text-start">
+                <label class="form-label small fw-bold">Mô tả cụ thể (tùy chọn):</label>
+                <textarea id="swal-report-detail" class="form-control form-control-sm" rows="3" placeholder="Nhập thêm chi tiết về lỗi nếu có..."></textarea>
+            </div>
+        `,
+        focusConfirm: false,
+        showCancelButton: true,
+        confirmButtonText: 'Gửi báo cáo',
+        cancelButtonText: 'Hủy',
+        confirmButtonColor: '#dc3545',
+        preConfirm: () => {
+            const type = document.getElementById('swal-report-type').value;
+            const detail = document.getElementById('swal-report-detail').value.trim();
+            const reason = detail ? `[${type}] ${detail}` : type;
+            return reason;
+        }
+    });
+
+    if (formValues) {
+        try {
+            await API.discussion.rateQuestion(q.questionId, 'REPORT_ERROR', formValues);
+            Swal.fire({
+                icon: 'success',
+                title: 'Đã gửi báo lỗi!',
+                text: 'Cảm ơn đóng góp của bạn. Báo cáo đã được chuyển tới Giảng viên. Bạn có thể yên tâm tiếp tục làm bài!',
+                timer: 2500,
+                showConfirmButton: false
+            });
+        } catch (err) {
+            Swal.fire('Lỗi', err.message || 'Không thể gửi báo lỗi lúc này.', 'error');
+        }
+    }
 }
 
 /**

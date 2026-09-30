@@ -20,16 +20,48 @@
                 <i class="fa-solid fa-graduation-cap fa-lg text-primary"></i>
                 <span>LMS Thông Minh</span>
             </a>
-            <div class="d-flex align-items-center gap-2">
-                <a href="index.html" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
-                    <i class="fa-solid fa-house me-1"></i>Trang Chủ
-                </a>
-                <a href="community.html" class="btn btn-outline-info text-dark btn-sm rounded-pill px-3">
-                    <i class="fa-solid fa-comments me-1 text-info"></i>Diễn Đàn Cộng Đồng
-                </a>
-                <a href="teacher-dashboard.html" class="btn btn-outline-primary btn-sm rounded-pill px-3 d-none" id="history-teacher-btn">
-                    <i class="fa-solid fa-chalkboard-user me-1"></i>Trang Giảng Viên
-                </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navContent">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navContent">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-3">
+                    <li class="nav-item">
+                        <a class="nav-link fw-semibold" href="index.html"><i class="fa-solid fa-book-open me-1"></i>Chủ Đề Ôn Tập</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link fw-semibold" href="community.html">
+                            <i class="fa-solid fa-comments me-1 text-info"></i>Diễn Đàn Cộng Đồng
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active fw-bold text-primary" href="history.html"><i class="fa-solid fa-chart-line me-1"></i>Lịch Sử & Tiến Độ</a>
+                    </li>
+                    <li class="nav-item d-none" id="nav-teacher-link">
+                        <a class="nav-link fw-bold text-indigo" href="teacher-dashboard.html" style="color: #6366f1;"><i class="fa-solid fa-chalkboard-user me-1"></i>Trang Giảng Viên</a>
+                    </li>
+                </ul>
+                <div class="d-flex align-items-center gap-3">
+                    <div class="dropdown">
+                        <button class="btn btn-outline-secondary dropdown-toggle d-flex align-items-center gap-2 rounded-pill px-3 py-1" type="button" data-bs-toggle="dropdown">
+                            <i class="fa-solid fa-user-circle fa-lg text-primary"></i>
+                            <span id="nav-username" class="fw-semibold small">Sinh Viên</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3">
+                            <li><h6 class="dropdown-header" id="nav-fullname">Họ và Tên</h6></li>
+                            <li class="d-none" id="dropdown-teacher-item">
+                                <a class="dropdown-item text-primary fw-semibold d-flex align-items-center gap-2" href="teacher-dashboard.html">
+                                    <i class="fa-solid fa-chalkboard-user"></i>Bảng Quản Trị Giảng Viên
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item text-danger d-flex align-items-center gap-2" href="#" id="logout-btn">
+                                    <i class="fa-solid fa-right-from-bracket"></i>Đăng xuất
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
             </div>
         </div>
     </nav>
@@ -128,6 +160,7 @@
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="js/ui.js?v=3.0"></script>
     <script src="js/api.js?v=3.0"></script>
@@ -135,9 +168,37 @@
 
     <script>
         const currentUser = API.auth.requireAuth();
-        if (currentUser && API.auth.isTeacher()) {
-            const btn = document.getElementById('history-teacher-btn');
-            if (btn) btn.classList.remove('d-none');
+        if (currentUser) {
+            const usernameEl = document.getElementById('nav-username');
+            const fullnameEl = document.getElementById('nav-fullname');
+            if (usernameEl) usernameEl.textContent = currentUser.username;
+            if (fullnameEl) fullnameEl.textContent = currentUser.fullName || currentUser.username;
+
+            if (API.auth.isTeacher()) {
+                const teacherLink = document.getElementById('nav-teacher-link');
+                if (teacherLink) teacherLink.classList.remove('d-none');
+                const dropdownTeacherItem = document.getElementById('dropdown-teacher-item');
+                if (dropdownTeacherItem) dropdownTeacherItem.classList.remove('d-none');
+            }
+        }
+
+        const logoutBtn = document.getElementById('logout-btn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                Swal.fire({
+                    title: 'Đăng xuất?',
+                    text: 'Bạn có chắc chắn muốn rời khỏi hệ thống?',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Đăng xuất',
+                    cancelButtonText: 'Hủy'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        API.auth.logout();
+                    }
+                });
+            });
         }
 
         async function loadHistory() {

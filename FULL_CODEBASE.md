@@ -1,6 +1,6 @@
 ﻿# TOAN BO MA NGUON DU AN - HE THONG HOC TAP THONG MINH (INTELLIGENT LMS)
 
-> **Thoi gian tao file:** 2026-09-30 19:24:20
+> **Thoi gian tao file:** 2026-09-30 20:11:05
 > **Tong so file:** 58
 > **Muc dich:** Gom toan bo source code thanh 1 file duy nhat de gui cho ben thu ba xem xet, danh gia va gop y.
 
@@ -8503,31 +8503,31 @@ function renderPostCard(p) {
     const isTeacher = (p.authorRole || '').toLowerCase() === 'teacher' || (p.authorRole || '').toLowerCase() === 'admin';
     const avatarClass = isTeacher ? 'author-avatar avatar-teacher' : 'author-avatar avatar-student';
     const roleBadge = isTeacher
-        ? '<span class="badge bg-indigo text-white px-2 py-0 small ms-1" style="background-color: #6366f1; font-size: 0.68rem;"><i class="fa-solid fa-award me-1"></i>Giảng Viên</span>'
-        : '<span class="badge bg-secondary-subtle text-secondary px-2 py-0 small ms-1" style="font-size: 0.68rem;">Sinh Viên</span>';
+        ? '<span class="badge bg-indigo text-white px-2 py-1 small rounded-pill" style="background-color: #6366f1; font-size: 0.7rem;"><i class="fa-solid fa-award me-1"></i>Giảng Viên</span>'
+        : '<span class="badge bg-light text-secondary border px-2 py-1 small rounded-pill" style="font-size: 0.7rem;"><i class="fa-solid fa-user-graduate me-1 text-primary"></i>Sinh Viên</span>';
 
     const initial = (p.authorName || p.authorUsername || 'U').charAt(0).toUpperCase();
     const timeAgo = formatTimeAgo(p.createdAt);
 
     let channelBadge = '';
     if (p.channel === 'qna') {
-        channelBadge = '<span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-2 py-1 small me-1"># hỏi-đáp</span>';
+        channelBadge = '<span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-2.5 py-1 small"><i class="fa-solid fa-circle-question me-1"></i>Hỏi & Đáp</span>';
     } else if (p.channel === 'tips') {
-        channelBadge = '<span class="badge bg-warning-subtle text-dark border border-warning-subtle rounded-pill px-2 py-1 small me-1"># mẹo-né-bẫy</span>';
+        channelBadge = '<span class="badge bg-warning-subtle text-dark border border-warning-subtle rounded-pill px-2.5 py-1 small"><i class="fa-solid fa-lightbulb me-1 text-warning"></i>Mẹo Né Bẫy</span>';
     } else if (p.channel === 'showcase') {
-        channelBadge = '<span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-1 small me-1"># đề-xuất-đề</span>';
+        channelBadge = '<span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2.5 py-1 small"><i class="fa-solid fa-code-compare me-1"></i>Đề Xuất Câu Hỏi</span>';
     } else {
-        channelBadge = '<span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2 py-1 small me-1"># thảo-luận</span>';
+        channelBadge = '<span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2.5 py-1 small"><i class="fa-solid fa-hashtag me-1"></i>Thảo Luận Chung</span>';
     }
 
     const topicBadge = p.topicName
-        ? `<span class="badge bg-light text-muted border rounded-pill px-2 py-1 small"><i class="fa-solid fa-book-bookmark me-1 text-primary"></i>${escapeHtml(p.topicName)}</span>`
+        ? `<span class="badge bg-light text-dark border rounded-pill px-2.5 py-1 small"><i class="fa-solid fa-book-bookmark me-1 text-primary"></i>${escapeHtml(p.topicName)}</span>`
         : '';
 
     // Quyền xóa bài (chính chủ hoặc Giảng viên/Admin)
     const canDelete = currentUser && (currentUser.userId === p.userId || API.auth.isTeacher());
     const deleteBtn = canDelete ? `
-        <button class="btn btn-link btn-sm text-danger p-0 text-decoration-none" title="Xóa bài viết" onclick="handleDeletePost(${p.postId})">
+        <button class="btn btn-outline-danger btn-sm border-0 rounded-circle" style="width: 32px; height: 32px; padding: 0;" title="Xóa bài viết" onclick="handleDeletePost(${p.postId})">
             <i class="fa-regular fa-trash-can"></i>
         </button>
     ` : '';
@@ -8547,31 +8547,37 @@ function renderPostCard(p) {
     }
 
     return `
-        <div class="card post-card p-4 shadow-sm" id="post-card-${p.postId}">
-            <!-- Header bài viết -->
-            <div class="d-flex justify-content-between align-items-start mb-3">
+        <div class="card post-card p-4 shadow-sm mb-3" id="post-card-${p.postId}">
+            <!-- Header bài viết: Tác giả & Hành động -->
+            <div class="d-flex justify-content-between align-items-center mb-2">
                 <div class="d-flex align-items-center gap-3">
                     <div class="${avatarClass}">
                         ${initial}
                     </div>
                     <div>
-                        <div class="d-flex align-items-center flex-wrap">
-                            <span class="fw-bold text-dark me-1">${escapeHtml(p.authorName || p.authorUsername)}</span>
+                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                            <span class="fw-bold text-dark">${escapeHtml(p.authorName || p.authorUsername)}</span>
                             ${roleBadge}
                         </div>
-                        <small class="text-muted" style="font-size: 0.75rem;">@${escapeHtml(p.authorUsername)} &bull; ${timeAgo}</small>
+                        <div class="text-muted" style="font-size: 0.78rem;">
+                            <span>@${escapeHtml(p.authorUsername)}</span>
+                            <span class="mx-1">&bull;</span>
+                            <span>${timeAgo}</span>
+                        </div>
                     </div>
                 </div>
-                <div class="d-flex align-items-center gap-2">
-                    ${channelBadge}
-                    ${topicBadge}
-                    ${deleteBtn}
-                </div>
+                ${deleteBtn ? `<div>${deleteBtn}</div>` : ''}
+            </div>
+
+            <!-- Tags Kênh & Môn học (Gọn gàng ngay dưới phần tác giả, không làm chật chội avatar) -->
+            <div class="d-flex flex-wrap align-items-center gap-2 my-2">
+                ${channelBadge}
+                ${topicBadge}
             </div>
 
             <!-- Tiêu đề & Nội dung bài viết -->
-            <h5 class="fw-bold text-dark mb-2">${escapeHtml(p.title)}</h5>
-            <div class="text-secondary small mb-3 post-body-content" style="line-height: 1.6;">
+            <h5 class="fw-bold text-dark mt-2 mb-2" style="font-size: 1.15rem; line-height: 1.4;">${escapeHtml(p.title)}</h5>
+            <div class="text-secondary post-body-content mb-3" style="font-size: 0.92rem; line-height: 1.65;">
                 ${renderedContent}
             </div>
 
@@ -9002,6 +9008,68 @@ function setupEventListeners() {
 
     // Nút nộp bài
     document.getElementById('btn-submit-quiz').addEventListener('click', () => submitQuiz(false));
+
+    // Nút báo lỗi câu hỏi tới Giảng viên
+    const btnReport = document.getElementById('btn-quiz-report');
+    if (btnReport) {
+        btnReport.addEventListener('click', handleQuizReportQuestion);
+    }
+}
+
+/**
+ * Báo lỗi câu hỏi hiện tại cho Giảng viên kiểm duyệt
+ */
+async function handleQuizReportQuestion() {
+    const q = questions[currentIndex];
+    if (!q) return;
+
+    const { value: formValues } = await Swal.fire({
+        title: '<i class="fa-solid fa-flag text-danger me-2"></i>Báo Lỗi Câu Hỏi',
+        html: `
+            <p class="small text-muted mb-3 text-start">
+                Bạn nhận thấy câu hỏi này có sai sót? Phản hồi của bạn sẽ được gửi trực tiếp tới <strong>Bảng Quản Trị Giảng Viên</strong> để kiểm duyệt và chỉnh sửa.
+            </p>
+            <div class="mb-3 text-start">
+                <label class="form-label small fw-bold">Dạng lỗi phát hiện:</label>
+                <select id="swal-report-type" class="form-select form-select-sm">
+                    <option value="Đáp án chuẩn bị sai / Gây tranh cãi">Đáp án chuẩn bị sai / Gây tranh cãi</option>
+                    <option value="Đề bài tối nghĩa / Lỗi diễn đạt hoặc ngữ pháp">Đề bài tối nghĩa / Lỗi diễn đạt hoặc ngữ pháp</option>
+                    <option value="Ảo giác AI (AI Hallucination) / Code sai logic">Ảo giác AI (AI Hallucination) / Code sai logic</option>
+                    <option value="Khác">Lý do khác</option>
+                </select>
+            </div>
+            <div class="text-start">
+                <label class="form-label small fw-bold">Mô tả cụ thể (tùy chọn):</label>
+                <textarea id="swal-report-detail" class="form-control form-control-sm" rows="3" placeholder="Nhập thêm chi tiết về lỗi nếu có..."></textarea>
+            </div>
+        `,
+        focusConfirm: false,
+        showCancelButton: true,
+        confirmButtonText: 'Gửi báo cáo',
+        cancelButtonText: 'Hủy',
+        confirmButtonColor: '#dc3545',
+        preConfirm: () => {
+            const type = document.getElementById('swal-report-type').value;
+            const detail = document.getElementById('swal-report-detail').value.trim();
+            const reason = detail ? `[${type}] ${detail}` : type;
+            return reason;
+        }
+    });
+
+    if (formValues) {
+        try {
+            await API.discussion.rateQuestion(q.questionId, 'REPORT_ERROR', formValues);
+            Swal.fire({
+                icon: 'success',
+                title: 'Đã gửi báo lỗi!',
+                text: 'Cảm ơn đóng góp của bạn. Báo cáo đã được chuyển tới Giảng viên. Bạn có thể yên tâm tiếp tục làm bài!',
+                timer: 2500,
+                showConfirmButton: false
+            });
+        } catch (err) {
+            Swal.fire('Lỗi', err.message || 'Không thể gửi báo lỗi lúc này.', 'error');
+        }
+    }
 }
 
 /**
@@ -9412,9 +9480,37 @@ document.addEventListener('DOMContentLoaded', () => {
         remediationModal = new bootstrap.Modal(modalEl);
     }
 
-    if (API.auth.isTeacher()) {
-        const btn = document.getElementById('result-teacher-btn');
-        if (btn) btn.classList.remove('d-none');
+    if (currentUser) {
+        const usernameEl = document.getElementById('nav-username');
+        const fullnameEl = document.getElementById('nav-fullname');
+        if (usernameEl) usernameEl.textContent = currentUser.username;
+        if (fullnameEl) fullnameEl.textContent = currentUser.fullName || currentUser.username;
+
+        if (API.auth.isTeacher()) {
+            const teacherLink = document.getElementById('nav-teacher-link');
+            if (teacherLink) teacherLink.classList.remove('d-none');
+            const dropdownTeacherItem = document.getElementById('dropdown-teacher-item');
+            if (dropdownTeacherItem) dropdownTeacherItem.classList.remove('d-none');
+        }
+    }
+
+    const logoutBtn = document.getElementById('logout-btn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            Swal.fire({
+                title: 'Đăng xuất?',
+                text: 'Bạn có chắc chắn muốn rời khỏi hệ thống?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Đăng xuất',
+                cancelButtonText: 'Hủy'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    API.auth.logout();
+                }
+            });
+        });
     }
 
     // 1.3. Guard Route: Kiểm tra xem có sessionId hoặc cache không
@@ -10033,22 +10129,34 @@ async function voteQuestion(questionId, ratingType) {
  */
 async function reportQuestionPrompt(questionId) {
     const { value: reason } = await Swal.fire({
-        title: 'Báo lỗi / Nghi vấn AI Ảo giác',
+        title: '<i class="fa-solid fa-flag text-danger me-2"></i>Báo Lỗi / Phản Biện Câu Hỏi',
         html: `
-            <p class="small text-muted mb-2 text-start">
-                Hãy cho cộng đồng và Giảng viên biết vấn đề cụ thể ở câu hỏi này (ví dụ: sai đáp án chuẩn, nhầm định nghĩa, đề bài mâu thuẫn...):
+            <p class="small text-muted mb-3 text-start">
+                Hãy cho cộng đồng và Giảng viên biết vấn đề cụ thể ở câu hỏi này để hệ thống tiến hành kiểm duyệt:
             </p>
+            <div class="mb-3 text-start">
+                <label class="form-label small fw-bold">Dạng lỗi phát hiện:</label>
+                <select id="swal-res-report-type" class="form-select form-select-sm">
+                    <option value="Đáp án chuẩn bị sai / Gây tranh cãi">Đáp án chuẩn bị sai / Gây tranh cãi</option>
+                    <option value="Đề bài tối nghĩa / Lỗi diễn đạt hoặc ngữ pháp">Đề bài tối nghĩa / Lỗi diễn đạt hoặc ngữ pháp</option>
+                    <option value="Ảo giác AI (AI Hallucination) / Code sai logic">Ảo giác AI (AI Hallucination) / Code sai logic</option>
+                    <option value="Khác">Lý do khác</option>
+                </select>
+            </div>
+            <div class="text-start">
+                <label class="form-label small fw-bold">Mô tả cụ thể (tùy chọn):</label>
+                <textarea id="swal-res-report-detail" class="form-control form-control-sm" rows="3" placeholder="Nhập thêm chi tiết về lỗi nếu có..."></textarea>
+            </div>
         `,
-        input: 'textarea',
-        inputPlaceholder: 'Nhập chi tiết lỗi bạn nhận thấy...',
+        focusConfirm: false,
         showCancelButton: true,
         confirmButtonText: 'Gửi báo lỗi',
         cancelButtonText: 'Hủy',
         confirmButtonColor: '#dc3545',
-        inputValidator: (value) => {
-            if (!value || !value.trim()) {
-                return 'Vui lòng nhập lý do cụ thể!';
-            }
+        preConfirm: () => {
+            const type = document.getElementById('swal-res-report-type').value;
+            const detail = document.getElementById('swal-res-report-detail').value.trim();
+            return detail ? `[${type}] ${detail}` : type;
         }
     });
 
@@ -12383,8 +12491,7 @@ const AppUI = (() => {
                     </li>
                     <li class="nav-item">
                         <a class="nav-link active fw-bold text-primary" href="community.html">
-                            <i class="fa-solid fa-comments me-1 text-info"></i>Diễn Đàn Cộng Đồng
-                            <span class="badge bg-danger rounded-pill ms-1" style="font-size: 0.65rem;">Mới</span>
+                            <i class="fa-solid fa-comments me-1"></i>Diễn Đàn Cộng Đồng
                         </a>
                     </li>
                     <li class="nav-item">
@@ -12507,7 +12614,7 @@ const AppUI = (() => {
                         <div class="flex-grow-1 bg-light rounded-pill py-2 px-3 text-muted small border">
                             <i class="fa-regular fa-pen-to-square me-1"></i>Bạn đang thắc mắc hay muốn chia sẻ điều gì về bài học hôm nay?
                         </div>
-                        <button class="btn btn-primary btn-sm rounded-pill px-3 fw-semibold">
+                        <button class="btn btn-primary btn-sm rounded-pill px-3 fw-semibold text-nowrap flex-shrink-0">
                             <i class="fa-solid fa-plus me-1"></i>Đăng bài
                         </button>
                     </div>
@@ -12702,16 +12809,48 @@ const AppUI = (() => {
                 <i class="fa-solid fa-graduation-cap fa-lg text-primary"></i>
                 <span>LMS Thông Minh</span>
             </a>
-            <div class="d-flex align-items-center gap-2">
-                <a href="index.html" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
-                    <i class="fa-solid fa-house me-1"></i>Trang Chủ
-                </a>
-                <a href="community.html" class="btn btn-outline-info text-dark btn-sm rounded-pill px-3">
-                    <i class="fa-solid fa-comments me-1 text-info"></i>Diễn Đàn Cộng Đồng
-                </a>
-                <a href="teacher-dashboard.html" class="btn btn-outline-primary btn-sm rounded-pill px-3 d-none" id="history-teacher-btn">
-                    <i class="fa-solid fa-chalkboard-user me-1"></i>Trang Giảng Viên
-                </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navContent">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navContent">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-3">
+                    <li class="nav-item">
+                        <a class="nav-link fw-semibold" href="index.html"><i class="fa-solid fa-book-open me-1"></i>Chủ Đề Ôn Tập</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link fw-semibold" href="community.html">
+                            <i class="fa-solid fa-comments me-1 text-info"></i>Diễn Đàn Cộng Đồng
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active fw-bold text-primary" href="history.html"><i class="fa-solid fa-chart-line me-1"></i>Lịch Sử & Tiến Độ</a>
+                    </li>
+                    <li class="nav-item d-none" id="nav-teacher-link">
+                        <a class="nav-link fw-bold text-indigo" href="teacher-dashboard.html" style="color: #6366f1;"><i class="fa-solid fa-chalkboard-user me-1"></i>Trang Giảng Viên</a>
+                    </li>
+                </ul>
+                <div class="d-flex align-items-center gap-3">
+                    <div class="dropdown">
+                        <button class="btn btn-outline-secondary dropdown-toggle d-flex align-items-center gap-2 rounded-pill px-3 py-1" type="button" data-bs-toggle="dropdown">
+                            <i class="fa-solid fa-user-circle fa-lg text-primary"></i>
+                            <span id="nav-username" class="fw-semibold small">Sinh Viên</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3">
+                            <li><h6 class="dropdown-header" id="nav-fullname">Họ và Tên</h6></li>
+                            <li class="d-none" id="dropdown-teacher-item">
+                                <a class="dropdown-item text-primary fw-semibold d-flex align-items-center gap-2" href="teacher-dashboard.html">
+                                    <i class="fa-solid fa-chalkboard-user"></i>Bảng Quản Trị Giảng Viên
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item text-danger d-flex align-items-center gap-2" href="#" id="logout-btn">
+                                    <i class="fa-solid fa-right-from-bracket"></i>Đăng xuất
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
             </div>
         </div>
     </nav>
@@ -12810,6 +12949,7 @@ const AppUI = (() => {
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="js/ui.js?v=3.0"></script>
     <script src="js/api.js?v=3.0"></script>
@@ -12817,9 +12957,37 @@ const AppUI = (() => {
 
     <script>
         const currentUser = API.auth.requireAuth();
-        if (currentUser && API.auth.isTeacher()) {
-            const btn = document.getElementById('history-teacher-btn');
-            if (btn) btn.classList.remove('d-none');
+        if (currentUser) {
+            const usernameEl = document.getElementById('nav-username');
+            const fullnameEl = document.getElementById('nav-fullname');
+            if (usernameEl) usernameEl.textContent = currentUser.username;
+            if (fullnameEl) fullnameEl.textContent = currentUser.fullName || currentUser.username;
+
+            if (API.auth.isTeacher()) {
+                const teacherLink = document.getElementById('nav-teacher-link');
+                if (teacherLink) teacherLink.classList.remove('d-none');
+                const dropdownTeacherItem = document.getElementById('dropdown-teacher-item');
+                if (dropdownTeacherItem) dropdownTeacherItem.classList.remove('d-none');
+            }
+        }
+
+        const logoutBtn = document.getElementById('logout-btn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                Swal.fire({
+                    title: 'Đăng xuất?',
+                    text: 'Bạn có chắc chắn muốn rời khỏi hệ thống?',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Đăng xuất',
+                    cancelButtonText: 'Hủy'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        API.auth.logout();
+                    }
+                });
+            });
         }
 
         async function loadHistory() {
@@ -12935,7 +13103,6 @@ const AppUI = (() => {
                     <li class="nav-item">
                         <a class="nav-link fw-semibold" href="community.html">
                             <i class="fa-solid fa-comments me-1 text-info"></i>Diễn Đàn Cộng Đồng
-                            <span class="badge bg-danger rounded-pill ms-1" style="font-size: 0.65rem;">Mới</span>
                         </a>
                     </li>
                     <li class="nav-item">
@@ -13199,8 +13366,13 @@ const AppUI = (() => {
                 <!-- Active Question Card -->
                 <div id="quiz-question-card" class="card border-0 shadow-sm rounded-4 p-4 bg-white" style="display: none;">
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <span class="badge bg-primary text-white px-3 py-1 rounded-pill" id="question-index-badge">Câu 1</span>
-                        <span class="badge bg-light text-muted border" id="question-difficulty-badge">Mức độ: Dễ</span>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-primary text-white px-3 py-1 rounded-pill" id="question-index-badge">Câu 1</span>
+                            <span class="badge bg-light text-muted border" id="question-difficulty-badge">Mức độ: Dễ</span>
+                        </div>
+                        <button class="btn btn-outline-danger btn-sm border-0 rounded-pill px-2 py-1 small" id="btn-quiz-report" type="button" title="Báo lỗi câu hỏi này cho Giảng viên / Đội ngũ kiểm duyệt">
+                            <i class="fa-solid fa-flag me-1"></i><span class="d-none d-sm-inline">Báo lỗi câu này</span>
+                        </button>
                     </div>
 
                     <!-- Nội dung câu hỏi -->
@@ -13333,22 +13505,54 @@ const AppUI = (() => {
 <body class="bg-light">
 
     <!-- ── Navbar ── -->
-    <nav class="navbar navbar-custom sticky-top">
-        <div class="container d-flex justify-content-between align-items-center">
+    <nav class="navbar navbar-expand-lg navbar-custom sticky-top">
+        <div class="container">
             <a class="navbar-brand d-flex align-items-center gap-2" href="index.html">
                 <i class="fa-solid fa-graduation-cap fa-lg text-primary"></i>
                 <span>LMS Thông Minh</span>
             </a>
-            <div class="d-flex gap-2">
-                <a href="index.html" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
-                    <i class="fa-solid fa-house me-1"></i>Về Trang Chủ
-                </a>
-                <a href="history.html" class="btn btn-primary btn-sm rounded-pill px-3">
-                    <i class="fa-solid fa-clock-rotate-left me-1"></i>Lịch Sử Làm Bài
-                </a>
-                <a href="teacher-dashboard.html" class="btn btn-outline-primary btn-sm rounded-pill px-3 d-none" id="result-teacher-btn">
-                    <i class="fa-solid fa-chalkboard-user me-1"></i>Trang Giảng Viên
-                </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navContent">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navContent">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-3">
+                    <li class="nav-item">
+                        <a class="nav-link fw-semibold" href="index.html"><i class="fa-solid fa-book-open me-1"></i>Chủ Đề Ôn Tập</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link fw-semibold" href="community.html">
+                            <i class="fa-solid fa-comments me-1"></i>Diễn Đàn Cộng Đồng
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link fw-semibold" href="history.html"><i class="fa-solid fa-chart-line me-1"></i>Lịch Sử & Tiến Độ</a>
+                    </li>
+                    <li class="nav-item d-none" id="nav-teacher-link">
+                        <a class="nav-link fw-bold text-indigo" href="teacher-dashboard.html" style="color: #6366f1;"><i class="fa-solid fa-chalkboard-user me-1"></i>Trang Giảng Viên</a>
+                    </li>
+                </ul>
+                <div class="d-flex align-items-center gap-3">
+                    <div class="dropdown">
+                        <button class="btn btn-outline-secondary dropdown-toggle d-flex align-items-center gap-2 rounded-pill px-3 py-1" type="button" data-bs-toggle="dropdown">
+                            <i class="fa-solid fa-user-circle fa-lg text-primary"></i>
+                            <span id="nav-username" class="fw-semibold small">Sinh Viên</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3">
+                            <li><h6 class="dropdown-header" id="nav-fullname">Họ và Tên</h6></li>
+                            <li class="d-none" id="dropdown-teacher-item">
+                                <a class="dropdown-item text-primary fw-semibold d-flex align-items-center gap-2" href="teacher-dashboard.html">
+                                    <i class="fa-solid fa-chalkboard-user"></i>Bảng Quản Trị Giảng Viên
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item text-danger d-flex align-items-center gap-2" href="#" id="logout-btn">
+                                    <i class="fa-solid fa-right-from-bracket"></i>Đăng xuất
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
             </div>
         </div>
     </nav>

@@ -64,8 +64,13 @@
                 <!-- Active Question Card -->
                 <div id="quiz-question-card" class="card border-0 shadow-sm rounded-4 p-4 bg-white" style="display: none;">
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <span class="badge bg-primary text-white px-3 py-1 rounded-pill" id="question-index-badge">Câu 1</span>
-                        <span class="badge bg-light text-muted border" id="question-difficulty-badge">Mức độ: Dễ</span>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-primary text-white px-3 py-1 rounded-pill" id="question-index-badge">Câu 1</span>
+                            <span class="badge bg-light text-muted border" id="question-difficulty-badge">Mức độ: Dễ</span>
+                        </div>
+                        <button class="btn btn-outline-danger btn-sm border-0 rounded-pill px-2 py-1 small" id="btn-quiz-report" type="button" title="Báo lỗi câu hỏi này cho Giảng viên / Đội ngũ kiểm duyệt">
+                            <i class="fa-solid fa-flag me-1"></i><span class="d-none d-sm-inline">Báo lỗi câu này</span>
+                        </button>
                     </div>
 
                     <!-- Nội dung câu hỏi -->

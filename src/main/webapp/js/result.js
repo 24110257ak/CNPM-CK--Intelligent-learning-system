@@ -26,9 +26,37 @@ document.addEventListener('DOMContentLoaded', () => {
         remediationModal = new bootstrap.Modal(modalEl);
     }
 
-    if (API.auth.isTeacher()) {
-        const btn = document.getElementById('result-teacher-btn');
-        if (btn) btn.classList.remove('d-none');
+    if (currentUser) {
+        const usernameEl = document.getElementById('nav-username');
+        const fullnameEl = document.getElementById('nav-fullname');
+        if (usernameEl) usernameEl.textContent = currentUser.username;
+        if (fullnameEl) fullnameEl.textContent = currentUser.fullName || currentUser.username;
+
+        if (API.auth.isTeacher()) {
+            const teacherLink = document.getElementById('nav-teacher-link');
+            if (teacherLink) teacherLink.classList.remove('d-none');
+            const dropdownTeacherItem = document.getElementById('dropdown-teacher-item');
+            if (dropdownTeacherItem) dropdownTeacherItem.classList.remove('d-none');
+        }
+    }
+
+    const logoutBtn = document.getElementById('logout-btn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            Swal.fire({
+                title: 'Đăng xuất?',
+                text: 'Bạn có chắc chắn muốn rời khỏi hệ thống?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Đăng xuất',
+                cancelButtonText: 'Hủy'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    API.auth.logout();
+                }
+            });
+        });
     }
 
     // 1.3. Guard Route: Kiểm tra xem có sessionId hoặc cache không
@@ -647,22 +675,34 @@ async function voteQuestion(questionId, ratingType) {
  */
 async function reportQuestionPrompt(questionId) {
     const { value: reason } = await Swal.fire({
-        title: 'Báo lỗi / Nghi vấn AI Ảo giác',
+        title: '<i class="fa-solid fa-flag text-danger me-2"></i>Báo Lỗi / Phản Biện Câu Hỏi',
         html: `
-            <p class="small text-muted mb-2 text-start">
-                Hãy cho cộng đồng và Giảng viên biết vấn đề cụ thể ở câu hỏi này (ví dụ: sai đáp án chuẩn, nhầm định nghĩa, đề bài mâu thuẫn...):
+            <p class="small text-muted mb-3 text-start">
+                Hãy cho cộng đồng và Giảng viên biết vấn đề cụ thể ở câu hỏi này để hệ thống tiến hành kiểm duyệt:
             </p>
+            <div class="mb-3 text-start">
+                <label class="form-label small fw-bold">Dạng lỗi phát hiện:</label>
+                <select id="swal-res-report-type" class="form-select form-select-sm">
+                    <option value="Đáp án chuẩn bị sai / Gây tranh cãi">Đáp án chuẩn bị sai / Gây tranh cãi</option>
+                    <option value="Đề bài tối nghĩa / Lỗi diễn đạt hoặc ngữ pháp">Đề bài tối nghĩa / Lỗi diễn đạt hoặc ngữ pháp</option>
+                    <option value="Ảo giác AI (AI Hallucination) / Code sai logic">Ảo giác AI (AI Hallucination) / Code sai logic</option>
+                    <option value="Khác">Lý do khác</option>
+                </select>
+            </div>
+            <div class="text-start">
+                <label class="form-label small fw-bold">Mô tả cụ thể (tùy chọn):</label>
+                <textarea id="swal-res-report-detail" class="form-control form-control-sm" rows="3" placeholder="Nhập thêm chi tiết về lỗi nếu có..."></textarea>
+            </div>
         `,
-        input: 'textarea',
-        inputPlaceholder: 'Nhập chi tiết lỗi bạn nhận thấy...',
+        focusConfirm: false,
         showCancelButton: true,
         confirmButtonText: 'Gửi báo lỗi',
         cancelButtonText: 'Hủy',
         confirmButtonColor: '#dc3545',
-        inputValidator: (value) => {
-            if (!value || !value.trim()) {
-                return 'Vui lòng nhập lý do cụ thể!';
-            }
+        preConfirm: () => {
+            const type = document.getElementById('swal-res-report-type').value;
+            const detail = document.getElementById('swal-res-report-detail').value.trim();
+            return detail ? `[${type}] ${detail}` : type;
         }
     });
 

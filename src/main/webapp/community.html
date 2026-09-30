@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diễn Đàn & Cộng Đồng Học Tập — LMS Thông Minh</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- SweetAlert2 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/app.css">
+    <style>
+        /* Discord / Facebook Inspired Community Styling */
+        .channel-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 0.65rem 0.9rem;
+            border-radius: 10px;
+            color: #475569;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.15s ease;
+            margin-bottom: 0.3rem;
+            border: 1px solid transparent;
+        }
+        .channel-btn:hover {
+            background-color: #f1f5f9;
+            color: #0f172a;
+            transform: translateX(2px);
+        }
+        .channel-btn.active {
+            background: linear-gradient(135deg, #4361ee 0%, #3a56d4 100%);
+            color: #ffffff !important;
+            box-shadow: 0 4px 12px rgba(67, 97, 238, 0.25);
+        }
+        .channel-btn.active i {
+            color: #ffffff !important;
+        }
+
+        .post-card {
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            background: #ffffff;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .post-card:hover {
+            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+            border-color: #cbd5e1;
+        }
+
+        .post-action-btn {
+            background: transparent;
+            border: none;
+            padding: 0.45rem 0.9rem;
+            border-radius: 8px;
+            color: #64748b;
+            font-weight: 600;
+            font-size: 0.88rem;
+            transition: all 0.15s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        .post-action-btn:hover {
+            background-color: #f1f5f9;
+            color: #0f172a;
+        }
+        .post-action-btn.liked {
+            color: #e11d48 !important;
+            background-color: rgba(225, 29, 72, 0.08);
+        }
+        .post-action-btn.liked i {
+            color: #e11d48 !important;
+        }
+
+        .comment-bubble {
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 0.75rem 1rem;
+        }
+
+        .author-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.1rem;
+            flex-shrink: 0;
+        }
+        .avatar-student {
+            background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+            color: #ffffff;
+        }
+        .avatar-teacher {
+            background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
+            color: #ffffff;
+        }
+
+        .composer-trigger {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 1.1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .composer-trigger:hover {
+            border-color: #6366f1;
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.08);
+        }
+    </style>
+</head>
+<body class="bg-light">
+
+    <!-- ── Navbar ── -->
+    <nav class="navbar navbar-expand-lg navbar-custom sticky-top">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center gap-2" href="index.html">
+                <i class="fa-solid fa-graduation-cap fa-lg text-primary"></i>
+                <span>LMS Thông Minh</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navContent">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navContent">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-3">
+                    <li class="nav-item">
+                        <a class="nav-link fw-semibold" href="index.html"><i class="fa-solid fa-book-open me-1"></i>Chủ Đề Ôn Tập</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active fw-bold text-primary" href="community.html">
+                            <i class="fa-solid fa-comments me-1 text-info"></i>Diễn Đàn Cộng Đồng
+                            <span class="badge bg-danger rounded-pill ms-1" style="font-size: 0.65rem;">Mới</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link fw-semibold" href="history.html"><i class="fa-solid fa-chart-line me-1"></i>Lịch Sử & Tiến Độ</a>
+                    </li>
+                    <li class="nav-item d-none" id="nav-teacher-link">
+                        <a class="nav-link fw-bold text-indigo" href="teacher-dashboard.html" style="color: #6366f1;"><i class="fa-solid fa-chalkboard-user me-1"></i>Trang Giảng Viên</a>
+                    </li>
+                </ul>
+                <div class="d-flex align-items-center gap-3">
+                    <div class="dropdown">
+                        <button class="btn btn-outline-secondary dropdown-toggle d-flex align-items-center gap-2 rounded-pill px-3 py-1" type="button" data-bs-toggle="dropdown">
+                            <i class="fa-solid fa-user-circle fa-lg text-primary"></i>
+                            <span id="nav-username" class="fw-semibold small">Sinh Viên</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3">
+                            <li><h6 class="dropdown-header" id="nav-fullname">Họ và Tên</h6></li>
+                            <li class="d-none" id="dropdown-teacher-item">
+                                <a class="dropdown-item text-primary fw-semibold d-flex align-items-center gap-2" href="teacher-dashboard.html">
+                                    <i class="fa-solid fa-chalkboard-user"></i>Bảng Quản Trị Giảng Viên
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item text-danger d-flex align-items-center gap-2" href="#" id="logout-btn">
+                                    <i class="fa-solid fa-right-from-bracket"></i>Đăng xuất
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ── Main Community Layout (Discord / Facebook Style 3-Column Layout) ── -->
+    <main class="container my-4 flex-grow-1">
+        <div class="row g-4">
+
+            <!-- ── Cột Trái: Kênh Thảo Luận (Discord Channels Sidebar) ── -->
+            <div class="col-lg-3">
+                <div class="card border-0 shadow-sm rounded-4 p-3 bg-white sticky-top" style="top: 80px; z-index: 10;">
+                    <!-- Community Server Header -->
+                    <div class="d-flex align-items-center gap-2 mb-3 pb-2 border-bottom">
+                        <div class="rounded-3 bg-primary text-white p-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                            <i class="fa-solid fa-fire fa-lg"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold mb-0 text-dark">LMS Study Lounge</h6>
+                            <small class="text-muted" style="font-size: 0.75rem;">Không gian trao đổi đa ngành</small>
+                        </div>
+                    </div>
+
+                    <!-- Kênh Phân Loại (Discord Channels) -->
+                    <div class="text-uppercase text-muted fw-bold small px-2 mb-2" style="font-size: 0.72rem; letter-spacing: 0.5px;">
+                        Kênh Thảo Luận
+                    </div>
+                    <nav class="nav flex-column mb-3">
+                        <a href="#" class="channel-btn active" data-channel="all">
+                            <i class="fa-solid fa-globe text-primary"></i>
+                            <span># tất-cả-bài-viết</span>
+                        </a>
+                        <a href="#" class="channel-btn" data-channel="general">
+                            <i class="fa-solid fa-comments text-info"></i>
+                            <span># thảo-luận-chung</span>
+                        </a>
+                        <a href="#" class="channel-btn" data-channel="qna">
+                            <i class="fa-solid fa-circle-question text-danger"></i>
+                            <span># hỏi-đáp-bài-tập</span>
+                        </a>
+                        <a href="#" class="channel-btn" data-channel="tips">
+                            <i class="fa-solid fa-lightbulb text-warning"></i>
+                            <span># mẹo-né-bẫy-tư-duy</span>
+                        </a>
+                        <a href="#" class="channel-btn" data-channel="showcase">
+                            <i class="fa-solid fa-star text-success"></i>
+                            <span># đề-xuất-đề-hay</span>
+                        </a>
+                    </nav>
+
+                    <!-- Lọc theo môn học -->
+                    <div class="text-uppercase text-muted fw-bold small px-2 mb-2 pt-2 border-top" style="font-size: 0.72rem; letter-spacing: 0.5px;">
+                        Lọc Theo Môn Học
+                    </div>
+                    <select class="form-select form-select-sm rounded-3 py-2 mb-3" id="filter-topic-select">
+                        <option value="">-- Mọi môn học & đề thi --</option>
+                        <!-- Injected dynamically -->
+                    </select>
+
+                    <!-- Chỉ số cộng đồng (Live Community Stats) -->
+                    <div class="p-3 bg-light rounded-3 border">
+                        <div class="fw-bold small text-dark mb-2 d-flex align-items-center gap-1">
+                            <i class="fa-solid fa-chart-simple text-primary"></i>Hoạt Động Cộng Đồng
+                        </div>
+                        <div class="d-flex justify-content-between small text-muted mb-1">
+                            <span>Bài thảo luận:</span>
+                            <span class="fw-bold text-dark" id="stat-posts-count">--</span>
+                        </div>
+                        <div class="d-flex justify-content-between small text-muted mb-1">
+                            <span>Lượt bình luận:</span>
+                            <span class="fw-bold text-dark" id="stat-comments-count">--</span>
+                        </div>
+                        <div class="d-flex justify-content-between small text-muted">
+                            <span>Người tham gia:</span>
+                            <span class="fw-bold text-success" id="stat-creators-count">--</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Cột Giữa: Bảng Tin Thảo Luận (Community Feed) ── -->
+            <div class="col-lg-6">
+
+                <!-- Hộp Đăng Bài Mới (Facebook Style Composer Box) -->
+                <div class="composer-trigger mb-4 shadow-sm" id="btn-open-create-post">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="author-avatar avatar-student" id="user-composer-avatar">
+                            U
+                        </div>
+                        <div class="flex-grow-1 bg-light rounded-pill py-2 px-3 text-muted small border">
+                            <i class="fa-regular fa-pen-to-square me-1"></i>Bạn đang thắc mắc hay muốn chia sẻ điều gì về bài học hôm nay?
+                        </div>
+                        <button class="btn btn-primary btn-sm rounded-pill px-3 fw-semibold">
+                            <i class="fa-solid fa-plus me-1"></i>Đăng bài
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Tiêu đề Kênh hiện tại & Bộ tìm kiếm -->
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+                    <div>
+                        <h5 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2" id="current-channel-title">
+                            <i class="fa-solid fa-hashtag text-primary"></i>Tất Cả Bài Viết
+                        </h5>
+                        <small class="text-muted" id="current-channel-desc">Dòng thời gian các câu hỏi, mẹo học tập và bài thảo luận mới nhất</small>
+                    </div>
+                    <button class="btn btn-outline-secondary btn-sm rounded-pill px-3" id="btn-refresh-feed">
+                        <i class="fa-solid fa-rotate-right me-1"></i>Làm mới
+                    </button>
+                </div>
+
+                <!-- Loading Spinner -->
+                <div id="posts-loading" class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="text-muted mt-2 small">Đang tải các cuộc thảo luận...</p>
+                </div>
+
+                <!-- Empty State -->
+                <div id="posts-empty" class="card border-0 shadow-sm rounded-4 p-5 text-center bg-white" style="display: none;">
+                    <i class="fa-solid fa-comment-dots text-muted fs-1 mb-3 opacity-50"></i>
+                    <h6 class="fw-bold text-dark">Chưa có bài thảo luận nào trong kênh này</h6>
+                    <p class="text-muted small mb-3">Hãy là người đầu tiên đặt câu hỏi hoặc chia sẻ góc nhìn của bạn nhé!</p>
+                    <div>
+                        <button class="btn btn-primary rounded-pill px-4 fw-semibold" onclick="document.getElementById('btn-open-create-post').click()">
+                            <i class="fa-solid fa-pen me-1"></i>Tạo Bài Thảo Luận Đầu Tiên
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Danh Sách Bài Viết (Feed Posts List) -->
+                <div id="posts-container" class="d-flex flex-column gap-3">
+                    <!-- Posts will be injected dynamically -->
+                </div>
+
+            </div>
+
+            <!-- ── Cột Phải: Góc Chuyên Gia & Xu Hướng (Widgets & Guidelines) ── -->
+            <div class="col-lg-3">
+                
+                <!-- Card 1: Không Gian Kết Nối Bình Đẳng -->
+                <div class="card border-0 shadow-sm rounded-4 p-3 bg-white mb-4">
+                    <h6 class="fw-bold text-dark mb-2 d-flex align-items-center gap-2">
+                        <i class="fa-solid fa-handshake-angle text-indigo" style="color: #6366f1;"></i>Kết Nối Giảng Viên & Sinh Viên
+                    </h6>
+                    <p class="text-muted small mb-3" style="line-height: 1.5;">
+                        Đây là không gian mở nơi người học và các chuyên gia học thuật cùng trao đổi, giải đáp các thắc mắc về bẫy tư duy, câu hỏi mơ hồ và phương pháp học tập hiệu quả.
+                    </p>
+                    <div class="d-flex gap-2 flex-wrap">
+                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2 py-1 small">
+                            <i class="fa-solid fa-user-graduate me-1"></i>Hỏi Bài Tự Do
+                        </span>
+                        <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-1 small">
+                            <i class="fa-solid fa-check-double me-1"></i>Bình Luận Đa Chiều
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Card 2: Quy Tắc Thảo Luận Văn Minh -->
+                <div class="card border-0 shadow-sm rounded-4 p-3 bg-white mb-4">
+                    <h6 class="fw-bold text-dark mb-2 d-flex align-items-center gap-2">
+                        <i class="fa-solid fa-scale-balanced text-warning"></i>Văn Hóa Cộng Đồng
+                    </h6>
+                    <ul class="text-secondary small ps-3 mb-0" style="line-height: 1.6;">
+                        <li>Tôn trọng góc nhìn đa chiều của bạn học.</li>
+                        <li>Khuyến khích trích dẫn dẫn chứng học thuật và code mẫu.</li>
+                        <li>Nếu phát hiện câu hỏi thi có lỗi, hãy dùng chức năng <strong>Báo Lỗi</strong> để giảng viên hoàn thiện.</li>
+                    </ul>
+                </div>
+
+                <!-- Card 3: Khám Phá Đề Thi Nổi Bật -->
+                <div class="card border-0 shadow-sm rounded-4 p-3 text-white" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <i class="fa-solid fa-wand-magic-sparkles text-warning"></i>
+                        <h6 class="fw-bold mb-0">Thử Thách Vượt Bẫy AI</h6>
+                    </div>
+                    <p class="text-light opacity-75 small mb-3">
+                        Thử sức với bộ câu hỏi do cộng đồng và AI biên soạn để kiểm tra mức độ vững vàng tư duy của bạn!
+                    </p>
+                    <a href="index.html" class="btn btn-warning text-dark btn-sm rounded-pill fw-bold w-100 py-2">
+                        <i class="fa-solid fa-play me-1"></i>Vào Danh Mục Đề Thi
+                    </a>
+                </div>
+
+            </div>
+
+        </div>
+    </main>
+
+    <!-- ── Modal Tạo Bài Viết Mới (Create Post Modal) ── -->
+    <div class="modal fade" id="createPostModal" tabindex="-1" aria-labelledby="createPostModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header border-0 py-3 bg-white border-bottom">
+                    <h5 class="modal-title fw-bold text-dark" id="createPostModalLabel">
+                        <i class="fa-solid fa-feather-pointed text-primary me-2"></i>Tạo Bài Thảo Luận Mới
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form id="create-post-form">
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label for="post-channel-select" class="form-label fw-bold small text-dark">Kênh thảo luận <span class="text-danger">*</span></label>
+                                <select class="form-select rounded-3 py-2" id="post-channel-select" required>
+                                    <option value="general"># thảo-luận-chung</option>
+                                    <option value="qna"># hỏi-đáp-bài-tập</option>
+                                    <option value="tips"># mẹo-né-bẫy-tư-duy</option>
+                                    <option value="showcase"># đề-xuất-đề-hay</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="post-topic-select" class="form-label fw-bold small text-dark">Môn học liên quan (Tùy chọn)</label>
+                                <select class="form-select rounded-3 py-2" id="post-topic-select">
+                                    <option value="">-- Thảo luận tự do / Không chọn môn --</option>
+                                    <!-- Injected dynamically -->
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="post-title-input" class="form-label fw-bold small text-dark">Tiêu đề bài viết <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control rounded-3 py-2" id="post-title-input" placeholder="Tóm tắt ngắn gọn câu hỏi hoặc chủ đề bạn muốn bàn luận..." required maxlength="255">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="post-content-input" class="form-label fw-bold small text-dark d-flex justify-content-between">
+                                <span>Nội dung chi tiết <span class="text-danger">*</span></span>
+                                <span class="text-muted fw-normal small">Hỗ trợ Markdown & Code blocks</span>
+                            </label>
+                            <textarea class="form-control rounded-3" id="post-content-input" rows="5" placeholder="Mô tả cụ thể thắc mắc, đoạn code gây lỗi, hoặc kinh nghiệm bạn muốn chia sẻ với mọi người..." required></textarea>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2 pt-2">
+                            <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Hủy</button>
+                            <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" id="btn-submit-post">
+                                <i class="fa-solid fa-paper-plane me-1"></i>Đăng Bài Lên Diễn Đàn
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="js/ui.js?v=3.1"></script>
+    <script src="js/api.js?v=3.1"></script>
+    <script src="js/chat-widget.js?v=3.1"></script>
+    <script src="js/community.js?v=3.1"></script>
+</body>
+</html>

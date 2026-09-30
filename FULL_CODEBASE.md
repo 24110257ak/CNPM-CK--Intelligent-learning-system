@@ -1,7 +1,7 @@
 ﻿# TOAN BO MA NGUON DU AN - HE THONG HOC TAP THONG MINH (INTELLIGENT LMS)
 
-> **Thoi gian tao file:** 2026-09-30 18:08:40
-> **Tong so file:** 52
+> **Thoi gian tao file:** 2026-09-30 19:24:20
+> **Tong so file:** 58
 > **Muc dich:** Gom toan bo source code thanh 1 file duy nhat de gui cho ben thu ba xem xet, danh gia va gop y.
 
 ---
@@ -16,50 +16,56 @@
 6. [PROJECT_STATE.md](#project-state-md)
 7. [src\main\resources\db\schema.sql](#src-main-resources-db-schema-sql)
 8. [src\main\java\com\lms\model\ChatMessage.java](#src-main-java-com-lms-model-chatmessage-java)
-9. [src\main\java\com\lms\model\Question.java](#src-main-java-com-lms-model-question-java)
-10. [src\main\java\com\lms\model\QuestionComment.java](#src-main-java-com-lms-model-questioncomment-java)
-11. [src\main\java\com\lms\model\QuestionRating.java](#src-main-java-com-lms-model-questionrating-java)
-12. [src\main\java\com\lms\model\QuizSession.java](#src-main-java-com-lms-model-quizsession-java)
-13. [src\main\java\com\lms\model\RemedialLesson.java](#src-main-java-com-lms-model-remediallesson-java)
-14. [src\main\java\com\lms\model\Topic.java](#src-main-java-com-lms-model-topic-java)
-15. [src\main\java\com\lms\model\User.java](#src-main-java-com-lms-model-user-java)
-16. [src\main\java\com\lms\model\UserAnswer.java](#src-main-java-com-lms-model-useranswer-java)
-17. [src\main\java\com\lms\util\ConfigLoader.java](#src-main-java-com-lms-util-configloader-java)
-18. [src\main\java\com\lms\util\JsonHelper.java](#src-main-java-com-lms-util-jsonhelper-java)
-19. [src\main\java\com\lms\dao\ChatDAO.java](#src-main-java-com-lms-dao-chatdao-java)
-20. [src\main\java\com\lms\dao\DatabaseUtil.java](#src-main-java-com-lms-dao-databaseutil-java)
-21. [src\main\java\com\lms\dao\DiscussionDAO.java](#src-main-java-com-lms-dao-discussiondao-java)
-22. [src\main\java\com\lms\dao\QuestionDAO.java](#src-main-java-com-lms-dao-questiondao-java)
-23. [src\main\java\com\lms\dao\QuizDAO.java](#src-main-java-com-lms-dao-quizdao-java)
-24. [src\main\java\com\lms\dao\TopicDAO.java](#src-main-java-com-lms-dao-topicdao-java)
-25. [src\main\java\com\lms\dao\UserDAO.java](#src-main-java-com-lms-dao-userdao-java)
-26. [src\main\java\com\lms\service\AIService.java](#src-main-java-com-lms-service-aiservice-java)
-27. [src\main\java\com\lms\service\FallbackService.java](#src-main-java-com-lms-service-fallbackservice-java)
-28. [src\main\java\com\lms\service\PromptBuilder.java](#src-main-java-com-lms-service-promptbuilder-java)
-29. [src\main\java\com\lms\service\QuizService.java](#src-main-java-com-lms-service-quizservice-java)
-30. [src\main\java\com\lms\service\UserService.java](#src-main-java-com-lms-service-userservice-java)
-31. [src\main\java\com\lms\filter\AuthFilter.java](#src-main-java-com-lms-filter-authfilter-java)
-32. [src\main\java\com\lms\filter\CorsFilter.java](#src-main-java-com-lms-filter-corsfilter-java)
-33. [src\main\java\com\lms\servlet\AuthServlet.java](#src-main-java-com-lms-servlet-authservlet-java)
-34. [src\main\java\com\lms\servlet\ChatServlet.java](#src-main-java-com-lms-servlet-chatservlet-java)
-35. [src\main\java\com\lms\servlet\DiscussionServlet.java](#src-main-java-com-lms-servlet-discussionservlet-java)
-36. [src\main\java\com\lms\servlet\QuestionServlet.java](#src-main-java-com-lms-servlet-questionservlet-java)
-37. [src\main\java\com\lms\servlet\QuizServlet.java](#src-main-java-com-lms-servlet-quizservlet-java)
-38. [src\main\java\com\lms\servlet\TeacherServlet.java](#src-main-java-com-lms-servlet-teacherservlet-java)
-39. [src\main\java\com\lms\servlet\TopicServlet.java](#src-main-java-com-lms-servlet-topicservlet-java)
-40. [src\main\webapp\css\app.css](#src-main-webapp-css-app-css)
-41. [src\main\webapp\js\api.js](#src-main-webapp-js-api-js)
-42. [src\main\webapp\js\chat-widget.js](#src-main-webapp-js-chat-widget-js)
-43. [src\main\webapp\js\quiz.js](#src-main-webapp-js-quiz-js)
-44. [src\main\webapp\js\result.js](#src-main-webapp-js-result-js)
-45. [src\main\webapp\js\teacher.js](#src-main-webapp-js-teacher-js)
-46. [src\main\webapp\js\ui.js](#src-main-webapp-js-ui-js)
-47. [src\main\webapp\auth.html](#src-main-webapp-auth-html)
-48. [src\main\webapp\history.html](#src-main-webapp-history-html)
-49. [src\main\webapp\index.html](#src-main-webapp-index-html)
-50. [src\main\webapp\quiz.html](#src-main-webapp-quiz-html)
-51. [src\main\webapp\result.html](#src-main-webapp-result-html)
-52. [src\main\webapp\teacher-dashboard.html](#src-main-webapp-teacher-dashboard-html)
+9. [src\main\java\com\lms\model\CommunityComment.java](#src-main-java-com-lms-model-communitycomment-java)
+10. [src\main\java\com\lms\model\CommunityPost.java](#src-main-java-com-lms-model-communitypost-java)
+11. [src\main\java\com\lms\model\Question.java](#src-main-java-com-lms-model-question-java)
+12. [src\main\java\com\lms\model\QuestionComment.java](#src-main-java-com-lms-model-questioncomment-java)
+13. [src\main\java\com\lms\model\QuestionRating.java](#src-main-java-com-lms-model-questionrating-java)
+14. [src\main\java\com\lms\model\QuizSession.java](#src-main-java-com-lms-model-quizsession-java)
+15. [src\main\java\com\lms\model\RemedialLesson.java](#src-main-java-com-lms-model-remediallesson-java)
+16. [src\main\java\com\lms\model\Topic.java](#src-main-java-com-lms-model-topic-java)
+17. [src\main\java\com\lms\model\User.java](#src-main-java-com-lms-model-user-java)
+18. [src\main\java\com\lms\model\UserAnswer.java](#src-main-java-com-lms-model-useranswer-java)
+19. [src\main\java\com\lms\util\ConfigLoader.java](#src-main-java-com-lms-util-configloader-java)
+20. [src\main\java\com\lms\util\JsonHelper.java](#src-main-java-com-lms-util-jsonhelper-java)
+21. [src\main\java\com\lms\dao\ChatDAO.java](#src-main-java-com-lms-dao-chatdao-java)
+22. [src\main\java\com\lms\dao\CommunityDAO.java](#src-main-java-com-lms-dao-communitydao-java)
+23. [src\main\java\com\lms\dao\DatabaseUtil.java](#src-main-java-com-lms-dao-databaseutil-java)
+24. [src\main\java\com\lms\dao\DiscussionDAO.java](#src-main-java-com-lms-dao-discussiondao-java)
+25. [src\main\java\com\lms\dao\QuestionDAO.java](#src-main-java-com-lms-dao-questiondao-java)
+26. [src\main\java\com\lms\dao\QuizDAO.java](#src-main-java-com-lms-dao-quizdao-java)
+27. [src\main\java\com\lms\dao\TopicDAO.java](#src-main-java-com-lms-dao-topicdao-java)
+28. [src\main\java\com\lms\dao\UserDAO.java](#src-main-java-com-lms-dao-userdao-java)
+29. [src\main\java\com\lms\service\AIService.java](#src-main-java-com-lms-service-aiservice-java)
+30. [src\main\java\com\lms\service\FallbackService.java](#src-main-java-com-lms-service-fallbackservice-java)
+31. [src\main\java\com\lms\service\PromptBuilder.java](#src-main-java-com-lms-service-promptbuilder-java)
+32. [src\main\java\com\lms\service\QuizService.java](#src-main-java-com-lms-service-quizservice-java)
+33. [src\main\java\com\lms\service\UserService.java](#src-main-java-com-lms-service-userservice-java)
+34. [src\main\java\com\lms\filter\AuthFilter.java](#src-main-java-com-lms-filter-authfilter-java)
+35. [src\main\java\com\lms\filter\CorsFilter.java](#src-main-java-com-lms-filter-corsfilter-java)
+36. [src\main\java\com\lms\servlet\AuthServlet.java](#src-main-java-com-lms-servlet-authservlet-java)
+37. [src\main\java\com\lms\servlet\ChatServlet.java](#src-main-java-com-lms-servlet-chatservlet-java)
+38. [src\main\java\com\lms\servlet\CommunityServlet.java](#src-main-java-com-lms-servlet-communityservlet-java)
+39. [src\main\java\com\lms\servlet\DiscussionServlet.java](#src-main-java-com-lms-servlet-discussionservlet-java)
+40. [src\main\java\com\lms\servlet\QuestionServlet.java](#src-main-java-com-lms-servlet-questionservlet-java)
+41. [src\main\java\com\lms\servlet\QuizServlet.java](#src-main-java-com-lms-servlet-quizservlet-java)
+42. [src\main\java\com\lms\servlet\TeacherServlet.java](#src-main-java-com-lms-servlet-teacherservlet-java)
+43. [src\main\java\com\lms\servlet\TopicServlet.java](#src-main-java-com-lms-servlet-topicservlet-java)
+44. [src\main\webapp\css\app.css](#src-main-webapp-css-app-css)
+45. [src\main\webapp\js\api.js](#src-main-webapp-js-api-js)
+46. [src\main\webapp\js\chat-widget.js](#src-main-webapp-js-chat-widget-js)
+47. [src\main\webapp\js\community.js](#src-main-webapp-js-community-js)
+48. [src\main\webapp\js\quiz.js](#src-main-webapp-js-quiz-js)
+49. [src\main\webapp\js\result.js](#src-main-webapp-js-result-js)
+50. [src\main\webapp\js\teacher.js](#src-main-webapp-js-teacher-js)
+51. [src\main\webapp\js\ui.js](#src-main-webapp-js-ui-js)
+52. [src\main\webapp\auth.html](#src-main-webapp-auth-html)
+53. [src\main\webapp\community.html](#src-main-webapp-community-html)
+54. [src\main\webapp\history.html](#src-main-webapp-history-html)
+55. [src\main\webapp\index.html](#src-main-webapp-index-html)
+56. [src\main\webapp\quiz.html](#src-main-webapp-quiz-html)
+57. [src\main\webapp\result.html](#src-main-webapp-result-html)
+58. [src\main\webapp\teacher-dashboard.html](#src-main-webapp-teacher-dashboard-html)
 
 ---
 
@@ -889,6 +895,49 @@ CREATE INDEX IF NOT EXISTS IX_question_comments_uid ON question_comments(user_id
 CREATE INDEX IF NOT EXISTS IX_question_ratings_qid ON question_ratings(question_id);
 CREATE INDEX IF NOT EXISTS IX_question_ratings_uid ON question_ratings(user_id);
 
+-- ─────────────────────────────────────────────────────────────────────────────
+-- BẢNG 10: COMMUNITY_POSTS (Diễn đàn & Bài viết cộng đồng học tập)
+-- ─────────────────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS community_posts (
+    post_id           SERIAL PRIMARY KEY,
+    user_id           INT           NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    topic_id          INT           NULL REFERENCES topics(topic_id) ON DELETE SET NULL,
+    channel           VARCHAR(50)   NOT NULL DEFAULT 'general',
+    title             VARCHAR(255)  NOT NULL,
+    content           TEXT          NOT NULL,
+    likes_count       INT           NOT NULL DEFAULT 0,
+    comments_count    INT           NOT NULL DEFAULT 0,
+    created_at        TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at        TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- BẢNG 11: COMMUNITY_POST_COMMENTS (Bình luận bài viết cộng đồng)
+-- ─────────────────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS community_post_comments (
+    comment_id        SERIAL PRIMARY KEY,
+    post_id           INT           NOT NULL REFERENCES community_posts(post_id) ON DELETE CASCADE,
+    user_id           INT           NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    content           TEXT          NOT NULL,
+    created_at        TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- BẢNG 12: COMMUNITY_POST_LIKES (Thả tim bài viết cộng đồng)
+-- ─────────────────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS community_post_likes (
+    like_id           SERIAL PRIMARY KEY,
+    post_id           INT           NOT NULL REFERENCES community_posts(post_id) ON DELETE CASCADE,
+    user_id           INT           NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    created_at        TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT UQ_community_post_like UNIQUE (post_id, user_id)
+);
+
+CREATE INDEX IF NOT EXISTS IX_community_posts_channel ON community_posts(channel);
+CREATE INDEX IF NOT EXISTS IX_community_posts_topic   ON community_posts(topic_id);
+CREATE INDEX IF NOT EXISTS IX_community_posts_user    ON community_posts(user_id);
+CREATE INDEX IF NOT EXISTS IX_community_comments_post ON community_post_comments(post_id);
+
 -- ═══════════════════════════════════════════════════════════════════════════════
 -- DỮ LIỆU MẪU KHỞI TẠO (SEED DATA)
 -- ═══════════════════════════════════════════════════════════════════════════════
@@ -1145,6 +1194,142 @@ public class ChatMessage {
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+}
+
+``
+
+---
+
+## src\main\java\com\lms\model\CommunityComment.java
+<a id='src-main-java-com-lms-model-communitycomment-java'></a>
+
+``java
+package com.lms.model;
+
+import java.sql.Timestamp;
+
+/**
+ * Model biểu diễn một bình luận bên dưới bài viết diễn đàn cộng đồng.
+ */
+public class CommunityComment {
+    private int commentId;
+    private int postId;
+    private int userId;
+    private String content;
+    private Timestamp createdAt;
+
+    // Thông tin người bình luận
+    private String authorName;
+    private String authorUsername;
+    private String authorRole;
+
+    public CommunityComment() {}
+
+    public int getCommentId() { return commentId; }
+    public void setCommentId(int commentId) { this.commentId = commentId; }
+
+    public int getPostId() { return postId; }
+    public void setPostId(int postId) { this.postId = postId; }
+
+    public int getUserId() { return userId; }
+    public void setUserId(int userId) { this.userId = userId; }
+
+    public String getContent() { return content; }
+    public void setContent(String content) { this.content = content; }
+
+    public Timestamp getCreatedAt() { return createdAt; }
+    public void setCreatedAt(Timestamp createdAt) { this.createdAt = createdAt; }
+
+    public String getAuthorName() { return authorName; }
+    public void setAuthorName(String authorName) { this.authorName = authorName; }
+
+    public String getAuthorUsername() { return authorUsername; }
+    public void setAuthorUsername(String authorUsername) { this.authorUsername = authorUsername; }
+
+    public String getAuthorRole() { return authorRole; }
+    public void setAuthorRole(String authorRole) { this.authorRole = authorRole; }
+}
+
+``
+
+---
+
+## src\main\java\com\lms\model\CommunityPost.java
+<a id='src-main-java-com-lms-model-communitypost-java'></a>
+
+``java
+package com.lms.model;
+
+import java.sql.Timestamp;
+
+/**
+ * Model biểu diễn một bài viết trên Diễn đàn / Không gian cộng đồng học tập.
+ */
+public class CommunityPost {
+    private int postId;
+    private int userId;
+    private Integer topicId;
+    private String topicName;
+    private String channel; // 'general', 'qna', 'tips', 'showcase'
+    private String title;
+    private String content;
+    private int likesCount;
+    private int commentsCount;
+    private boolean likedByMe;
+    private Timestamp createdAt;
+    private Timestamp updatedAt;
+
+    // Thông tin người đăng (join từ bảng users)
+    private String authorName;
+    private String authorUsername;
+    private String authorRole;
+
+    public CommunityPost() {}
+
+    public int getPostId() { return postId; }
+    public void setPostId(int postId) { this.postId = postId; }
+
+    public int getUserId() { return userId; }
+    public void setUserId(int userId) { this.userId = userId; }
+
+    public Integer getTopicId() { return topicId; }
+    public void setTopicId(Integer topicId) { this.topicId = topicId; }
+
+    public String getTopicName() { return topicName; }
+    public void setTopicName(String topicName) { this.topicName = topicName; }
+
+    public String getChannel() { return channel; }
+    public void setChannel(String channel) { this.channel = channel; }
+
+    public String getTitle() { return title; }
+    public void setTitle(String title) { this.title = title; }
+
+    public String getContent() { return content; }
+    public void setContent(String content) { this.content = content; }
+
+    public int getLikesCount() { return likesCount; }
+    public void setLikesCount(int likesCount) { this.likesCount = likesCount; }
+
+    public int getCommentsCount() { return commentsCount; }
+    public void setCommentsCount(int commentsCount) { this.commentsCount = commentsCount; }
+
+    public boolean isLikedByMe() { return likedByMe; }
+    public void setLikedByMe(boolean likedByMe) { this.likedByMe = likedByMe; }
+
+    public Timestamp getCreatedAt() { return createdAt; }
+    public void setCreatedAt(Timestamp createdAt) { this.createdAt = createdAt; }
+
+    public Timestamp getUpdatedAt() { return updatedAt; }
+    public void setUpdatedAt(Timestamp updatedAt) { this.updatedAt = updatedAt; }
+
+    public String getAuthorName() { return authorName; }
+    public void setAuthorName(String authorName) { this.authorName = authorName; }
+
+    public String getAuthorUsername() { return authorUsername; }
+    public void setAuthorUsername(String authorUsername) { this.authorUsername = authorUsername; }
+
+    public String getAuthorRole() { return authorRole; }
+    public void setAuthorRole(String authorRole) { this.authorRole = authorRole; }
 }
 
 ``
@@ -1867,6 +2052,13 @@ public class JsonHelper {
     }
 
     /**
+     * Tạo response thành công với data mặc định.
+     */
+    public static String success(Object data) {
+        return success("Thành công", data);
+    }
+
+    /**
      * Tạo response thành công kèm data.
      */
     public static String success(String message, Object data) {
@@ -2025,6 +2217,381 @@ public class ChatDAO {
         Timestamp createdAt = rs.getTimestamp("created_at");
         m.setCreatedAt(createdAt != null ? createdAt.toLocalDateTime() : null);
         return m;
+    }
+}
+
+``
+
+---
+
+## src\main\java\com\lms\dao\CommunityDAO.java
+<a id='src-main-java-com-lms-dao-communitydao-java'></a>
+
+``java
+package com.lms.dao;
+
+import com.lms.model.CommunityComment;
+import com.lms.model.CommunityPost;
+
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * Data Access Object quản lý Diễn đàn & Không gian cộng đồng học tập (Community Forum Feed).
+ */
+public class CommunityDAO {
+
+    /**
+     * Lấy danh sách bài viết theo bộ lọc kênh (channel) hoặc môn học (topicId).
+     */
+    public List<CommunityPost> listPosts(String channel, Integer topicId, int limit, int offset, Integer currentUserId) throws SQLException {
+        List<CommunityPost> list = new ArrayList<>();
+        StringBuilder sql = new StringBuilder();
+        sql.append("SELECT p.post_id, p.user_id, p.topic_id, p.channel, p.title, p.content, ")
+           .append("       p.likes_count, p.comments_count, p.created_at, p.updated_at, ")
+           .append("       u.full_name AS author_name, u.username AS author_username, u.role AS author_role, ")
+           .append("       t.topic_name, ")
+           .append("       CASE WHEN pl.like_id IS NOT NULL THEN TRUE ELSE FALSE END AS is_liked_by_me ")
+           .append("FROM community_posts p ")
+           .append("JOIN users u ON p.user_id = u.user_id ")
+           .append("LEFT JOIN topics t ON p.topic_id = t.topic_id ")
+           .append("LEFT JOIN community_post_likes pl ON p.post_id = pl.post_id AND pl.user_id = ? ")
+           .append("WHERE 1=1 ");
+
+        List<Object> params = new ArrayList<>();
+        params.add(currentUserId != null ? currentUserId : -1);
+
+        if (channel != null && !channel.trim().isEmpty() && !channel.equalsIgnoreCase("all")) {
+            sql.append("AND p.channel = ? ");
+            params.add(channel.trim().toLowerCase());
+        }
+
+        if (topicId != null && topicId > 0) {
+            sql.append("AND p.topic_id = ? ");
+            params.add(topicId);
+        }
+
+        sql.append("ORDER BY p.created_at DESC LIMIT ? OFFSET ?");
+        params.add(Math.max(1, limit));
+        params.add(Math.max(0, offset));
+
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+
+            for (int i = 0; i < params.size(); i++) {
+                ps.setObject(i + 1, params.get(i));
+            }
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    CommunityPost p = mapPostRow(rs);
+                    list.add(p);
+                }
+            }
+        }
+        return list;
+    }
+
+    /**
+     * Lấy chi tiết một bài viết theo ID.
+     */
+    public CommunityPost getPostById(int postId, Integer currentUserId) throws SQLException {
+        String sql = "SELECT p.post_id, p.user_id, p.topic_id, p.channel, p.title, p.content, "
+                + "       p.likes_count, p.comments_count, p.created_at, p.updated_at, "
+                + "       u.full_name AS author_name, u.username AS author_username, u.role AS author_role, "
+                + "       t.topic_name, "
+                + "       CASE WHEN pl.like_id IS NOT NULL THEN TRUE ELSE FALSE END AS is_liked_by_me "
+                + "FROM community_posts p "
+                + "JOIN users u ON p.user_id = u.user_id "
+                + "LEFT JOIN topics t ON p.topic_id = t.topic_id "
+                + "LEFT JOIN community_post_likes pl ON p.post_id = pl.post_id AND pl.user_id = ? "
+                + "WHERE p.post_id = ?";
+
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setObject(1, currentUserId != null ? currentUserId : -1);
+            ps.setInt(2, postId);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapPostRow(rs);
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Tạo một bài viết thảo luận mới.
+     */
+    public int createPost(int userId, Integer topicId, String channel, String title, String content) throws SQLException {
+        String sql = "INSERT INTO community_posts (user_id, topic_id, channel, title, content, likes_count, comments_count, created_at, updated_at) "
+                + "VALUES (?, ?, ?, ?, ?, 0, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)";
+
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+
+            ps.setInt(1, userId);
+            if (topicId != null && topicId > 0) {
+                ps.setInt(2, topicId);
+            } else {
+                ps.setNull(2, Types.INTEGER);
+            }
+            ps.setString(3, (channel != null && !channel.trim().isEmpty()) ? channel.trim().toLowerCase() : "general");
+            ps.setString(4, title);
+            ps.setString(5, content);
+
+            ps.executeUpdate();
+            try (ResultSet rs = ps.getGeneratedKeys()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        }
+        return 0;
+    }
+
+    /**
+     * Xóa bài viết (Chỉ tác giả hoặc Giảng viên/Admin).
+     */
+    public boolean deletePost(int postId, int userId, boolean isAdminOrTeacher) throws SQLException {
+        String sql = isAdminOrTeacher
+                ? "DELETE FROM community_posts WHERE post_id = ?"
+                : "DELETE FROM community_posts WHERE post_id = ? AND user_id = ?";
+
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, postId);
+            if (!isAdminOrTeacher) {
+                ps.setInt(2, userId);
+            }
+            return ps.executeUpdate() > 0;
+        }
+    }
+
+    /**
+     * Thả tim / Bỏ thả tim (Toggle Like) bài viết.
+     * @return Map chứa { "liked": boolean, "likesCount": int }
+     */
+    public Map<String, Object> toggleLike(int postId, int userId) throws SQLException {
+        Map<String, Object> result = new HashMap<>();
+
+        try (Connection conn = DatabaseUtil.getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                // Kiểm tra đã like chưa
+                boolean alreadyLiked = false;
+                try (PreparedStatement checkPs = conn.prepareStatement("SELECT 1 FROM community_post_likes WHERE post_id = ? AND user_id = ?")) {
+                    checkPs.setInt(1, postId);
+                    checkPs.setInt(2, userId);
+                    try (ResultSet rs = checkPs.executeQuery()) {
+                        alreadyLiked = rs.next();
+                    }
+                }
+
+                if (alreadyLiked) {
+                    // Unlike
+                    try (PreparedStatement delPs = conn.prepareStatement("DELETE FROM community_post_likes WHERE post_id = ? AND user_id = ?")) {
+                        delPs.setInt(1, postId);
+                        delPs.setInt(2, userId);
+                        delPs.executeUpdate();
+                    }
+                    try (PreparedStatement decPs = conn.prepareStatement("UPDATE community_posts SET likes_count = GREATEST(likes_count - 1, 0) WHERE post_id = ?")) {
+                        decPs.setInt(1, postId);
+                        decPs.executeUpdate();
+                    }
+                    result.put("liked", false);
+                } else {
+                    // Like
+                    try (PreparedStatement insPs = conn.prepareStatement("INSERT INTO community_post_likes (post_id, user_id) VALUES (?, ?)")) {
+                        insPs.setInt(1, postId);
+                        insPs.setInt(2, userId);
+                        insPs.executeUpdate();
+                    }
+                    try (PreparedStatement incPs = conn.prepareStatement("UPDATE community_posts SET likes_count = likes_count + 1 WHERE post_id = ?")) {
+                        incPs.setInt(1, postId);
+                        incPs.executeUpdate();
+                    }
+                    result.put("liked", true);
+                }
+
+                // Lấy likesCount mới nhất
+                int currentLikes = 0;
+                try (PreparedStatement countPs = conn.prepareStatement("SELECT likes_count FROM community_posts WHERE post_id = ?")) {
+                    countPs.setInt(1, postId);
+                    try (ResultSet rs = countPs.executeQuery()) {
+                        if (rs.next()) currentLikes = rs.getInt(1);
+                    }
+                }
+
+                conn.commit();
+                result.put("likesCount", currentLikes);
+                return result;
+
+            } catch (Exception ex) {
+                conn.rollback();
+                throw ex;
+            } finally {
+                conn.setAutoCommit(true);
+            }
+        }
+    }
+
+    /**
+     * Lấy danh sách bình luận của bài viết.
+     */
+    public List<CommunityComment> listComments(int postId) throws SQLException {
+        List<CommunityComment> list = new ArrayList<>();
+        String sql = "SELECT c.comment_id, c.post_id, c.user_id, c.content, c.created_at, "
+                + "       u.full_name AS author_name, u.username AS author_username, u.role AS author_role "
+                + "FROM community_post_comments c "
+                + "JOIN users u ON c.user_id = u.user_id "
+                + "WHERE c.post_id = ? "
+                + "ORDER BY c.created_at ASC";
+
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, postId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    CommunityComment c = new CommunityComment();
+                    c.setCommentId(rs.getInt("comment_id"));
+                    c.setPostId(rs.getInt("post_id"));
+                    c.setUserId(rs.getInt("user_id"));
+                    c.setContent(rs.getString("content"));
+                    c.setCreatedAt(rs.getTimestamp("created_at"));
+                    c.setAuthorName(rs.getString("author_name"));
+                    c.setAuthorUsername(rs.getString("author_username"));
+                    c.setAuthorRole(rs.getString("author_role"));
+                    list.add(c);
+                }
+            }
+        }
+        return list;
+    }
+
+    /**
+     * Thêm bình luận vào bài viết.
+     */
+    public int createComment(int postId, int userId, String content) throws SQLException {
+        String sql = "INSERT INTO community_post_comments (post_id, user_id, content, created_at) "
+                + "VALUES (?, ?, ?, CURRENT_TIMESTAMP)";
+
+        try (Connection conn = DatabaseUtil.getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                int commentId = 0;
+                try (PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+                    ps.setInt(1, postId);
+                    ps.setInt(2, userId);
+                    ps.setString(3, content);
+                    ps.executeUpdate();
+                    try (ResultSet rs = ps.getGeneratedKeys()) {
+                        if (rs.next()) commentId = rs.getInt(1);
+                    }
+                }
+
+                // Tăng comments_count của bài viết
+                try (PreparedStatement incPs = conn.prepareStatement("UPDATE community_posts SET comments_count = comments_count + 1 WHERE post_id = ?")) {
+                    incPs.setInt(1, postId);
+                    incPs.executeUpdate();
+                }
+
+                conn.commit();
+                return commentId;
+            } catch (Exception ex) {
+                conn.rollback();
+                throw ex;
+            } finally {
+                conn.setAutoCommit(true);
+            }
+        }
+    }
+
+    /**
+     * Xóa bình luận.
+     */
+    public boolean deleteComment(int commentId, int postId, int userId, boolean isAdminOrTeacher) throws SQLException {
+        String sql = isAdminOrTeacher
+                ? "DELETE FROM community_post_comments WHERE comment_id = ?"
+                : "DELETE FROM community_post_comments WHERE comment_id = ? AND user_id = ?";
+
+        try (Connection conn = DatabaseUtil.getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                int affected;
+                try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                    ps.setInt(1, commentId);
+                    if (!isAdminOrTeacher) ps.setInt(2, userId);
+                    affected = ps.executeUpdate();
+                }
+
+                if (affected > 0) {
+                    try (PreparedStatement decPs = conn.prepareStatement("UPDATE community_posts SET comments_count = GREATEST(comments_count - 1, 0) WHERE post_id = ?")) {
+                        decPs.setInt(1, postId);
+                        decPs.executeUpdate();
+                    }
+                }
+
+                conn.commit();
+                return affected > 0;
+            } catch (Exception ex) {
+                conn.rollback();
+                throw ex;
+            } finally {
+                conn.setAutoCommit(true);
+            }
+        }
+    }
+
+    /**
+     * Thống kê cộng đồng: tổng bài viết, tổng thảo luận, thành viên tích cực.
+     */
+    public Map<String, Object> getCommunityStats() throws SQLException {
+        Map<String, Object> stats = new HashMap<>();
+        String sql = "SELECT "
+                + "  (SELECT COUNT(*) FROM community_posts) AS total_posts, "
+                + "  (SELECT COUNT(*) FROM community_post_comments) AS total_comments, "
+                + "  (SELECT COUNT(DISTINCT user_id) FROM community_posts) AS total_creators";
+
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+
+            if (rs.next()) {
+                stats.put("totalPosts", rs.getInt("total_posts"));
+                stats.put("totalComments", rs.getInt("total_comments"));
+                stats.put("totalCreators", rs.getInt("total_creators"));
+            }
+        }
+        return stats;
+    }
+
+    private CommunityPost mapPostRow(ResultSet rs) throws SQLException {
+        CommunityPost p = new CommunityPost();
+        p.setPostId(rs.getInt("post_id"));
+        p.setUserId(rs.getInt("user_id"));
+        int topicId = rs.getInt("topic_id");
+        p.setTopicId(rs.wasNull() ? null : topicId);
+        p.setChannel(rs.getString("channel"));
+        p.setTitle(rs.getString("title"));
+        p.setContent(rs.getString("content"));
+        p.setLikesCount(rs.getInt("likes_count"));
+        p.setCommentsCount(rs.getInt("comments_count"));
+        p.setCreatedAt(rs.getTimestamp("created_at"));
+        p.setUpdatedAt(rs.getTimestamp("updated_at"));
+        p.setAuthorName(rs.getString("author_name"));
+        p.setAuthorUsername(rs.getString("author_username"));
+        p.setAuthorRole(rs.getString("author_role"));
+        p.setTopicName(rs.getString("topic_name"));
+        p.setLikedByMe(rs.getBoolean("is_liked_by_me"));
+        return p;
     }
 }
 
@@ -2206,7 +2773,52 @@ public class DatabaseUtil {
                         + "CONSTRAINT UQ_question_user_rating UNIQUE (question_id, user_id)"
                         + ");");
 
-                System.out.println("[DatabaseUtil] ✅ PostgreSQL Auto-Migration: Cột [misconception_tag] và bảng [question_comments, question_ratings] đã sẵn sàng!");
+                // PostgreSQL: Bảng Diễn Đàn & Không Gian Cộng Đồng Học Tập (Discord / Facebook style)
+                stmt.execute("CREATE TABLE IF NOT EXISTS community_posts ("
+                        + "post_id SERIAL PRIMARY KEY, "
+                        + "user_id INT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE, "
+                        + "topic_id INT NULL REFERENCES topics(topic_id) ON DELETE SET NULL, "
+                        + "channel VARCHAR(50) NOT NULL DEFAULT 'general', "
+                        + "title VARCHAR(255) NOT NULL, "
+                        + "content TEXT NOT NULL, "
+                        + "likes_count INT NOT NULL DEFAULT 0, "
+                        + "comments_count INT NOT NULL DEFAULT 0, "
+                        + "created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, "
+                        + "updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP"
+                        + ");");
+
+                stmt.execute("CREATE TABLE IF NOT EXISTS community_post_comments ("
+                        + "comment_id SERIAL PRIMARY KEY, "
+                        + "post_id INT NOT NULL REFERENCES community_posts(post_id) ON DELETE CASCADE, "
+                        + "user_id INT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE, "
+                        + "content TEXT NOT NULL, "
+                        + "created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP"
+                        + ");");
+
+                stmt.execute("CREATE TABLE IF NOT EXISTS community_post_likes ("
+                        + "like_id SERIAL PRIMARY KEY, "
+                        + "post_id INT NOT NULL REFERENCES community_posts(post_id) ON DELETE CASCADE, "
+                        + "user_id INT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE, "
+                        + "created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, "
+                        + "CONSTRAINT UQ_community_post_like UNIQUE (post_id, user_id)"
+                        + ");");
+
+                // Seed bài viết mẫu nếu bảng mới được tạo
+                try (var countRs = stmt.executeQuery("SELECT COUNT(*) FROM community_posts")) {
+                    if (countRs.next() && countRs.getInt(1) == 0) {
+                        stmt.execute("INSERT INTO community_posts (user_id, topic_id, channel, title, content, likes_count, comments_count) "
+                                + "SELECT u.user_id, 1, 'tips', 'Kinh nghiệm né bẫy Boundary Blindness khi viết vòng lặp For trong Java', "
+                                + "'Chào mọi người, khi làm trắc nghiệm dạng biên mảng [i <= array.length] các bạn nhớ chú ý mảng trong Java bắt đầu từ 0 đến length - 1. Nếu dùng <= sẽ vướng lỗi ArrayIndexOutOfBoundsException kinh điển!', 5, 1 "
+                                + "FROM users u WHERE u.role = 'teacher' LIMIT 1;");
+
+                        stmt.execute("INSERT INTO community_posts (user_id, topic_id, channel, title, content, likes_count, comments_count) "
+                                + "SELECT u.user_id, 1, 'qna', 'Phân biệt giữa Interface và Abstract Class khi nào nên dùng cái nào?', "
+                                + "'Mình đang làm bài tập lớn phần hướng đối tượng, theo các bạn khi thiết kế kiến trúc đa tầng (Clean Architecture), tầng Repository nên dùng Interface hay Abstract class thì linh hoạt hơn cho unit test?', 3, 0 "
+                                + "FROM users u WHERE u.role = 'student' LIMIT 1;");
+                    }
+                } catch (Exception ignored) {}
+
+                System.out.println("[DatabaseUtil] ✅ PostgreSQL Auto-Migration: Cột [misconception_tag] và bảng [question_comments, community_posts] đã sẵn sàng!");
 
             } else {
                 // SQL Server migration
@@ -5385,6 +5997,243 @@ public class ChatServlet extends HttpServlet {
 
 ---
 
+## src\main\java\com\lms\servlet\CommunityServlet.java
+<a id='src-main-java-com-lms-servlet-communityservlet-java'></a>
+
+``java
+package com.lms.servlet;
+
+import com.google.gson.JsonObject;
+import com.lms.dao.CommunityDAO;
+import com.lms.model.CommunityComment;
+import com.lms.model.CommunityPost;
+import com.lms.model.User;
+import com.lms.util.JsonHelper;
+import jakarta.servlet.annotation.WebServlet;
+import jakarta.servlet.http.HttpServlet;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * Controller RESTful phục vụ Diễn đàn & Không gian cộng đồng học tập phong cách Discord / Facebook.
+ */
+@WebServlet(name = "CommunityServlet", urlPatterns = {"/api/community", "/api/community/*"})
+public class CommunityServlet extends HttpServlet {
+
+    private final CommunityDAO communityDAO = new CommunityDAO();
+
+    @Override
+    protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        resp.setContentType("application/json;charset=UTF-8");
+        String pathInfo = req.getPathInfo();
+        if (pathInfo == null) pathInfo = "";
+
+        User currentUser = getOptionalUser(req);
+        Integer currentUserId = currentUser != null ? currentUser.getUserId() : null;
+
+        try {
+            if (pathInfo.equals("/posts") || pathInfo.isEmpty()) {
+                // GET /api/community/posts
+                String channel = req.getParameter("channel");
+                String topicIdStr = req.getParameter("topicId");
+                Integer topicId = null;
+                if (topicIdStr != null && !topicIdStr.trim().isEmpty()) {
+                    try { topicId = Integer.parseInt(topicIdStr.trim()); } catch (NumberFormatException ignored) {}
+                }
+
+                int limit = 30;
+                try {
+                    String limitStr = req.getParameter("limit");
+                    if (limitStr != null) limit = Math.min(100, Math.max(1, Integer.parseInt(limitStr)));
+                } catch (NumberFormatException ignored) {}
+
+                int offset = 0;
+                try {
+                    String offsetStr = req.getParameter("offset");
+                    if (offsetStr != null) offset = Math.max(0, Integer.parseInt(offsetStr));
+                } catch (NumberFormatException ignored) {}
+
+                List<CommunityPost> posts = communityDAO.listPosts(channel, topicId, limit, offset, currentUserId);
+                resp.getWriter().write(JsonHelper.success(posts));
+
+            } else if (pathInfo.startsWith("/posts/")) {
+                String sub = pathInfo.substring("/posts/".length());
+                if (sub.contains("/comments")) {
+                    // GET /api/community/posts/{id}/comments
+                    int postId = Integer.parseInt(sub.split("/")[0]);
+                    List<CommunityComment> comments = communityDAO.listComments(postId);
+                    resp.getWriter().write(JsonHelper.success(comments));
+                } else {
+                    // GET /api/community/posts/{id}
+                    int postId = Integer.parseInt(sub);
+                    CommunityPost post = communityDAO.getPostById(postId, currentUserId);
+                    if (post != null) {
+                        resp.getWriter().write(JsonHelper.success(post));
+                    } else {
+                        resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                        resp.getWriter().write(JsonHelper.error("Không tìm thấy bài viết #" + postId));
+                    }
+                }
+
+            } else if (pathInfo.equals("/stats")) {
+                // GET /api/community/stats
+                Map<String, Object> stats = communityDAO.getCommunityStats();
+                resp.getWriter().write(JsonHelper.success(stats));
+
+            } else {
+                resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                resp.getWriter().write(JsonHelper.error("Endpoint GET không hợp lệ: " + pathInfo));
+            }
+        } catch (Exception ex) {
+            resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            resp.getWriter().write(JsonHelper.error("Lỗi máy chủ: " + ex.getMessage()));
+        }
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        resp.setContentType("application/json;charset=UTF-8");
+        User user = getAuthenticatedUser(req, resp);
+        if (user == null) return;
+
+        String pathInfo = req.getPathInfo();
+        if (pathInfo == null) pathInfo = "";
+
+        try {
+            if (pathInfo.equals("/posts") || pathInfo.isEmpty()) {
+                // POST /api/community/posts
+                JsonObject body = JsonHelper.parseRequestBody(req);
+                String title = body.has("title") ? body.get("title").getAsString().trim() : "";
+                String content = body.has("content") ? body.get("content").getAsString().trim() : "";
+                String channel = body.has("channel") ? body.get("channel").getAsString().trim() : "general";
+                Integer topicId = (body.has("topicId") && !body.get("topicId").isJsonNull()) ? body.get("topicId").getAsInt() : null;
+
+                if (title.isEmpty() || content.isEmpty()) {
+                    resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                    resp.getWriter().write(JsonHelper.error("Tiêu đề và nội dung bài viết không được để trống."));
+                    return;
+                }
+
+                int postId = communityDAO.createPost(user.getUserId(), topicId, channel, title, content);
+                resp.setStatus(HttpServletResponse.SC_CREATED);
+                resp.getWriter().write(JsonHelper.success(Map.of(
+                        "postId", postId,
+                        "message", "Đăng bài viết lên diễn đàn thành công!"
+                )));
+
+            } else if (pathInfo.startsWith("/posts/") && pathInfo.endsWith("/like")) {
+                // POST /api/community/posts/{id}/like
+                String idStr = pathInfo.substring("/posts/".length(), pathInfo.length() - "/like".length());
+                int postId = Integer.parseInt(idStr);
+                Map<String, Object> result = communityDAO.toggleLike(postId, user.getUserId());
+                resp.getWriter().write(JsonHelper.success(result));
+
+            } else if (pathInfo.startsWith("/posts/") && pathInfo.endsWith("/comments")) {
+                // POST /api/community/posts/{id}/comments
+                String idStr = pathInfo.substring("/posts/".length(), pathInfo.length() - "/comments".length());
+                int postId = Integer.parseInt(idStr);
+                JsonObject body = JsonHelper.parseRequestBody(req);
+                String content = body.has("content") ? body.get("content").getAsString().trim() : "";
+
+                if (content.isEmpty()) {
+                    resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                    resp.getWriter().write(JsonHelper.error("Nội dung bình luận không được để trống."));
+                    return;
+                }
+
+                int commentId = communityDAO.createComment(postId, user.getUserId(), content);
+                resp.setStatus(HttpServletResponse.SC_CREATED);
+                resp.getWriter().write(JsonHelper.success(Map.of(
+                        "commentId", commentId,
+                        "message", "Đã gửi bình luận thành công!"
+                )));
+
+            } else {
+                resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                resp.getWriter().write(JsonHelper.error("Endpoint POST không hợp lệ: " + pathInfo));
+            }
+        } catch (Exception ex) {
+            resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            resp.getWriter().write(JsonHelper.error("Lỗi khi xử lý dữ liệu: " + ex.getMessage()));
+        }
+    }
+
+    @Override
+    protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        resp.setContentType("application/json;charset=UTF-8");
+        User user = getAuthenticatedUser(req, resp);
+        if (user == null) return;
+
+        String pathInfo = req.getPathInfo();
+        if (pathInfo == null) pathInfo = "";
+
+        boolean isTeacherOrAdmin = user.getRole() != null &&
+                (user.getRole().equalsIgnoreCase("teacher") || user.getRole().equalsIgnoreCase("admin"));
+
+        try {
+            if (pathInfo.startsWith("/posts/")) {
+                String sub = pathInfo.substring("/posts/".length());
+                if (sub.contains("/comments/")) {
+                    // DELETE /api/community/posts/{postId}/comments/{commentId}
+                    String[] parts = sub.split("/comments/");
+                    int postId = Integer.parseInt(parts[0]);
+                    int commentId = Integer.parseInt(parts[1]);
+                    boolean ok = communityDAO.deleteComment(commentId, postId, user.getUserId(), isTeacherOrAdmin);
+                    if (ok) {
+                        resp.getWriter().write(JsonHelper.success(Map.of("message", "Đã xóa bình luận.")));
+                    } else {
+                        resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                        resp.getWriter().write(JsonHelper.error("Bạn không có quyền xóa bình luận này."));
+                    }
+                } else {
+                    // DELETE /api/community/posts/{id}
+                    int postId = Integer.parseInt(sub);
+                    boolean ok = communityDAO.deletePost(postId, user.getUserId(), isTeacherOrAdmin);
+                    if (ok) {
+                        resp.getWriter().write(JsonHelper.success(Map.of("message", "Đã xóa bài viết khỏi diễn đàn.")));
+                    } else {
+                        resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                        resp.getWriter().write(JsonHelper.error("Bạn không có quyền xóa bài viết này."));
+                    }
+                }
+            } else {
+                resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                resp.getWriter().write(JsonHelper.error("Endpoint DELETE không hợp lệ."));
+            }
+        } catch (Exception ex) {
+            resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            resp.getWriter().write(JsonHelper.error("Lỗi khi xóa: " + ex.getMessage()));
+        }
+    }
+
+    private User getAuthenticatedUser(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        HttpSession session = req.getSession(false);
+        if (session == null || session.getAttribute("user") == null) {
+            resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            resp.getWriter().write(JsonHelper.error("Vui lòng đăng nhập để thực hiện tương tác này trên diễn đàn!"));
+            return null;
+        }
+        return (User) session.getAttribute("user");
+    }
+
+    private User getOptionalUser(HttpServletRequest req) {
+        HttpSession session = req.getSession(false);
+        if (session != null && session.getAttribute("user") != null) {
+            return (User) session.getAttribute("user");
+        }
+        return null;
+    }
+}
+
+``
+
+---
+
 ## src\main\java\com\lms\servlet\DiscussionServlet.java
 <a id='src-main-java-com-lms-servlet-discussionservlet-java'></a>
 
@@ -7189,6 +8038,24 @@ const API = {
         rateQuestion: (questionId, ratingType, reportReason = null) => API.request('/discussion/rate', { method: 'POST', body: JSON.stringify({ questionId, ratingType, reportReason }) }),
         getReported: (limit = 50) => API.request(`/discussion/reported?limit=${encodeURIComponent(limit)}`)
     },
+    community: {
+        listPosts: (channel = null, topicId = null, limit = 30, offset = 0) => {
+            const params = new URLSearchParams();
+            if (channel && channel !== 'all') params.append('channel', channel);
+            if (topicId) params.append('topicId', topicId);
+            params.append('limit', limit);
+            params.append('offset', offset);
+            return API.request(`/community/posts?${params.toString()}`);
+        },
+        getPost: postId => API.request(`/community/posts/${encodeURIComponent(postId)}`),
+        createPost: data => API.request('/community/posts', { method: 'POST', body: JSON.stringify(data) }),
+        deletePost: postId => API.request(`/community/posts/${encodeURIComponent(postId)}`, { method: 'DELETE' }),
+        toggleLike: postId => API.request(`/community/posts/${encodeURIComponent(postId)}/like`, { method: 'POST' }),
+        listComments: postId => API.request(`/community/posts/${encodeURIComponent(postId)}/comments`),
+        createComment: (postId, content) => API.request(`/community/posts/${encodeURIComponent(postId)}/comments`, { method: 'POST', body: JSON.stringify({ content }) }),
+        deleteComment: (postId, commentId) => API.request(`/community/posts/${encodeURIComponent(postId)}/comments/${encodeURIComponent(commentId)}`, { method: 'DELETE' }),
+        getStats: () => API.request('/community/stats')
+    },
     teacher: {
         stats: () => API.request('/teacher/stats'),
         generateQuestions: payload => API.request('/teacher/ai/generate', { method:'POST', body:JSON.stringify(payload), timeout:60000 }),
@@ -7388,6 +8255,661 @@ const API = {
         }
     }
 })();
+
+``
+
+---
+
+## src\main\webapp\js\community.js
+<a id='src-main-webapp-js-community-js'></a>
+
+``javascript
+/**
+ * ══════════════════════════════════════════════════════════════
+ * COMMUNITY FORUM & STUDY LOUNGE CONTROLLER (DISCORD / FACEBOOK STYLE)
+ * ══════════════════════════════════════════════════════════════
+ */
+
+let currentUser = null;
+let currentChannel = 'all';
+let currentTopicId = null;
+let allTopics = [];
+
+const CHANNEL_INFO = {
+    all: { title: 'Tất Cả Bài Viết', desc: 'Dòng thời gian các câu hỏi, mẹo học tập và bài thảo luận mới nhất' },
+    general: { title: 'Thảo Luận Chung', desc: 'Không gian tự do chia sẻ cảm nghĩ, định hướng và phương pháp học' },
+    qna: { title: 'Hỏi Đáp & Trợ Giúp', desc: 'Gỡ rối bài tập khó, phân tích bẫy đề thi và giải thích kiến thức' },
+    tips: { title: 'Mẹo Né Bẫy Tư Duy', desc: 'Kinh nghiệm phát hiện phương án nhiễu và củng cố lỗ hổng nhận thức' },
+    showcase: { title: 'Đề Xuất Đề Thi Hay', desc: 'Chia sẻ các câu hỏi trắc nghiệm hay, tình huống thực tế và bài toán mở' }
+};
+
+document.addEventListener('DOMContentLoaded', async () => {
+    // 1. Kiểm tra xác thực
+    currentUser = API.auth.requireAuth();
+    if (!currentUser) return;
+
+    setupNavbar();
+    setupEventListeners();
+
+    // 2. Tải dữ liệu ban đầu
+    await Promise.all([
+        loadTopics(),
+        loadCommunityStats(),
+        loadFeed()
+    ]);
+});
+
+function setupNavbar() {
+    const usernameEl = document.getElementById('nav-username');
+    const fullnameEl = document.getElementById('nav-fullname');
+    const avatarEl = document.getElementById('user-composer-avatar');
+
+    if (usernameEl) usernameEl.textContent = currentUser.username;
+    if (fullnameEl) fullnameEl.textContent = currentUser.fullName || currentUser.username;
+
+    if (avatarEl) {
+        const initial = (currentUser.fullName || currentUser.username || 'U').charAt(0).toUpperCase();
+        avatarEl.textContent = initial;
+        if (API.auth.isTeacher()) {
+            avatarEl.className = 'author-avatar avatar-teacher';
+        }
+    }
+
+    if (API.auth.isTeacher()) {
+        const teacherLink = document.getElementById('nav-teacher-link');
+        if (teacherLink) teacherLink.classList.remove('d-none');
+        const dropdownTeacherItem = document.getElementById('dropdown-teacher-item');
+        if (dropdownTeacherItem) dropdownTeacherItem.classList.remove('d-none');
+    }
+}
+
+function setupEventListeners() {
+    // Đăng xuất
+    const logoutBtn = document.getElementById('logout-btn');
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            Swal.fire({
+                title: 'Đăng xuất?',
+                text: 'Bạn có chắc chắn muốn rời khỏi hệ thống?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Đăng xuất',
+                cancelButtonText: 'Hủy'
+            }).then((result) => {
+                if (result.isConfirmed) API.auth.logout();
+            });
+        });
+    }
+
+    // Chuyển kênh (Discord Channels)
+    document.querySelectorAll('.channel-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            document.querySelectorAll('.channel-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            currentChannel = btn.getAttribute('data-channel') || 'all';
+            updateChannelHeader();
+            loadFeed();
+        });
+    });
+
+    // Lọc theo môn học
+    const topicFilter = document.getElementById('filter-topic-select');
+    if (topicFilter) {
+        topicFilter.addEventListener('change', () => {
+            const val = topicFilter.value;
+            currentTopicId = val ? parseInt(val, 10) : null;
+            loadFeed();
+        });
+    }
+
+    // Nút làm mới bảng tin
+    const refreshBtn = document.getElementById('btn-refresh-feed');
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', () => {
+            loadFeed();
+            loadCommunityStats();
+        });
+    }
+
+    // Mở Modal tạo bài viết
+    const openComposer = document.getElementById('btn-open-create-post');
+    if (openComposer) {
+        openComposer.addEventListener('click', () => {
+            const modalEl = document.getElementById('createPostModal');
+            if (modalEl) {
+                // Đặt kênh mặc định theo kênh đang xem
+                const channelSelect = document.getElementById('post-channel-select');
+                if (channelSelect && currentChannel !== 'all') {
+                    channelSelect.value = currentChannel;
+                }
+                const modal = new bootstrap.Modal(modalEl);
+                modal.show();
+            }
+        });
+    }
+
+    // Form submit tạo bài viết
+    const createForm = document.getElementById('create-post-form');
+    if (createForm) {
+        createForm.addEventListener('submit', handleCreatePost);
+    }
+}
+
+function updateChannelHeader() {
+    const titleEl = document.getElementById('current-channel-title');
+    const descEl = document.getElementById('current-channel-desc');
+    const info = CHANNEL_INFO[currentChannel] || CHANNEL_INFO.all;
+
+    if (titleEl) {
+        titleEl.innerHTML = `<i class="fa-solid fa-hashtag text-primary"></i>${escapeHtml(info.title)}`;
+    }
+    if (descEl) {
+        descEl.textContent = info.desc;
+    }
+}
+
+/**
+ * Tải danh sách môn học để đưa vào dropdown
+ */
+async function loadTopics() {
+    try {
+        const res = await API.topics.list();
+        allTopics = res.data || [];
+
+        const filterSelect = document.getElementById('filter-topic-select');
+        const postTopicSelect = document.getElementById('post-topic-select');
+
+        allTopics.forEach(t => {
+            if (filterSelect) {
+                const opt = document.createElement('option');
+                opt.value = t.topicId;
+                opt.textContent = t.topicName;
+                filterSelect.appendChild(opt);
+            }
+            if (postTopicSelect) {
+                const opt2 = document.createElement('option');
+                opt2.value = t.topicId;
+                opt2.textContent = t.topicName;
+                postTopicSelect.appendChild(opt2);
+            }
+        });
+    } catch (err) {
+        console.error('Lỗi nạp danh sách môn học:', err);
+    }
+}
+
+/**
+ * Tải chỉ số cộng đồng
+ */
+async function loadCommunityStats() {
+    try {
+        const res = await API.community.getStats();
+        const data = res.data || {};
+        const pEl = document.getElementById('stat-posts-count');
+        const cEl = document.getElementById('stat-comments-count');
+        const crEl = document.getElementById('stat-creators-count');
+
+        if (pEl) pEl.textContent = data.totalPosts || 0;
+        if (cEl) cEl.textContent = data.totalComments || 0;
+        if (crEl) crEl.textContent = data.totalCreators || 0;
+    } catch (err) {
+        console.error('Lỗi nạp thống kê cộng đồng:', err);
+    }
+}
+
+/**
+ * Tải danh sách bài viết theo bộ lọc
+ */
+async function loadFeed() {
+    const loadingEl = document.getElementById('posts-loading');
+    const emptyEl = document.getElementById('posts-empty');
+    const container = document.getElementById('posts-container');
+
+    if (loadingEl) loadingEl.style.display = 'block';
+    if (emptyEl) emptyEl.style.display = 'none';
+    if (container) container.innerHTML = '';
+
+    try {
+        const res = await API.community.listPosts(currentChannel, currentTopicId, 40, 0);
+        const posts = res.data || [];
+
+        if (loadingEl) loadingEl.style.display = 'none';
+
+        if (posts.length === 0) {
+            if (emptyEl) emptyEl.style.display = 'block';
+            return;
+        }
+
+        container.innerHTML = posts.map(renderPostCard).join('');
+    } catch (err) {
+        if (loadingEl) loadingEl.style.display = 'none';
+        if (container) {
+            container.innerHTML = `
+                <div class="alert alert-danger py-3 px-4 rounded-4 small">
+                    <i class="fa-solid fa-triangle-exclamation me-1"></i>Không thể tải bài thảo luận: ${escapeHtml(err.message || 'Lỗi mạng')}
+                </div>
+            `;
+        }
+    }
+}
+
+/**
+ * Sinh HTML cho từng bài viết
+ */
+function renderPostCard(p) {
+    const isTeacher = (p.authorRole || '').toLowerCase() === 'teacher' || (p.authorRole || '').toLowerCase() === 'admin';
+    const avatarClass = isTeacher ? 'author-avatar avatar-teacher' : 'author-avatar avatar-student';
+    const roleBadge = isTeacher
+        ? '<span class="badge bg-indigo text-white px-2 py-0 small ms-1" style="background-color: #6366f1; font-size: 0.68rem;"><i class="fa-solid fa-award me-1"></i>Giảng Viên</span>'
+        : '<span class="badge bg-secondary-subtle text-secondary px-2 py-0 small ms-1" style="font-size: 0.68rem;">Sinh Viên</span>';
+
+    const initial = (p.authorName || p.authorUsername || 'U').charAt(0).toUpperCase();
+    const timeAgo = formatTimeAgo(p.createdAt);
+
+    let channelBadge = '';
+    if (p.channel === 'qna') {
+        channelBadge = '<span class="badge bg-danger-subtle text-danger border border-danger-subtle rounded-pill px-2 py-1 small me-1"># hỏi-đáp</span>';
+    } else if (p.channel === 'tips') {
+        channelBadge = '<span class="badge bg-warning-subtle text-dark border border-warning-subtle rounded-pill px-2 py-1 small me-1"># mẹo-né-bẫy</span>';
+    } else if (p.channel === 'showcase') {
+        channelBadge = '<span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-1 small me-1"># đề-xuất-đề</span>';
+    } else {
+        channelBadge = '<span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2 py-1 small me-1"># thảo-luận</span>';
+    }
+
+    const topicBadge = p.topicName
+        ? `<span class="badge bg-light text-muted border rounded-pill px-2 py-1 small"><i class="fa-solid fa-book-bookmark me-1 text-primary"></i>${escapeHtml(p.topicName)}</span>`
+        : '';
+
+    // Quyền xóa bài (chính chủ hoặc Giảng viên/Admin)
+    const canDelete = currentUser && (currentUser.userId === p.userId || API.auth.isTeacher());
+    const deleteBtn = canDelete ? `
+        <button class="btn btn-link btn-sm text-danger p-0 text-decoration-none" title="Xóa bài viết" onclick="handleDeletePost(${p.postId})">
+            <i class="fa-regular fa-trash-can"></i>
+        </button>
+    ` : '';
+
+    const isLiked = !!p.likedByMe;
+    const likeBtnClass = isLiked ? 'post-action-btn liked' : 'post-action-btn';
+    const heartIcon = isLiked ? 'fa-solid fa-heart' : 'fa-regular fa-heart';
+
+    // Xử lý nội dung (Markdown nếu có hàm marked)
+    let renderedContent = escapeHtml(p.content);
+    if (typeof marked !== 'undefined' && marked.parse) {
+        try {
+            renderedContent = marked.parse(p.content);
+        } catch (e) {
+            renderedContent = escapeHtml(p.content);
+        }
+    }
+
+    return `
+        <div class="card post-card p-4 shadow-sm" id="post-card-${p.postId}">
+            <!-- Header bài viết -->
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="${avatarClass}">
+                        ${initial}
+                    </div>
+                    <div>
+                        <div class="d-flex align-items-center flex-wrap">
+                            <span class="fw-bold text-dark me-1">${escapeHtml(p.authorName || p.authorUsername)}</span>
+                            ${roleBadge}
+                        </div>
+                        <small class="text-muted" style="font-size: 0.75rem;">@${escapeHtml(p.authorUsername)} &bull; ${timeAgo}</small>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    ${channelBadge}
+                    ${topicBadge}
+                    ${deleteBtn}
+                </div>
+            </div>
+
+            <!-- Tiêu đề & Nội dung bài viết -->
+            <h5 class="fw-bold text-dark mb-2">${escapeHtml(p.title)}</h5>
+            <div class="text-secondary small mb-3 post-body-content" style="line-height: 1.6;">
+                ${renderedContent}
+            </div>
+
+            <!-- Thanh tương tác bài viết (Like, Comment, Share) -->
+            <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                <div class="d-flex gap-2">
+                    <button class="${likeBtnClass}" id="btn-like-post-${p.postId}" onclick="handleToggleLike(${p.postId})">
+                        <i class="${heartIcon}"></i>
+                        <span id="like-count-${p.postId}">${p.likesCount}</span>
+                    </button>
+                    <button class="post-action-btn" onclick="toggleCommentsSection(${p.postId})">
+                        <i class="fa-regular fa-message"></i>
+                        <span id="comment-count-${p.postId}">${p.commentsCount}</span> bình luận
+                    </button>
+                </div>
+                <button class="post-action-btn text-muted" onclick="handleSharePost(${p.postId})">
+                    <i class="fa-regular fa-share-from-square"></i>Chia sẻ
+                </button>
+            </div>
+
+            <!-- Khu vực bình luận (Mở rộng theo phong cách Discord/Facebook) -->
+            <div class="mt-3 pt-3 border-top" id="comments-section-${p.postId}" style="display: none;">
+                <!-- Danh sách bình luận -->
+                <div class="d-flex flex-column gap-2 mb-3" id="comments-list-${p.postId}">
+                    <div class="text-muted small text-center py-2">
+                        <span class="spinner-border spinner-border-sm me-1 text-primary"></span>Đang tải bình luận...
+                    </div>
+                </div>
+
+                <!-- Input gửi bình luận mới -->
+                <form onsubmit="handleSendComment(event, ${p.postId})" class="d-flex gap-2">
+                    <input type="text" class="form-control rounded-pill px-3 py-2 small" id="comment-input-${p.postId}" placeholder="Viết phản hồi hoặc đóng góp ý kiến của bạn..." required autocomplete="off">
+                    <button type="submit" class="btn btn-primary rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width: 40px; height: 40px;">
+                        <i class="fa-solid fa-paper-plane fa-sm"></i>
+                    </button>
+                </form>
+            </div>
+        </div>
+    `;
+}
+
+/**
+ * Xử lý tạo bài viết mới
+ */
+async function handleCreatePost(e) {
+    e.preventDefault();
+    const title = document.getElementById('post-title-input').value.trim();
+    const content = document.getElementById('post-content-input').value.trim();
+    const channel = document.getElementById('post-channel-select').value;
+    const topicIdVal = document.getElementById('post-topic-select').value;
+    const topicId = topicIdVal ? parseInt(topicIdVal, 10) : null;
+    const submitBtn = document.getElementById('btn-submit-post');
+
+    if (!title || !content) {
+        Swal.fire('Lỗi', 'Vui lòng điền đầy đủ tiêu đề và nội dung bài viết!', 'warning');
+        return;
+    }
+
+    try {
+        if (submitBtn) submitBtn.disabled = true;
+        const res = await API.community.createPost({ title, content, channel, topicId });
+
+        // Đóng modal & reset form
+        const modalEl = document.getElementById('createPostModal');
+        if (modalEl) {
+            const inst = bootstrap.Modal.getInstance(modalEl);
+            if (inst) inst.hide();
+        }
+        document.getElementById('create-post-form').reset();
+
+        Swal.fire({
+            icon: 'success',
+            title: 'Đăng bài thành công!',
+            text: 'Bài viết của bạn đã được xuất bản trên diễn đàn cộng đồng.',
+            timer: 2000,
+            showConfirmButton: false
+        });
+
+        // Tải lại feed & stats
+        await Promise.all([loadFeed(), loadCommunityStats()]);
+
+    } catch (err) {
+        Swal.fire('Lỗi', err.message || 'Không thể tạo bài viết.', 'error');
+    } finally {
+        if (submitBtn) submitBtn.disabled = false;
+    }
+}
+
+/**
+ * Thả tim / Bỏ thả tim bài viết
+ */
+async function handleToggleLike(postId) {
+    const btn = document.getElementById(`btn-like-post-${postId}`);
+    const countEl = document.getElementById(`like-count-${postId}`);
+    if (!btn) return;
+
+    try {
+        const res = await API.community.toggleLike(postId);
+        const data = res.data || {};
+        const liked = !!data.liked;
+        const likesCount = data.likesCount !== undefined ? data.likesCount : 0;
+
+        if (countEl) countEl.textContent = likesCount;
+
+        if (liked) {
+            btn.classList.add('liked');
+            btn.querySelector('i').className = 'fa-solid fa-heart';
+        } else {
+            btn.classList.remove('liked');
+            btn.querySelector('i').className = 'fa-regular fa-heart';
+        }
+    } catch (err) {
+        console.error('Lỗi khi tương tác thả tim:', err);
+    }
+}
+
+/**
+ * Bật/tắt và tải bình luận cho bài viết
+ */
+async function toggleCommentsSection(postId) {
+    const sec = document.getElementById(`comments-section-${postId}`);
+    if (!sec) return;
+
+    if (sec.style.display === 'none') {
+        sec.style.display = 'block';
+        await loadComments(postId);
+    } else {
+        sec.style.display = 'none';
+    }
+}
+
+/**
+ * Tải danh sách bình luận
+ */
+async function loadComments(postId) {
+    const listEl = document.getElementById(`comments-list-${postId}`);
+    if (!listEl) return;
+
+    try {
+        const res = await API.community.listComments(postId);
+        const comments = res.data || [];
+
+        if (comments.length === 0) {
+            listEl.innerHTML = '<div class="text-muted small text-center py-2">Chưa có bình luận nào. Hãy mở đầu cuộc trò chuyện nhé!</div>';
+            return;
+        }
+
+        listEl.innerHTML = comments.map(c => {
+            const isTeacher = (c.authorRole || '').toLowerCase() === 'teacher' || (c.authorRole || '').toLowerCase() === 'admin';
+            const roleBadge = isTeacher
+                ? '<span class="badge bg-indigo text-white px-2 py-0 small ms-1" style="background-color: #6366f1; font-size: 0.65rem;">Giảng Viên</span>'
+                : '';
+            const initial = (c.authorName || c.authorUsername || 'U').charAt(0).toUpperCase();
+            const timeAgo = formatTimeAgo(c.createdAt);
+            const canDelete = currentUser && (currentUser.userId === c.userId || API.auth.isTeacher());
+
+            const deleteBtn = canDelete ? `
+                <button class="btn btn-link btn-sm text-danger p-0 text-decoration-none ms-2" onclick="handleDeleteComment(${postId}, ${c.commentId})" title="Xóa bình luận">
+                    <i class="fa-regular fa-trash-can fa-xs"></i>
+                </button>
+            ` : '';
+
+            return `
+                <div class="d-flex gap-2 align-items-start" id="comment-item-${c.commentId}">
+                    <div class="rounded-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center fw-bold small flex-shrink-0" style="width: 32px; height: 32px; font-size: 0.85rem;">
+                        ${initial}
+                    </div>
+                    <div class="comment-bubble flex-grow-1">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="fw-bold text-dark small">
+                                ${escapeHtml(c.authorName || c.authorUsername)}
+                                ${roleBadge}
+                            </span>
+                            <div class="d-flex align-items-center">
+                                <small class="text-muted" style="font-size: 0.72rem;">${timeAgo}</small>
+                                ${deleteBtn}
+                            </div>
+                        </div>
+                        <div class="text-secondary small" style="line-height: 1.5;">${escapeHtml(c.content)}</div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+    } catch (err) {
+        listEl.innerHTML = `<div class="text-danger small py-1">Không thể tải bình luận: ${escapeHtml(err.message)}</div>`;
+    }
+}
+
+/**
+ * Gửi bình luận mới
+ */
+async function handleSendComment(e, postId) {
+    e.preventDefault();
+    const input = document.getElementById(`comment-input-${postId}`);
+    if (!input) return;
+
+    const content = input.value.trim();
+    if (!content) return;
+
+    try {
+        input.disabled = true;
+        await API.community.createComment(postId, content);
+        input.value = '';
+
+        // Tăng đếm comment trên UI
+        const countEl = document.getElementById(`comment-count-${postId}`);
+        if (countEl) {
+            const current = parseInt(countEl.textContent || '0', 10);
+            countEl.textContent = current + 1;
+        }
+
+        // Tải lại bình luận
+        await loadComments(postId);
+
+        // Cập nhật stats
+        loadCommunityStats();
+
+    } catch (err) {
+        Swal.fire('Lỗi', err.message || 'Không thể gửi bình luận.', 'error');
+    } finally {
+        input.disabled = false;
+        input.focus();
+    }
+}
+
+/**
+ * Xóa bình luận
+ */
+async function handleDeleteComment(postId, commentId) {
+    const res = await Swal.fire({
+        title: 'Xóa bình luận?',
+        text: 'Bạn có chắc muốn xóa phản hồi này không?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Xóa',
+        cancelButtonText: 'Hủy'
+    });
+
+    if (!res.isConfirmed) return;
+
+    try {
+        await API.community.deleteComment(postId, commentId);
+
+        // Giảm đếm comment trên UI
+        const countEl = document.getElementById(`comment-count-${postId}`);
+        if (countEl) {
+            const current = Math.max(0, parseInt(countEl.textContent || '1', 10) - 1);
+            countEl.textContent = current;
+        }
+
+        await loadComments(postId);
+        loadCommunityStats();
+
+    } catch (err) {
+        Swal.fire('Lỗi', err.message || 'Không thể xóa bình luận.', 'error');
+    }
+}
+
+/**
+ * Xóa bài viết
+ */
+async function handleDeletePost(postId) {
+    const res = await Swal.fire({
+        title: 'Xóa bài viết?',
+        text: 'Toàn bộ nội dung và các bình luận liên quan sẽ bị xóa vĩnh viễn!',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Xóa bài viết',
+        cancelButtonText: 'Hủy'
+    });
+
+    if (!res.isConfirmed) return;
+
+    try {
+        await API.community.deletePost(postId);
+        const card = document.getElementById(`post-card-${postId}`);
+        if (card) card.remove();
+
+        Swal.fire({
+            icon: 'success',
+            title: 'Đã xóa bài viết',
+            timer: 1500,
+            showConfirmButton: false
+        });
+
+        loadCommunityStats();
+    } catch (err) {
+        Swal.fire('Lỗi', err.message || 'Không thể xóa bài viết.', 'error');
+    }
+}
+
+/**
+ * Chia sẻ bài viết (Copy link)
+ */
+function handleSharePost(postId) {
+    const url = window.location.origin + window.location.pathname + '#post-card-' + postId;
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(url).then(() => {
+            Swal.fire({
+                icon: 'success',
+                title: 'Đã sao chép liên kết!',
+                text: 'Bạn có thể gửi liên kết bài thảo luận này cho bạn học hoặc giảng viên.',
+                timer: 1800,
+                showConfirmButton: false
+            });
+        });
+    }
+}
+
+/**
+ * Chuyển đổi timestamp thành relative time thân thiện (Vừa xong, 10 phút trước...)
+ */
+function formatTimeAgo(ts) {
+    if (!ts) return 'Vừa xong';
+    try {
+        const time = new Date(ts.replace ? ts.replace(' ', 'T') : ts).getTime();
+        const diff = Math.floor((Date.now() - time) / 1000);
+
+        if (diff < 60) return 'Vừa xong';
+        if (diff < 3600) return `${Math.floor(diff / 60)} phút trước`;
+        if (diff < 86400) return `${Math.floor(diff / 3600)} giờ trước`;
+        if (diff < 604800) return `${Math.floor(diff / 86400)} ngày trước`;
+        return new Date(time).toLocaleDateString('vi-VN');
+    } catch (e) {
+        return 'Vừa xong';
+    }
+}
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
 
 ``
 
@@ -10718,6 +12240,442 @@ const AppUI = (() => {
 
 ---
 
+## src\main\webapp\community.html
+<a id='src-main-webapp-community-html'></a>
+
+``html
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diễn Đàn & Cộng Đồng Học Tập — LMS Thông Minh</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- FontAwesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <!-- SweetAlert2 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/app.css">
+    <style>
+        /* Discord / Facebook Inspired Community Styling */
+        .channel-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 0.65rem 0.9rem;
+            border-radius: 10px;
+            color: #475569;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.15s ease;
+            margin-bottom: 0.3rem;
+            border: 1px solid transparent;
+        }
+        .channel-btn:hover {
+            background-color: #f1f5f9;
+            color: #0f172a;
+            transform: translateX(2px);
+        }
+        .channel-btn.active {
+            background: linear-gradient(135deg, #4361ee 0%, #3a56d4 100%);
+            color: #ffffff !important;
+            box-shadow: 0 4px 12px rgba(67, 97, 238, 0.25);
+        }
+        .channel-btn.active i {
+            color: #ffffff !important;
+        }
+
+        .post-card {
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            background: #ffffff;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .post-card:hover {
+            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+            border-color: #cbd5e1;
+        }
+
+        .post-action-btn {
+            background: transparent;
+            border: none;
+            padding: 0.45rem 0.9rem;
+            border-radius: 8px;
+            color: #64748b;
+            font-weight: 600;
+            font-size: 0.88rem;
+            transition: all 0.15s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        .post-action-btn:hover {
+            background-color: #f1f5f9;
+            color: #0f172a;
+        }
+        .post-action-btn.liked {
+            color: #e11d48 !important;
+            background-color: rgba(225, 29, 72, 0.08);
+        }
+        .post-action-btn.liked i {
+            color: #e11d48 !important;
+        }
+
+        .comment-bubble {
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 0.75rem 1rem;
+        }
+
+        .author-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.1rem;
+            flex-shrink: 0;
+        }
+        .avatar-student {
+            background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+            color: #ffffff;
+        }
+        .avatar-teacher {
+            background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%);
+            color: #ffffff;
+        }
+
+        .composer-trigger {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 1.1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .composer-trigger:hover {
+            border-color: #6366f1;
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.08);
+        }
+    </style>
+</head>
+<body class="bg-light">
+
+    <!-- ── Navbar ── -->
+    <nav class="navbar navbar-expand-lg navbar-custom sticky-top">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center gap-2" href="index.html">
+                <i class="fa-solid fa-graduation-cap fa-lg text-primary"></i>
+                <span>LMS Thông Minh</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navContent">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navContent">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-3">
+                    <li class="nav-item">
+                        <a class="nav-link fw-semibold" href="index.html"><i class="fa-solid fa-book-open me-1"></i>Chủ Đề Ôn Tập</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active fw-bold text-primary" href="community.html">
+                            <i class="fa-solid fa-comments me-1 text-info"></i>Diễn Đàn Cộng Đồng
+                            <span class="badge bg-danger rounded-pill ms-1" style="font-size: 0.65rem;">Mới</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link fw-semibold" href="history.html"><i class="fa-solid fa-chart-line me-1"></i>Lịch Sử & Tiến Độ</a>
+                    </li>
+                    <li class="nav-item d-none" id="nav-teacher-link">
+                        <a class="nav-link fw-bold text-indigo" href="teacher-dashboard.html" style="color: #6366f1;"><i class="fa-solid fa-chalkboard-user me-1"></i>Trang Giảng Viên</a>
+                    </li>
+                </ul>
+                <div class="d-flex align-items-center gap-3">
+                    <div class="dropdown">
+                        <button class="btn btn-outline-secondary dropdown-toggle d-flex align-items-center gap-2 rounded-pill px-3 py-1" type="button" data-bs-toggle="dropdown">
+                            <i class="fa-solid fa-user-circle fa-lg text-primary"></i>
+                            <span id="nav-username" class="fw-semibold small">Sinh Viên</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3">
+                            <li><h6 class="dropdown-header" id="nav-fullname">Họ và Tên</h6></li>
+                            <li class="d-none" id="dropdown-teacher-item">
+                                <a class="dropdown-item text-primary fw-semibold d-flex align-items-center gap-2" href="teacher-dashboard.html">
+                                    <i class="fa-solid fa-chalkboard-user"></i>Bảng Quản Trị Giảng Viên
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item text-danger d-flex align-items-center gap-2" href="#" id="logout-btn">
+                                    <i class="fa-solid fa-right-from-bracket"></i>Đăng xuất
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ── Main Community Layout (Discord / Facebook Style 3-Column Layout) ── -->
+    <main class="container my-4 flex-grow-1">
+        <div class="row g-4">
+
+            <!-- ── Cột Trái: Kênh Thảo Luận (Discord Channels Sidebar) ── -->
+            <div class="col-lg-3">
+                <div class="card border-0 shadow-sm rounded-4 p-3 bg-white sticky-top" style="top: 80px; z-index: 10;">
+                    <!-- Community Server Header -->
+                    <div class="d-flex align-items-center gap-2 mb-3 pb-2 border-bottom">
+                        <div class="rounded-3 bg-primary text-white p-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                            <i class="fa-solid fa-fire fa-lg"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold mb-0 text-dark">LMS Study Lounge</h6>
+                            <small class="text-muted" style="font-size: 0.75rem;">Không gian trao đổi đa ngành</small>
+                        </div>
+                    </div>
+
+                    <!-- Kênh Phân Loại (Discord Channels) -->
+                    <div class="text-uppercase text-muted fw-bold small px-2 mb-2" style="font-size: 0.72rem; letter-spacing: 0.5px;">
+                        Kênh Thảo Luận
+                    </div>
+                    <nav class="nav flex-column mb-3">
+                        <a href="#" class="channel-btn active" data-channel="all">
+                            <i class="fa-solid fa-globe text-primary"></i>
+                            <span># tất-cả-bài-viết</span>
+                        </a>
+                        <a href="#" class="channel-btn" data-channel="general">
+                            <i class="fa-solid fa-comments text-info"></i>
+                            <span># thảo-luận-chung</span>
+                        </a>
+                        <a href="#" class="channel-btn" data-channel="qna">
+                            <i class="fa-solid fa-circle-question text-danger"></i>
+                            <span># hỏi-đáp-bài-tập</span>
+                        </a>
+                        <a href="#" class="channel-btn" data-channel="tips">
+                            <i class="fa-solid fa-lightbulb text-warning"></i>
+                            <span># mẹo-né-bẫy-tư-duy</span>
+                        </a>
+                        <a href="#" class="channel-btn" data-channel="showcase">
+                            <i class="fa-solid fa-star text-success"></i>
+                            <span># đề-xuất-đề-hay</span>
+                        </a>
+                    </nav>
+
+                    <!-- Lọc theo môn học -->
+                    <div class="text-uppercase text-muted fw-bold small px-2 mb-2 pt-2 border-top" style="font-size: 0.72rem; letter-spacing: 0.5px;">
+                        Lọc Theo Môn Học
+                    </div>
+                    <select class="form-select form-select-sm rounded-3 py-2 mb-3" id="filter-topic-select">
+                        <option value="">-- Mọi môn học & đề thi --</option>
+                        <!-- Injected dynamically -->
+                    </select>
+
+                    <!-- Chỉ số cộng đồng (Live Community Stats) -->
+                    <div class="p-3 bg-light rounded-3 border">
+                        <div class="fw-bold small text-dark mb-2 d-flex align-items-center gap-1">
+                            <i class="fa-solid fa-chart-simple text-primary"></i>Hoạt Động Cộng Đồng
+                        </div>
+                        <div class="d-flex justify-content-between small text-muted mb-1">
+                            <span>Bài thảo luận:</span>
+                            <span class="fw-bold text-dark" id="stat-posts-count">--</span>
+                        </div>
+                        <div class="d-flex justify-content-between small text-muted mb-1">
+                            <span>Lượt bình luận:</span>
+                            <span class="fw-bold text-dark" id="stat-comments-count">--</span>
+                        </div>
+                        <div class="d-flex justify-content-between small text-muted">
+                            <span>Người tham gia:</span>
+                            <span class="fw-bold text-success" id="stat-creators-count">--</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Cột Giữa: Bảng Tin Thảo Luận (Community Feed) ── -->
+            <div class="col-lg-6">
+
+                <!-- Hộp Đăng Bài Mới (Facebook Style Composer Box) -->
+                <div class="composer-trigger mb-4 shadow-sm" id="btn-open-create-post">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="author-avatar avatar-student" id="user-composer-avatar">
+                            U
+                        </div>
+                        <div class="flex-grow-1 bg-light rounded-pill py-2 px-3 text-muted small border">
+                            <i class="fa-regular fa-pen-to-square me-1"></i>Bạn đang thắc mắc hay muốn chia sẻ điều gì về bài học hôm nay?
+                        </div>
+                        <button class="btn btn-primary btn-sm rounded-pill px-3 fw-semibold">
+                            <i class="fa-solid fa-plus me-1"></i>Đăng bài
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Tiêu đề Kênh hiện tại & Bộ tìm kiếm -->
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+                    <div>
+                        <h5 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2" id="current-channel-title">
+                            <i class="fa-solid fa-hashtag text-primary"></i>Tất Cả Bài Viết
+                        </h5>
+                        <small class="text-muted" id="current-channel-desc">Dòng thời gian các câu hỏi, mẹo học tập và bài thảo luận mới nhất</small>
+                    </div>
+                    <button class="btn btn-outline-secondary btn-sm rounded-pill px-3" id="btn-refresh-feed">
+                        <i class="fa-solid fa-rotate-right me-1"></i>Làm mới
+                    </button>
+                </div>
+
+                <!-- Loading Spinner -->
+                <div id="posts-loading" class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="text-muted mt-2 small">Đang tải các cuộc thảo luận...</p>
+                </div>
+
+                <!-- Empty State -->
+                <div id="posts-empty" class="card border-0 shadow-sm rounded-4 p-5 text-center bg-white" style="display: none;">
+                    <i class="fa-solid fa-comment-dots text-muted fs-1 mb-3 opacity-50"></i>
+                    <h6 class="fw-bold text-dark">Chưa có bài thảo luận nào trong kênh này</h6>
+                    <p class="text-muted small mb-3">Hãy là người đầu tiên đặt câu hỏi hoặc chia sẻ góc nhìn của bạn nhé!</p>
+                    <div>
+                        <button class="btn btn-primary rounded-pill px-4 fw-semibold" onclick="document.getElementById('btn-open-create-post').click()">
+                            <i class="fa-solid fa-pen me-1"></i>Tạo Bài Thảo Luận Đầu Tiên
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Danh Sách Bài Viết (Feed Posts List) -->
+                <div id="posts-container" class="d-flex flex-column gap-3">
+                    <!-- Posts will be injected dynamically -->
+                </div>
+
+            </div>
+
+            <!-- ── Cột Phải: Góc Chuyên Gia & Xu Hướng (Widgets & Guidelines) ── -->
+            <div class="col-lg-3">
+                
+                <!-- Card 1: Không Gian Kết Nối Bình Đẳng -->
+                <div class="card border-0 shadow-sm rounded-4 p-3 bg-white mb-4">
+                    <h6 class="fw-bold text-dark mb-2 d-flex align-items-center gap-2">
+                        <i class="fa-solid fa-handshake-angle text-indigo" style="color: #6366f1;"></i>Kết Nối Giảng Viên & Sinh Viên
+                    </h6>
+                    <p class="text-muted small mb-3" style="line-height: 1.5;">
+                        Đây là không gian mở nơi người học và các chuyên gia học thuật cùng trao đổi, giải đáp các thắc mắc về bẫy tư duy, câu hỏi mơ hồ và phương pháp học tập hiệu quả.
+                    </p>
+                    <div class="d-flex gap-2 flex-wrap">
+                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2 py-1 small">
+                            <i class="fa-solid fa-user-graduate me-1"></i>Hỏi Bài Tự Do
+                        </span>
+                        <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-1 small">
+                            <i class="fa-solid fa-check-double me-1"></i>Bình Luận Đa Chiều
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Card 2: Quy Tắc Thảo Luận Văn Minh -->
+                <div class="card border-0 shadow-sm rounded-4 p-3 bg-white mb-4">
+                    <h6 class="fw-bold text-dark mb-2 d-flex align-items-center gap-2">
+                        <i class="fa-solid fa-scale-balanced text-warning"></i>Văn Hóa Cộng Đồng
+                    </h6>
+                    <ul class="text-secondary small ps-3 mb-0" style="line-height: 1.6;">
+                        <li>Tôn trọng góc nhìn đa chiều của bạn học.</li>
+                        <li>Khuyến khích trích dẫn dẫn chứng học thuật và code mẫu.</li>
+                        <li>Nếu phát hiện câu hỏi thi có lỗi, hãy dùng chức năng <strong>Báo Lỗi</strong> để giảng viên hoàn thiện.</li>
+                    </ul>
+                </div>
+
+                <!-- Card 3: Khám Phá Đề Thi Nổi Bật -->
+                <div class="card border-0 shadow-sm rounded-4 p-3 text-white" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <i class="fa-solid fa-wand-magic-sparkles text-warning"></i>
+                        <h6 class="fw-bold mb-0">Thử Thách Vượt Bẫy AI</h6>
+                    </div>
+                    <p class="text-light opacity-75 small mb-3">
+                        Thử sức với bộ câu hỏi do cộng đồng và AI biên soạn để kiểm tra mức độ vững vàng tư duy của bạn!
+                    </p>
+                    <a href="index.html" class="btn btn-warning text-dark btn-sm rounded-pill fw-bold w-100 py-2">
+                        <i class="fa-solid fa-play me-1"></i>Vào Danh Mục Đề Thi
+                    </a>
+                </div>
+
+            </div>
+
+        </div>
+    </main>
+
+    <!-- ── Modal Tạo Bài Viết Mới (Create Post Modal) ── -->
+    <div class="modal fade" id="createPostModal" tabindex="-1" aria-labelledby="createPostModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header border-0 py-3 bg-white border-bottom">
+                    <h5 class="modal-title fw-bold text-dark" id="createPostModalLabel">
+                        <i class="fa-solid fa-feather-pointed text-primary me-2"></i>Tạo Bài Thảo Luận Mới
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form id="create-post-form">
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label for="post-channel-select" class="form-label fw-bold small text-dark">Kênh thảo luận <span class="text-danger">*</span></label>
+                                <select class="form-select rounded-3 py-2" id="post-channel-select" required>
+                                    <option value="general"># thảo-luận-chung</option>
+                                    <option value="qna"># hỏi-đáp-bài-tập</option>
+                                    <option value="tips"># mẹo-né-bẫy-tư-duy</option>
+                                    <option value="showcase"># đề-xuất-đề-hay</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="post-topic-select" class="form-label fw-bold small text-dark">Môn học liên quan (Tùy chọn)</label>
+                                <select class="form-select rounded-3 py-2" id="post-topic-select">
+                                    <option value="">-- Thảo luận tự do / Không chọn môn --</option>
+                                    <!-- Injected dynamically -->
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="post-title-input" class="form-label fw-bold small text-dark">Tiêu đề bài viết <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control rounded-3 py-2" id="post-title-input" placeholder="Tóm tắt ngắn gọn câu hỏi hoặc chủ đề bạn muốn bàn luận..." required maxlength="255">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="post-content-input" class="form-label fw-bold small text-dark d-flex justify-content-between">
+                                <span>Nội dung chi tiết <span class="text-danger">*</span></span>
+                                <span class="text-muted fw-normal small">Hỗ trợ Markdown & Code blocks</span>
+                            </label>
+                            <textarea class="form-control rounded-3" id="post-content-input" rows="5" placeholder="Mô tả cụ thể thắc mắc, đoạn code gây lỗi, hoặc kinh nghiệm bạn muốn chia sẻ với mọi người..." required></textarea>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2 pt-2">
+                            <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Hủy</button>
+                            <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" id="btn-submit-post">
+                                <i class="fa-solid fa-paper-plane me-1"></i>Đăng Bài Lên Diễn Đàn
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="js/ui.js?v=3.1"></script>
+    <script src="js/api.js?v=3.1"></script>
+    <script src="js/chat-widget.js?v=3.1"></script>
+    <script src="js/community.js?v=3.1"></script>
+</body>
+</html>
+
+``
+
+---
+
 ## src\main\webapp\history.html
 <a id='src-main-webapp-history-html'></a>
 
@@ -10747,6 +12705,9 @@ const AppUI = (() => {
             <div class="d-flex align-items-center gap-2">
                 <a href="index.html" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
                     <i class="fa-solid fa-house me-1"></i>Trang Chủ
+                </a>
+                <a href="community.html" class="btn btn-outline-info text-dark btn-sm rounded-pill px-3">
+                    <i class="fa-solid fa-comments me-1 text-info"></i>Diễn Đàn Cộng Đồng
                 </a>
                 <a href="teacher-dashboard.html" class="btn btn-outline-primary btn-sm rounded-pill px-3 d-none" id="history-teacher-btn">
                     <i class="fa-solid fa-chalkboard-user me-1"></i>Trang Giảng Viên
@@ -10969,7 +12930,13 @@ const AppUI = (() => {
             <div class="collapse navbar-collapse" id="navContent">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-3">
                     <li class="nav-item">
-                        <a class="nav-link active fw-semibold" href="index.html"><i class="fa-solid fa-book-open me-1"></i>Chủ Đề</a>
+                        <a class="nav-link active fw-semibold" href="index.html"><i class="fa-solid fa-book-open me-1"></i>Chủ Đề Ôn Tập</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link fw-semibold" href="community.html">
+                            <i class="fa-solid fa-comments me-1 text-info"></i>Diễn Đàn Cộng Đồng
+                            <span class="badge bg-danger rounded-pill ms-1" style="font-size: 0.65rem;">Mới</span>
+                        </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link fw-semibold" href="history.html"><i class="fa-solid fa-chart-line me-1"></i>Lịch Sử & Tiến Độ</a>
@@ -11017,9 +12984,12 @@ const AppUI = (() => {
                     <p class="text-light opacity-75 mb-4" style="max-width: 600px;">
                         Làm bài kiểm tra trắc nghiệm với tính năng <strong>Confidence Tagging</strong>. AI sẽ tự động phân tích quan niệm sai lầm và thiết kế bài học củng cố dành riêng cho bạn!
                     </p>
-                    <div class="d-flex gap-2">
+                    <div class="d-flex gap-2 flex-wrap">
                         <a href="#topics-section" class="btn btn-primary px-4 py-2 rounded-pill fw-semibold shadow">
                             <i class="fa-solid fa-play me-2"></i>Bắt Đầu Ôn Tập
+                        </a>
+                        <a href="community.html" class="btn btn-outline-info text-white border-light-subtle px-4 py-2 rounded-pill fw-semibold">
+                            <i class="fa-solid fa-comments me-2 text-info"></i>Diễn Đàn Học Tập
                         </a>
                         <a href="history.html" class="btn btn-outline-light px-4 py-2 rounded-pill fw-semibold">
                             <i class="fa-solid fa-clock-rotate-left me-2"></i>Xem Lịch Sử
@@ -11586,6 +13556,11 @@ const AppUI = (() => {
                     <li class="nav-item">
                         <a class="nav-link fw-semibold text-secondary" href="index.html">
                             <i class="fa-solid fa-arrow-left me-1"></i>Về LMS Sinh Viên
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link fw-semibold text-primary" href="community.html">
+                            <i class="fa-solid fa-comments me-1 text-info"></i>Diễn Đàn Cộng Đồng
                         </a>
                     </li>
                 </ul>

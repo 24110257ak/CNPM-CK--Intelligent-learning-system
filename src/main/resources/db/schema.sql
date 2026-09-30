@@ -160,6 +160,49 @@ CREATE INDEX IF NOT EXISTS IX_question_comments_uid ON question_comments(user_id
 CREATE INDEX IF NOT EXISTS IX_question_ratings_qid ON question_ratings(question_id);
 CREATE INDEX IF NOT EXISTS IX_question_ratings_uid ON question_ratings(user_id);
 
+-- ─────────────────────────────────────────────────────────────────────────────
+-- BẢNG 10: COMMUNITY_POSTS (Diễn đàn & Bài viết cộng đồng học tập)
+-- ─────────────────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS community_posts (
+    post_id           SERIAL PRIMARY KEY,
+    user_id           INT           NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    topic_id          INT           NULL REFERENCES topics(topic_id) ON DELETE SET NULL,
+    channel           VARCHAR(50)   NOT NULL DEFAULT 'general',
+    title             VARCHAR(255)  NOT NULL,
+    content           TEXT          NOT NULL,
+    likes_count       INT           NOT NULL DEFAULT 0,
+    comments_count    INT           NOT NULL DEFAULT 0,
+    created_at        TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at        TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- BẢNG 11: COMMUNITY_POST_COMMENTS (Bình luận bài viết cộng đồng)
+-- ─────────────────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS community_post_comments (
+    comment_id        SERIAL PRIMARY KEY,
+    post_id           INT           NOT NULL REFERENCES community_posts(post_id) ON DELETE CASCADE,
+    user_id           INT           NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    content           TEXT          NOT NULL,
+    created_at        TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- BẢNG 12: COMMUNITY_POST_LIKES (Thả tim bài viết cộng đồng)
+-- ─────────────────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS community_post_likes (
+    like_id           SERIAL PRIMARY KEY,
+    post_id           INT           NOT NULL REFERENCES community_posts(post_id) ON DELETE CASCADE,
+    user_id           INT           NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    created_at        TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT UQ_community_post_like UNIQUE (post_id, user_id)
+);
+
+CREATE INDEX IF NOT EXISTS IX_community_posts_channel ON community_posts(channel);
+CREATE INDEX IF NOT EXISTS IX_community_posts_topic   ON community_posts(topic_id);
+CREATE INDEX IF NOT EXISTS IX_community_posts_user    ON community_posts(user_id);
+CREATE INDEX IF NOT EXISTS IX_community_comments_post ON community_post_comments(post_id);
+
 -- ═══════════════════════════════════════════════════════════════════════════════
 -- DỮ LIỆU MẪU KHỞI TẠO (SEED DATA)
 -- ═══════════════════════════════════════════════════════════════════════════════

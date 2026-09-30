@@ -128,6 +128,24 @@ const API = {
         rateQuestion: (questionId, ratingType, reportReason = null) => API.request('/discussion/rate', { method: 'POST', body: JSON.stringify({ questionId, ratingType, reportReason }) }),
         getReported: (limit = 50) => API.request(`/discussion/reported?limit=${encodeURIComponent(limit)}`)
     },
+    community: {
+        listPosts: (channel = null, topicId = null, limit = 30, offset = 0) => {
+            const params = new URLSearchParams();
+            if (channel && channel !== 'all') params.append('channel', channel);
+            if (topicId) params.append('topicId', topicId);
+            params.append('limit', limit);
+            params.append('offset', offset);
+            return API.request(`/community/posts?${params.toString()}`);
+        },
+        getPost: postId => API.request(`/community/posts/${encodeURIComponent(postId)}`),
+        createPost: data => API.request('/community/posts', { method: 'POST', body: JSON.stringify(data) }),
+        deletePost: postId => API.request(`/community/posts/${encodeURIComponent(postId)}`, { method: 'DELETE' }),
+        toggleLike: postId => API.request(`/community/posts/${encodeURIComponent(postId)}/like`, { method: 'POST' }),
+        listComments: postId => API.request(`/community/posts/${encodeURIComponent(postId)}/comments`),
+        createComment: (postId, content) => API.request(`/community/posts/${encodeURIComponent(postId)}/comments`, { method: 'POST', body: JSON.stringify({ content }) }),
+        deleteComment: (postId, commentId) => API.request(`/community/posts/${encodeURIComponent(postId)}/comments/${encodeURIComponent(commentId)}`, { method: 'DELETE' }),
+        getStats: () => API.request('/community/stats')
+    },
     teacher: {
         stats: () => API.request('/teacher/stats'),
         generateQuestions: payload => API.request('/teacher/ai/generate', { method:'POST', body:JSON.stringify(payload), timeout:60000 }),

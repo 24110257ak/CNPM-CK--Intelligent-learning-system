@@ -168,7 +168,52 @@ public class DatabaseUtil {
                         + "CONSTRAINT UQ_question_user_rating UNIQUE (question_id, user_id)"
                         + ");");
 
-                System.out.println("[DatabaseUtil] ✅ PostgreSQL Auto-Migration: Cột [misconception_tag] và bảng [question_comments, question_ratings] đã sẵn sàng!");
+                // PostgreSQL: Bảng Diễn Đàn & Không Gian Cộng Đồng Học Tập (Discord / Facebook style)
+                stmt.execute("CREATE TABLE IF NOT EXISTS community_posts ("
+                        + "post_id SERIAL PRIMARY KEY, "
+                        + "user_id INT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE, "
+                        + "topic_id INT NULL REFERENCES topics(topic_id) ON DELETE SET NULL, "
+                        + "channel VARCHAR(50) NOT NULL DEFAULT 'general', "
+                        + "title VARCHAR(255) NOT NULL, "
+                        + "content TEXT NOT NULL, "
+                        + "likes_count INT NOT NULL DEFAULT 0, "
+                        + "comments_count INT NOT NULL DEFAULT 0, "
+                        + "created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, "
+                        + "updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP"
+                        + ");");
+
+                stmt.execute("CREATE TABLE IF NOT EXISTS community_post_comments ("
+                        + "comment_id SERIAL PRIMARY KEY, "
+                        + "post_id INT NOT NULL REFERENCES community_posts(post_id) ON DELETE CASCADE, "
+                        + "user_id INT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE, "
+                        + "content TEXT NOT NULL, "
+                        + "created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP"
+                        + ");");
+
+                stmt.execute("CREATE TABLE IF NOT EXISTS community_post_likes ("
+                        + "like_id SERIAL PRIMARY KEY, "
+                        + "post_id INT NOT NULL REFERENCES community_posts(post_id) ON DELETE CASCADE, "
+                        + "user_id INT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE, "
+                        + "created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, "
+                        + "CONSTRAINT UQ_community_post_like UNIQUE (post_id, user_id)"
+                        + ");");
+
+                // Seed bài viết mẫu nếu bảng mới được tạo
+                try (var countRs = stmt.executeQuery("SELECT COUNT(*) FROM community_posts")) {
+                    if (countRs.next() && countRs.getInt(1) == 0) {
+                        stmt.execute("INSERT INTO community_posts (user_id, topic_id, channel, title, content, likes_count, comments_count) "
+                                + "SELECT u.user_id, 1, 'tips', 'Kinh nghiệm né bẫy Boundary Blindness khi viết vòng lặp For trong Java', "
+                                + "'Chào mọi người, khi làm trắc nghiệm dạng biên mảng [i <= array.length] các bạn nhớ chú ý mảng trong Java bắt đầu từ 0 đến length - 1. Nếu dùng <= sẽ vướng lỗi ArrayIndexOutOfBoundsException kinh điển!', 5, 1 "
+                                + "FROM users u WHERE u.role = 'teacher' LIMIT 1;");
+
+                        stmt.execute("INSERT INTO community_posts (user_id, topic_id, channel, title, content, likes_count, comments_count) "
+                                + "SELECT u.user_id, 1, 'qna', 'Phân biệt giữa Interface và Abstract Class khi nào nên dùng cái nào?', "
+                                + "'Mình đang làm bài tập lớn phần hướng đối tượng, theo các bạn khi thiết kế kiến trúc đa tầng (Clean Architecture), tầng Repository nên dùng Interface hay Abstract class thì linh hoạt hơn cho unit test?', 3, 0 "
+                                + "FROM users u WHERE u.role = 'student' LIMIT 1;");
+                    }
+                } catch (Exception ignored) {}
+
+                System.out.println("[DatabaseUtil] ✅ PostgreSQL Auto-Migration: Cột [misconception_tag] và bảng [question_comments, community_posts] đã sẵn sàng!");
 
             } else {
                 // SQL Server migration

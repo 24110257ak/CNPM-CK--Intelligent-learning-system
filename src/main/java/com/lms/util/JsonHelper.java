@@ -80,6 +80,13 @@ public class JsonHelper {
     }
 
     /**
+     * Tạo response thành công với data mặc định.
+     */
+    public static String success(Object data) {
+        return success("Thành công", data);
+    }
+
+    /**
      * Tạo response thành công kèm data.
      */
     public static String success(String message, Object data) {

@@ -126,6 +126,32 @@
                         </div>
 
                         <div class="mb-3">
+                            <label class="form-label fw-semibold small">Vai trò trên diễn đàn <span class="text-danger">*</span></label>
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <input type="radio" class="btn-check" name="reg-role" id="role-student" value="student" checked>
+                                    <label class="btn btn-outline-primary w-100 py-2 rounded-3 text-start d-flex align-items-center" for="role-student">
+                                        <i class="fa-solid fa-user-graduate me-2 fs-5"></i>
+                                        <div>
+                                            <div class="fw-bold small">Người học</div>
+                                            <small class="text-muted" style="font-size:0.72rem;">Làm bài & thảo luận</small>
+                                        </div>
+                                    </label>
+                                </div>
+                                <div class="col-6">
+                                    <input type="radio" class="btn-check" name="reg-role" id="role-teacher" value="teacher">
+                                    <label class="btn btn-outline-success w-100 py-2 rounded-3 text-start d-flex align-items-center" for="role-teacher">
+                                        <i class="fa-solid fa-chalkboard-user me-2 fs-5"></i>
+                                        <div>
+                                            <div class="fw-bold small">Giảng viên / Soạn đề</div>
+                                            <small class="text-muted" style="font-size:0.72rem;">Đóng góp & quản trị</small>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
                             <label class="form-label fw-semibold small">Sở thích cá nhân <span class="text-muted">(để AI tạo ẩn dụ thân thuộc)</span></label>
                             <input type="text" id="reg-interests" class="form-control" placeholder="Ví dụ: bóng đá, anime, game kiếm hiệp, nấu ăn">
                         </div>
@@ -204,17 +230,21 @@
             const email = document.getElementById('reg-email').value.trim();
             const password = document.getElementById('reg-password').value;
             const interests = document.getElementById('reg-interests').value.trim();
+            const selectedRoleEl = document.querySelector('input[name="reg-role"]:checked');
+            const role = selectedRoleEl ? selectedRoleEl.value : 'student';
 
             try {
-                await API.auth.register(username, password, fullName, email, interests);
+                await API.auth.register(username, password, fullName, email, interests, role);
+                const targetUrl = (role === 'teacher') ? 'teacher-dashboard.html' : 'index.html';
+
                 Swal.fire({
                     icon: 'success',
                     title: 'Đăng ký thành công!',
-                    text: 'Tài khoản đã sẵn sàng. Đang chuyển hướng vào hệ thống...',
+                    text: `Tài khoản (${role === 'teacher' ? 'Giảng viên' : 'Học viên'}) đã sẵn sàng. Đang chuyển hướng...`,
                     timer: 1500,
                     showConfirmButton: false
                 }).then(() => {
-                    window.location.href = 'index.html';
+                    window.location.href = targetUrl;
                 });
             } catch (err) {
                 Swal.fire('Lỗi đăng ký', err.message || 'Không thể tạo tài khoản.', 'error');

@@ -192,29 +192,80 @@ function renderResult(data) {
     // 2.3. Khởi tạo Thẻ Khắc Phục Lỗi (Adaptive Remediation Card) nếu phát hiện lỗ hổng
     setupAdaptiveRemediation(remedialList, data);
 
-    // Render Danh Sách Xem Lại Từng Câu Hỏi
+    // Render Danh Sách Xem Lại Từng Câu Hỏi kèm Diễn Đàn & Tín Nhiệm Phản Biện
     const reviewList = document.getElementById('questions-review-list');
     if (graded.length > 0) {
         reviewList.innerHTML = graded.map((ans, idx) => `
-            <div class="p-3 border rounded-3 ${ans.isCorrect ? 'border-success-subtle bg-success-subtle bg-opacity-10' : 'border-danger-subtle bg-danger-subtle bg-opacity-10'}">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <span class="fw-bold text-dark">Câu ${idx + 1}: ${ans.questionText || ''}</span>
-                    <span class="badge ${ans.isCorrect ? 'bg-success' : 'bg-danger'} rounded-pill">
-                        ${ans.isCorrect ? 'ĐÚNG' : 'SAI'}
-                    </span>
-                </div>
-                <div class="small d-flex flex-wrap gap-3 mb-2">
-                    <span>Lựa chọn của bạn: <strong>${ans.chosenAnswer || '(Bỏ trống)'}</strong></span>
-                    <span>Đáp án đúng: <strong class="text-success">${ans.correctAnswer}</strong></span>
-                    <span>Mức độ tự tin: <strong class="${ans.confidenceLevel === 'GUESS' ? 'text-warning' : 'text-success'}">${ans.confidenceLevel}</strong></span>
-                </div>
-                ${ans.explanation ? `
-                    <div class="text-muted small pt-2 border-top">
-                        <strong>Giải thích gốc:</strong> ${ans.explanation}
+            <div class="card border rounded-4 mb-3 overflow-hidden shadow-sm ${ans.isCorrect ? 'border-success-subtle bg-white' : 'border-danger-subtle bg-white'}">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+                        <span class="fw-bold text-dark fs-6">Câu ${idx + 1}: ${escapeHtml(ans.questionText || '')}</span>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge ${ans.isCorrect ? 'bg-success' : 'bg-danger'} rounded-pill px-3 py-1">
+                                ${ans.isCorrect ? '<i class="fa-solid fa-circle-check me-1"></i>ĐÚNG' : '<i class="fa-solid fa-circle-xmark me-1"></i>SAI'}
+                            </span>
+                            <span class="badge bg-light text-muted border rounded-pill px-2 py-1" id="cred-badge-${ans.questionId}">
+                                <i class="fa-solid fa-shield-halved me-1 text-primary"></i>Độ tin cậy: ...
+                            </span>
+                        </div>
                     </div>
-                ` : ''}
+                    <div class="small d-flex flex-wrap gap-3 mb-2 py-2 px-3 bg-light rounded-3 border">
+                        <span>Lựa chọn của bạn: <strong class="${ans.isCorrect ? 'text-success' : 'text-danger'}">${ans.chosenAnswer || '(Bỏ trống)'}</strong></span>
+                        <span>Đáp án chuẩn: <strong class="text-success">${ans.correctAnswer}</strong></span>
+                        <span>Mức độ tự tin: <strong class="${ans.confidenceLevel === 'GUESS' ? 'text-warning' : 'text-success'}">${ans.confidenceLevel === 'GUESS' ? 'Đoán mò' : 'Chắc chắn'}</strong></span>
+                    </div>
+                    ${ans.explanation ? `
+                        <div class="text-muted small pt-2 mb-3">
+                            <strong class="text-secondary"><i class="fa-solid fa-lightbulb text-warning me-1"></i>Giải thích:</strong> ${escapeHtml(ans.explanation)}
+                        </div>
+                    ` : ''}
+
+                    <!-- ── Thanh Đánh Giá Độ Tin Cậy & Phản Biện ── -->
+                    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 pt-3 border-top">
+                        <div class="d-flex align-items-center gap-2">
+                            <button class="btn btn-sm btn-outline-success rounded-pill px-3" id="btn-upvote-${ans.questionId}" onclick="voteQuestion(${ans.questionId}, 'UPVOTE')">
+                                <i class="fa-solid fa-thumbs-up me-1"></i>Hữu ích (<span id="upvotes-cnt-${ans.questionId}">0</span>)
+                            </button>
+                            <button class="btn btn-sm btn-outline-secondary rounded-pill px-3" id="btn-downvote-${ans.questionId}" onclick="voteQuestion(${ans.questionId}, 'DOWNVOTE')">
+                                <i class="fa-solid fa-thumbs-down me-1"></i>Chưa chuẩn (<span id="downvotes-cnt-${ans.questionId}">0</span>)
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger rounded-pill px-3" id="btn-report-${ans.questionId}" onclick="reportQuestionPrompt(${ans.questionId})">
+                                <i class="fa-solid fa-flag me-1"></i>Báo lỗi / Ảo giác AI
+                            </button>
+                        </div>
+                        <div>
+                            <button class="btn btn-sm btn-outline-primary rounded-pill px-3" onclick="toggleComments(${ans.questionId})">
+                                <i class="fa-solid fa-comments me-1"></i>Thảo luận & Phản biện (<span id="comments-cnt-${ans.questionId}">0</span>)
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- ── Khung Bình Luận Phản Biện Mở Rộng ── -->
+                    <div id="comments-section-${ans.questionId}" class="mt-3 pt-3 border-top" style="display: none;">
+                        <h6 class="fw-bold small text-dark mb-2">
+                            <i class="fa-solid fa-users-viewfinder text-primary me-1"></i>Diễn đàn thảo luận & phản biện câu hỏi này
+                        </h6>
+                        <div id="comments-list-${ans.questionId}" class="d-flex flex-column gap-2 mb-3">
+                            <div class="text-muted small text-center py-2"><span class="spinner-border spinner-border-sm me-1"></span>Đang tải bình luận...</div>
+                        </div>
+
+                        <!-- Form gửi bình luận -->
+                        <div class="d-flex gap-2">
+                            <input type="text" class="form-control form-control-sm rounded-pill px-3" id="comment-input-${ans.questionId}" placeholder="Viết phản biện, chia sẻ góc nhìn hoặc hỏi đồng nghiệp..." onkeydown="if(event.key==='Enter') submitComment(${ans.questionId})">
+                            <button class="btn btn-primary btn-sm rounded-pill px-3" onclick="submitComment(${ans.questionId})">
+                                <i class="fa-solid fa-paper-plane me-1"></i>Gửi
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
             </div>
         `).join('');
+
+        // Tải độ tín nhiệm ban đầu cho từng câu hỏi
+        graded.forEach(ans => {
+            loadCredibility(ans.questionId);
+        });
     }
 }
 
@@ -501,4 +552,231 @@ function escapeHtml(str) {
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;');
+}
+
+/**
+ * ══════════════════════════════════════════════════════════════
+ * DIỄN ĐÀN THẢO LUẬN & ĐÁNH GIÁ ĐỘ TIN CẬY CÂU HỎI (FORUM & CREDIBILITY)
+ * ══════════════════════════════════════════════════════════════
+ */
+
+const loadedCommentsMap = {};
+
+/**
+ * Tải chỉ số tín nhiệm của câu hỏi (Upvote, Downvote, % Tin cậy)
+ */
+async function loadCredibility(questionId) {
+    try {
+        const res = await API.discussion.getCredibility(questionId);
+        const data = res.data || {};
+
+        const upvotesEl = document.getElementById(`upvotes-cnt-${questionId}`);
+        const downvotesEl = document.getElementById(`downvotes-cnt-${questionId}`);
+        const badgeEl = document.getElementById(`cred-badge-${questionId}`);
+        const upBtn = document.getElementById(`btn-upvote-${questionId}`);
+        const downBtn = document.getElementById(`btn-downvote-${questionId}`);
+        const reportBtn = document.getElementById(`btn-report-${questionId}`);
+
+        if (upvotesEl) upvotesEl.textContent = data.upvotes !== undefined ? data.upvotes : 0;
+        if (downvotesEl) downvotesEl.textContent = data.downvotes !== undefined ? data.downvotes : 0;
+
+        if (badgeEl) {
+            const score = data.scorePercent !== undefined ? data.scorePercent : 100;
+            let color = 'text-success border-success-subtle bg-success-subtle';
+            if (score < 60) color = 'text-danger border-danger-subtle bg-danger-subtle';
+            else if (score < 80) color = 'text-warning border-warning-subtle bg-warning-subtle';
+
+            badgeEl.className = `badge ${color} border rounded-pill px-2 py-1`;
+            badgeEl.innerHTML = `<i class="fa-solid fa-shield-halved me-1"></i>Độ tin cậy: ${score}%`;
+        }
+
+        // Highlight vote của người dùng hiện tại
+        const userVote = data.userRating;
+        if (upBtn) {
+            if (userVote === 'UPVOTE') {
+                upBtn.className = 'btn btn-sm btn-success rounded-pill px-3 shadow-sm text-white';
+            } else {
+                upBtn.className = 'btn btn-sm btn-outline-success rounded-pill px-3';
+            }
+        }
+        if (downBtn) {
+            if (userVote === 'DOWNVOTE') {
+                downBtn.className = 'btn btn-sm btn-secondary rounded-pill px-3 shadow-sm text-white';
+            } else {
+                downBtn.className = 'btn btn-sm btn-outline-secondary rounded-pill px-3';
+            }
+        }
+        if (reportBtn) {
+            if (userVote === 'REPORT_ERROR') {
+                reportBtn.className = 'btn btn-sm btn-danger rounded-pill px-3 shadow-sm text-white';
+                reportBtn.innerHTML = '<i class="fa-solid fa-flag me-1"></i>Đã báo lỗi';
+            } else {
+                reportBtn.className = 'btn btn-sm btn-outline-danger rounded-pill px-3';
+                reportBtn.innerHTML = '<i class="fa-solid fa-flag me-1"></i>Báo lỗi / Ảo giác AI';
+            }
+        }
+
+    } catch (err) {
+        console.error(`Lỗi tải tín nhiệm cho câu ${questionId}:`, err);
+    }
+}
+
+/**
+ * Đánh giá Upvote / Downvote câu hỏi
+ */
+async function voteQuestion(questionId, ratingType) {
+    try {
+        await API.discussion.rateQuestion(questionId, ratingType);
+        await loadCredibility(questionId);
+
+        Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'success',
+            title: ratingType === 'UPVOTE' ? 'Đã ghi nhận hữu ích!' : 'Đã ghi nhận đánh giá!',
+            showConfirmButton: false,
+            timer: 1500
+        });
+    } catch (err) {
+        Swal.fire('Lỗi', err.message || 'Không thể gửi đánh giá.', 'error');
+    }
+}
+
+/**
+ * Mở hộp thoại báo lỗi câu hỏi hoặc phát hiện AI bị ảo giác
+ */
+async function reportQuestionPrompt(questionId) {
+    const { value: reason } = await Swal.fire({
+        title: 'Báo lỗi / Nghi vấn AI Ảo giác',
+        html: `
+            <p class="small text-muted mb-2 text-start">
+                Hãy cho cộng đồng và Giảng viên biết vấn đề cụ thể ở câu hỏi này (ví dụ: sai đáp án chuẩn, nhầm định nghĩa, đề bài mâu thuẫn...):
+            </p>
+        `,
+        input: 'textarea',
+        inputPlaceholder: 'Nhập chi tiết lỗi bạn nhận thấy...',
+        showCancelButton: true,
+        confirmButtonText: 'Gửi báo lỗi',
+        cancelButtonText: 'Hủy',
+        confirmButtonColor: '#dc3545',
+        inputValidator: (value) => {
+            if (!value || !value.trim()) {
+                return 'Vui lòng nhập lý do cụ thể!';
+            }
+        }
+    });
+
+    if (reason) {
+        try {
+            await API.discussion.rateQuestion(questionId, 'REPORT_ERROR', reason.trim());
+            await loadCredibility(questionId);
+
+            Swal.fire({
+                icon: 'success',
+                title: 'Đã gửi báo lỗi thành công!',
+                text: 'Cảm ơn tinh thần phản biện học thuật của bạn. Đội ngũ kiểm duyệt và giảng viên sẽ rà soát câu hỏi này sớm nhất!',
+                confirmButtonColor: '#0d6efd'
+            });
+        } catch (err) {
+            Swal.fire('Lỗi', err.message || 'Không thể gửi báo lỗi.', 'error');
+        }
+    }
+}
+
+/**
+ * Đóng / mở khung bình luận phản biện
+ */
+function toggleComments(questionId) {
+    const section = document.getElementById(`comments-section-${questionId}`);
+    if (!section) return;
+
+    if (section.style.display === 'none' || !section.style.display) {
+        section.style.display = 'block';
+        loadComments(questionId);
+    } else {
+        section.style.display = 'none';
+    }
+}
+
+/**
+ * Tải danh sách bình luận của câu hỏi
+ */
+async function loadComments(questionId) {
+    const listEl = document.getElementById(`comments-list-${questionId}`);
+    const cntEl = document.getElementById(`comments-cnt-${questionId}`);
+    if (!listEl) return;
+
+    try {
+        const res = await API.discussion.getComments(questionId);
+        const comments = res.data || [];
+        loadedCommentsMap[questionId] = comments;
+
+        if (cntEl) cntEl.textContent = comments.length;
+
+        if (comments.length === 0) {
+            listEl.innerHTML = `
+                <div class="text-muted small text-center py-3 bg-light rounded-3">
+                    <i class="fa-regular fa-comment-dots me-1"></i>Chưa có phản biện nào. Hãy là người đầu tiên mở đầu thảo luận!
+                </div>
+            `;
+            return;
+        }
+
+        listEl.innerHTML = comments.map(c => {
+            const roleBadge = (c.userRole === 'teacher' || c.userRole === 'admin')
+                ? '<span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill ms-1" style="font-size:0.68rem;"><i class="fa-solid fa-chalkboard-user me-1"></i>Giảng viên</span>'
+                : '<span class="badge bg-light text-muted border rounded-pill ms-1" style="font-size:0.68rem;">Học viên</span>';
+
+            const timeStr = c.createdAt ? c.createdAt.replace('T', ' ').substring(0, 16) : '';
+
+            return `
+                <div class="p-3 bg-light rounded-3 border">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <div>
+                            <strong class="text-dark small">${escapeHtml(c.userFullName || c.username)}</strong>
+                            ${roleBadge}
+                        </div>
+                        <small class="text-muted" style="font-size: 0.72rem;">${timeStr}</small>
+                    </div>
+                    <div class="text-dark small" style="white-space: pre-wrap;">${escapeHtml(c.content)}</div>
+                </div>
+            `;
+        }).join('');
+
+    } catch (err) {
+        console.error(`Lỗi tải bình luận cho câu ${questionId}:`, err);
+        listEl.innerHTML = '<div class="text-danger small text-center py-2">Không thể tải danh sách bình luận.</div>';
+    }
+}
+
+/**
+ * Gửi bình luận mới vào câu hỏi
+ */
+async function submitComment(questionId) {
+    const input = document.getElementById(`comment-input-${questionId}`);
+    if (!input) return;
+
+    const content = input.value.trim();
+    if (!content) return;
+
+    try {
+        input.disabled = true;
+        await API.discussion.addComment(questionId, content);
+        input.value = '';
+        await loadComments(questionId);
+
+        Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'success',
+            title: 'Đã gửi phản biện thành công!',
+            showConfirmButton: false,
+            timer: 1500
+        });
+    } catch (err) {
+        Swal.fire('Lỗi', err.message || 'Không thể gửi bình luận.', 'error');
+    } finally {
+        input.disabled = false;
+        input.focus();
+    }
 }

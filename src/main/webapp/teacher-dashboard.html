@@ -190,6 +190,11 @@
                     <i class="fa-solid fa-wand-magic-sparkles text-warning me-2"></i>Trợ Lý AI Soạn Đề & Bài Tập
                 </button>
             </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link fw-bold px-4 py-2 text-danger" id="tab-reports-btn" data-bs-toggle="pill" data-bs-target="#tab-reports" type="button" role="tab">
+                    <i class="fa-solid fa-triangle-exclamation me-2"></i>Báo Lỗi & Phản Hồi (<span id="reports-count-badge">0</span>)
+                </button>
+            </li>
         </ul>
 
         <!-- ── Tab Contents ── -->
@@ -219,8 +224,11 @@
                                 </div>
                             </div>
                             <div class="col-md-4 text-md-end">
+                                <button class="btn btn-outline-primary rounded-pill px-3 fw-semibold shadow-sm me-2" id="btn-open-topic-modal">
+                                    <i class="fa-solid fa-folder-plus me-1"></i>Thêm Môn / Chủ Đề
+                                </button>
                                 <button class="btn btn-primary rounded-pill px-3 fw-semibold shadow-sm" id="btn-open-create-modal">
-                                    <i class="fa-solid fa-plus me-1"></i>Thêm Mới
+                                    <i class="fa-solid fa-plus me-1"></i>Thêm Câu Hỏi
                                 </button>
                             </div>
                         </div>
@@ -401,14 +409,15 @@
                             <div class="card-body p-4">
                                 <form id="ai-generator-form">
                                     <div class="row g-3 mb-3">
-                                        <!-- Topic -->
+                                        <!-- Topic Input & Suggestions -->
                                         <div class="col-md-6">
-                                            <label for="ai-topic-id" class="form-label fw-semibold small">
-                                                <i class="fa-solid fa-book-bookmark text-primary me-1"></i>Chủ đề bài học <span class="text-danger">*</span>
+                                            <label for="ai-topic-input" class="form-label fw-semibold small">
+                                                <i class="fa-solid fa-book-bookmark text-primary me-1"></i>Môn học / Chủ đề (Tự do & Liên ngành) <span class="text-danger">*</span>
                                             </label>
-                                            <select class="form-select rounded-3" id="ai-topic-id" required>
-                                                <option value="">-- Đang nạp danh mục chủ đề --</option>
-                                            </select>
+                                            <input type="text" class="form-control rounded-3" id="ai-topic-input" list="topic-datalist" placeholder="Nhập tên môn: OOP, Toán Rời Rạc, Kinh Tế Lượng, Hỗn hợp..." required>
+                                            <datalist id="topic-datalist">
+                                                <!-- Động theo CSDL -->
+                                            </datalist>
                                         </div>
                                         <!-- Difficulty -->
                                         <div class="col-md-6">
@@ -435,19 +444,22 @@
                                                 <option value="boundary_blindness">Boundary Blindness (Biên: off-by-one &lt;= vs &lt;, mảng rỗng)</option>
                                                 <option value="mental_model_gap">Mental Model Gap (Hiểu sai mô hình: Scope, Static, Tham chiếu)</option>
                                                 <option value="logic_flaw">Logic Flaw (Lỗi suy luận: Đảo ngược điều kiện, break/continue)</option>
+                                                <option value="other">Bẫy mở rộng & Tư duy liên ngành (Bất kỳ môn học nào)</option>
                                             </select>
                                         </div>
                                         <!-- Count -->
                                         <div class="col-md-5">
                                             <label for="ai-count" class="form-label fw-semibold small">
-                                                <i class="fa-solid fa-list-ol text-info me-1"></i>Số lượng câu hỏi (1 - 5)
+                                                <i class="fa-solid fa-list-ol text-info me-1"></i>Số lượng câu hỏi (1 - 25)
                                             </label>
                                             <select class="form-select rounded-3" id="ai-count">
                                                 <option value="1">1 câu hỏi</option>
-                                                <option value="2">2 câu hỏi</option>
-                                                <option value="3" selected>3 câu hỏi (Khuyên dùng)</option>
-                                                <option value="4">4 câu hỏi</option>
-                                                <option value="5">5 câu hỏi</option>
+                                                <option value="3">3 câu hỏi</option>
+                                                <option value="5" selected>5 câu hỏi (Khuyên dùng)</option>
+                                                <option value="10">10 câu hỏi (Đề kiểm tra ngắn)</option>
+                                                <option value="15">15 câu hỏi (Đề giữa kỳ)</option>
+                                                <option value="20">20 câu hỏi (Đề thi đầy đủ)</option>
+                                                <option value="25">25 câu hỏi (Tối đa 1 lần)</option>
                                             </select>
                                         </div>
                                     </div>
@@ -568,6 +580,48 @@
                 </div>
             </div>
 
+            <!-- ══════════════════════════════════════════════════════════════ -->
+            <!-- TAB 4: Rà Soát Câu Hỏi Bị Báo Lỗi & Phản Hồi Cộng Đồng -->
+            <!-- ══════════════════════════════════════════════════════════════ -->
+            <div class="tab-pane fade" id="tab-reports" role="tabpanel">
+                <div class="card border-0 shadow-sm rounded-3">
+                    <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="fa-solid fa-triangle-exclamation text-danger fs-5"></i>
+                            <div>
+                                <h5 class="fw-bold mb-0 text-dark">Rà Soát Câu Hỏi Bị Báo Lỗi / Nghi Ảo Giác AI</h5>
+                                <p class="text-muted small mb-0">Danh sách câu hỏi được cộng đồng người học và đồng nghiệp báo cáo cần thẩm định</p>
+                            </div>
+                        </div>
+                        <button class="btn btn-sm btn-outline-secondary rounded-pill px-3" id="btn-refresh-reports">
+                            <i class="fa-solid fa-arrows-rotate me-1"></i>Làm mới
+                        </button>
+                    </div>
+                    <div class="card-body p-4 pt-1">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle border-top" id="reports-table">
+                                <thead class="table-light">
+                                    <tr class="text-secondary small">
+                                        <th style="width: 70px;">Mã Câu</th>
+                                        <th>Nội Dung Câu Hỏi</th>
+                                        <th style="width: 160px;">Môn / Chủ Đề</th>
+                                        <th class="text-center" style="width: 140px;">Lượt Báo Lỗi</th>
+                                        <th class="text-center" style="width: 160px;">Thao Tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="reports-tbody">
+                                    <tr>
+                                        <td colspan="5" class="text-center py-4 text-muted">
+                                            <div class="spinner-border spinner-border-sm text-danger me-2"></div>Đang tải danh sách báo lỗi...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
 
     </main>
@@ -680,6 +734,40 @@
                     <button type="button" class="btn btn-primary rounded-pill px-4 fw-semibold" id="btn-save-question">
                         <i class="fa-solid fa-floppy-disk me-1"></i>Lưu Câu Hỏi
                     </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════ -->
+    <!-- MODAL THÊM CHỦ ĐỀ / MÔN HỌC MỚI -->
+    <!-- ══════════════════════════════════════════════════════════════ -->
+    <div class="modal fade" id="createTopicModal" tabindex="-1" aria-labelledby="createTopicModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header bg-primary text-white border-0 py-3">
+                    <h5 class="modal-title fw-bold" id="createTopicModalLabel">
+                        <i class="fa-solid fa-folder-plus me-2"></i>Thêm Môn Học / Chủ Đề Mới
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form id="create-topic-form">
+                        <div class="mb-3">
+                            <label for="new-topic-name" class="form-label fw-semibold small">Tên Môn Học / Chủ Đề <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control rounded-3" id="new-topic-name" placeholder="Ví dụ: Thiết Kế Web, Triết Học Mác-Lênin, Giải Tích 1..." required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="new-topic-desc" class="form-label fw-semibold small">Mô tả tóm tắt</label>
+                            <textarea class="form-control rounded-3" id="new-topic-desc" rows="3" placeholder="Mục tiêu kiến thức, nội dung trọng tâm của chủ đề..."></textarea>
+                        </div>
+                        <div class="d-flex justify-content-end gap-2 pt-2">
+                            <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Hủy</button>
+                            <button type="submit" class="btn btn-primary rounded-pill px-4 fw-semibold" id="btn-save-topic">
+                                <i class="fa-solid fa-check me-1"></i>Khởi Tạo Chủ Đề
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>

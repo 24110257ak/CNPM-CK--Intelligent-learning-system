@@ -1,6 +1,6 @@
 ﻿# TOAN BO MA NGUON DU AN - HE THONG HOC TAP THONG MINH (INTELLIGENT LMS)
 
-> **Thoi gian tao file:** 2026-09-30 15:29:50
+> **Thoi gian tao file:** 2026-09-30 15:39:54
 > **Tong so file:** 52
 > **Muc dich:** Gom toan bo source code thanh 1 file duy nhat de gui cho ben thu ba xem xet, danh gia va gop y.
 
@@ -7485,29 +7485,80 @@ function renderResult(data) {
     // 2.3. Khởi tạo Thẻ Khắc Phục Lỗi (Adaptive Remediation Card) nếu phát hiện lỗ hổng
     setupAdaptiveRemediation(remedialList, data);
 
-    // Render Danh Sách Xem Lại Từng Câu Hỏi
+    // Render Danh Sách Xem Lại Từng Câu Hỏi kèm Diễn Đàn & Tín Nhiệm Phản Biện
     const reviewList = document.getElementById('questions-review-list');
     if (graded.length > 0) {
         reviewList.innerHTML = graded.map((ans, idx) => `
-            <div class="p-3 border rounded-3 ${ans.isCorrect ? 'border-success-subtle bg-success-subtle bg-opacity-10' : 'border-danger-subtle bg-danger-subtle bg-opacity-10'}">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <span class="fw-bold text-dark">Câu ${idx + 1}: ${ans.questionText || ''}</span>
-                    <span class="badge ${ans.isCorrect ? 'bg-success' : 'bg-danger'} rounded-pill">
-                        ${ans.isCorrect ? 'ĐÚNG' : 'SAI'}
-                    </span>
-                </div>
-                <div class="small d-flex flex-wrap gap-3 mb-2">
-                    <span>Lựa chọn của bạn: <strong>${ans.chosenAnswer || '(Bỏ trống)'}</strong></span>
-                    <span>Đáp án đúng: <strong class="text-success">${ans.correctAnswer}</strong></span>
-                    <span>Mức độ tự tin: <strong class="${ans.confidenceLevel === 'GUESS' ? 'text-warning' : 'text-success'}">${ans.confidenceLevel}</strong></span>
-                </div>
-                ${ans.explanation ? `
-                    <div class="text-muted small pt-2 border-top">
-                        <strong>Giải thích gốc:</strong> ${ans.explanation}
+            <div class="card border rounded-4 mb-3 overflow-hidden shadow-sm ${ans.isCorrect ? 'border-success-subtle bg-white' : 'border-danger-subtle bg-white'}">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+                        <span class="fw-bold text-dark fs-6">Câu ${idx + 1}: ${escapeHtml(ans.questionText || '')}</span>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge ${ans.isCorrect ? 'bg-success' : 'bg-danger'} rounded-pill px-3 py-1">
+                                ${ans.isCorrect ? '<i class="fa-solid fa-circle-check me-1"></i>ĐÚNG' : '<i class="fa-solid fa-circle-xmark me-1"></i>SAI'}
+                            </span>
+                            <span class="badge bg-light text-muted border rounded-pill px-2 py-1" id="cred-badge-${ans.questionId}">
+                                <i class="fa-solid fa-shield-halved me-1 text-primary"></i>Độ tin cậy: ...
+                            </span>
+                        </div>
                     </div>
-                ` : ''}
+                    <div class="small d-flex flex-wrap gap-3 mb-2 py-2 px-3 bg-light rounded-3 border">
+                        <span>Lựa chọn của bạn: <strong class="${ans.isCorrect ? 'text-success' : 'text-danger'}">${ans.chosenAnswer || '(Bỏ trống)'}</strong></span>
+                        <span>Đáp án chuẩn: <strong class="text-success">${ans.correctAnswer}</strong></span>
+                        <span>Mức độ tự tin: <strong class="${ans.confidenceLevel === 'GUESS' ? 'text-warning' : 'text-success'}">${ans.confidenceLevel === 'GUESS' ? 'Đoán mò' : 'Chắc chắn'}</strong></span>
+                    </div>
+                    ${ans.explanation ? `
+                        <div class="text-muted small pt-2 mb-3">
+                            <strong class="text-secondary"><i class="fa-solid fa-lightbulb text-warning me-1"></i>Giải thích:</strong> ${escapeHtml(ans.explanation)}
+                        </div>
+                    ` : ''}
+
+                    <!-- ── Thanh Đánh Giá Độ Tin Cậy & Phản Biện ── -->
+                    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 pt-3 border-top">
+                        <div class="d-flex align-items-center gap-2">
+                            <button class="btn btn-sm btn-outline-success rounded-pill px-3" id="btn-upvote-${ans.questionId}" onclick="voteQuestion(${ans.questionId}, 'UPVOTE')">
+                                <i class="fa-solid fa-thumbs-up me-1"></i>Hữu ích (<span id="upvotes-cnt-${ans.questionId}">0</span>)
+                            </button>
+                            <button class="btn btn-sm btn-outline-secondary rounded-pill px-3" id="btn-downvote-${ans.questionId}" onclick="voteQuestion(${ans.questionId}, 'DOWNVOTE')">
+                                <i class="fa-solid fa-thumbs-down me-1"></i>Chưa chuẩn (<span id="downvotes-cnt-${ans.questionId}">0</span>)
+                            </button>
+                            <button class="btn btn-sm btn-outline-danger rounded-pill px-3" id="btn-report-${ans.questionId}" onclick="reportQuestionPrompt(${ans.questionId})">
+                                <i class="fa-solid fa-flag me-1"></i>Báo lỗi / Ảo giác AI
+                            </button>
+                        </div>
+                        <div>
+                            <button class="btn btn-sm btn-outline-primary rounded-pill px-3" onclick="toggleComments(${ans.questionId})">
+                                <i class="fa-solid fa-comments me-1"></i>Thảo luận & Phản biện (<span id="comments-cnt-${ans.questionId}">0</span>)
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- ── Khung Bình Luận Phản Biện Mở Rộng ── -->
+                    <div id="comments-section-${ans.questionId}" class="mt-3 pt-3 border-top" style="display: none;">
+                        <h6 class="fw-bold small text-dark mb-2">
+                            <i class="fa-solid fa-users-viewfinder text-primary me-1"></i>Diễn đàn thảo luận & phản biện câu hỏi này
+                        </h6>
+                        <div id="comments-list-${ans.questionId}" class="d-flex flex-column gap-2 mb-3">
+                            <div class="text-muted small text-center py-2"><span class="spinner-border spinner-border-sm me-1"></span>Đang tải bình luận...</div>
+                        </div>
+
+                        <!-- Form gửi bình luận -->
+                        <div class="d-flex gap-2">
+                            <input type="text" class="form-control form-control-sm rounded-pill px-3" id="comment-input-${ans.questionId}" placeholder="Viết phản biện, chia sẻ góc nhìn hoặc hỏi đồng nghiệp..." onkeydown="if(event.key==='Enter') submitComment(${ans.questionId})">
+                            <button class="btn btn-primary btn-sm rounded-pill px-3" onclick="submitComment(${ans.questionId})">
+                                <i class="fa-solid fa-paper-plane me-1"></i>Gửi
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
             </div>
         `).join('');
+
+        // Tải độ tín nhiệm ban đầu cho từng câu hỏi
+        graded.forEach(ans => {
+            loadCredibility(ans.questionId);
+        });
     }
 }
 
@@ -7796,6 +7847,233 @@ function escapeHtml(str) {
         .replace(/'/g, '&#039;');
 }
 
+/**
+ * ══════════════════════════════════════════════════════════════
+ * DIỄN ĐÀN THẢO LUẬN & ĐÁNH GIÁ ĐỘ TIN CẬY CÂU HỎI (FORUM & CREDIBILITY)
+ * ══════════════════════════════════════════════════════════════
+ */
+
+const loadedCommentsMap = {};
+
+/**
+ * Tải chỉ số tín nhiệm của câu hỏi (Upvote, Downvote, % Tin cậy)
+ */
+async function loadCredibility(questionId) {
+    try {
+        const res = await API.discussion.getCredibility(questionId);
+        const data = res.data || {};
+
+        const upvotesEl = document.getElementById(`upvotes-cnt-${questionId}`);
+        const downvotesEl = document.getElementById(`downvotes-cnt-${questionId}`);
+        const badgeEl = document.getElementById(`cred-badge-${questionId}`);
+        const upBtn = document.getElementById(`btn-upvote-${questionId}`);
+        const downBtn = document.getElementById(`btn-downvote-${questionId}`);
+        const reportBtn = document.getElementById(`btn-report-${questionId}`);
+
+        if (upvotesEl) upvotesEl.textContent = data.upvotes !== undefined ? data.upvotes : 0;
+        if (downvotesEl) downvotesEl.textContent = data.downvotes !== undefined ? data.downvotes : 0;
+
+        if (badgeEl) {
+            const score = data.scorePercent !== undefined ? data.scorePercent : 100;
+            let color = 'text-success border-success-subtle bg-success-subtle';
+            if (score < 60) color = 'text-danger border-danger-subtle bg-danger-subtle';
+            else if (score < 80) color = 'text-warning border-warning-subtle bg-warning-subtle';
+
+            badgeEl.className = `badge ${color} border rounded-pill px-2 py-1`;
+            badgeEl.innerHTML = `<i class="fa-solid fa-shield-halved me-1"></i>Độ tin cậy: ${score}%`;
+        }
+
+        // Highlight vote của người dùng hiện tại
+        const userVote = data.userRating;
+        if (upBtn) {
+            if (userVote === 'UPVOTE') {
+                upBtn.className = 'btn btn-sm btn-success rounded-pill px-3 shadow-sm text-white';
+            } else {
+                upBtn.className = 'btn btn-sm btn-outline-success rounded-pill px-3';
+            }
+        }
+        if (downBtn) {
+            if (userVote === 'DOWNVOTE') {
+                downBtn.className = 'btn btn-sm btn-secondary rounded-pill px-3 shadow-sm text-white';
+            } else {
+                downBtn.className = 'btn btn-sm btn-outline-secondary rounded-pill px-3';
+            }
+        }
+        if (reportBtn) {
+            if (userVote === 'REPORT_ERROR') {
+                reportBtn.className = 'btn btn-sm btn-danger rounded-pill px-3 shadow-sm text-white';
+                reportBtn.innerHTML = '<i class="fa-solid fa-flag me-1"></i>Đã báo lỗi';
+            } else {
+                reportBtn.className = 'btn btn-sm btn-outline-danger rounded-pill px-3';
+                reportBtn.innerHTML = '<i class="fa-solid fa-flag me-1"></i>Báo lỗi / Ảo giác AI';
+            }
+        }
+
+    } catch (err) {
+        console.error(`Lỗi tải tín nhiệm cho câu ${questionId}:`, err);
+    }
+}
+
+/**
+ * Đánh giá Upvote / Downvote câu hỏi
+ */
+async function voteQuestion(questionId, ratingType) {
+    try {
+        await API.discussion.rateQuestion(questionId, ratingType);
+        await loadCredibility(questionId);
+
+        Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'success',
+            title: ratingType === 'UPVOTE' ? 'Đã ghi nhận hữu ích!' : 'Đã ghi nhận đánh giá!',
+            showConfirmButton: false,
+            timer: 1500
+        });
+    } catch (err) {
+        Swal.fire('Lỗi', err.message || 'Không thể gửi đánh giá.', 'error');
+    }
+}
+
+/**
+ * Mở hộp thoại báo lỗi câu hỏi hoặc phát hiện AI bị ảo giác
+ */
+async function reportQuestionPrompt(questionId) {
+    const { value: reason } = await Swal.fire({
+        title: 'Báo lỗi / Nghi vấn AI Ảo giác',
+        html: `
+            <p class="small text-muted mb-2 text-start">
+                Hãy cho cộng đồng và Giảng viên biết vấn đề cụ thể ở câu hỏi này (ví dụ: sai đáp án chuẩn, nhầm định nghĩa, đề bài mâu thuẫn...):
+            </p>
+        `,
+        input: 'textarea',
+        inputPlaceholder: 'Nhập chi tiết lỗi bạn nhận thấy...',
+        showCancelButton: true,
+        confirmButtonText: 'Gửi báo lỗi',
+        cancelButtonText: 'Hủy',
+        confirmButtonColor: '#dc3545',
+        inputValidator: (value) => {
+            if (!value || !value.trim()) {
+                return 'Vui lòng nhập lý do cụ thể!';
+            }
+        }
+    });
+
+    if (reason) {
+        try {
+            await API.discussion.rateQuestion(questionId, 'REPORT_ERROR', reason.trim());
+            await loadCredibility(questionId);
+
+            Swal.fire({
+                icon: 'success',
+                title: 'Đã gửi báo lỗi thành công!',
+                text: 'Cảm ơn tinh thần phản biện học thuật của bạn. Đội ngũ kiểm duyệt và giảng viên sẽ rà soát câu hỏi này sớm nhất!',
+                confirmButtonColor: '#0d6efd'
+            });
+        } catch (err) {
+            Swal.fire('Lỗi', err.message || 'Không thể gửi báo lỗi.', 'error');
+        }
+    }
+}
+
+/**
+ * Đóng / mở khung bình luận phản biện
+ */
+function toggleComments(questionId) {
+    const section = document.getElementById(`comments-section-${questionId}`);
+    if (!section) return;
+
+    if (section.style.display === 'none' || !section.style.display) {
+        section.style.display = 'block';
+        loadComments(questionId);
+    } else {
+        section.style.display = 'none';
+    }
+}
+
+/**
+ * Tải danh sách bình luận của câu hỏi
+ */
+async function loadComments(questionId) {
+    const listEl = document.getElementById(`comments-list-${questionId}`);
+    const cntEl = document.getElementById(`comments-cnt-${questionId}`);
+    if (!listEl) return;
+
+    try {
+        const res = await API.discussion.getComments(questionId);
+        const comments = res.data || [];
+        loadedCommentsMap[questionId] = comments;
+
+        if (cntEl) cntEl.textContent = comments.length;
+
+        if (comments.length === 0) {
+            listEl.innerHTML = `
+                <div class="text-muted small text-center py-3 bg-light rounded-3">
+                    <i class="fa-regular fa-comment-dots me-1"></i>Chưa có phản biện nào. Hãy là người đầu tiên mở đầu thảo luận!
+                </div>
+            `;
+            return;
+        }
+
+        listEl.innerHTML = comments.map(c => {
+            const roleBadge = (c.userRole === 'teacher' || c.userRole === 'admin')
+                ? '<span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill ms-1" style="font-size:0.68rem;"><i class="fa-solid fa-chalkboard-user me-1"></i>Giảng viên</span>'
+                : '<span class="badge bg-light text-muted border rounded-pill ms-1" style="font-size:0.68rem;">Học viên</span>';
+
+            const timeStr = c.createdAt ? c.createdAt.replace('T', ' ').substring(0, 16) : '';
+
+            return `
+                <div class="p-3 bg-light rounded-3 border">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <div>
+                            <strong class="text-dark small">${escapeHtml(c.userFullName || c.username)}</strong>
+                            ${roleBadge}
+                        </div>
+                        <small class="text-muted" style="font-size: 0.72rem;">${timeStr}</small>
+                    </div>
+                    <div class="text-dark small" style="white-space: pre-wrap;">${escapeHtml(c.content)}</div>
+                </div>
+            `;
+        }).join('');
+
+    } catch (err) {
+        console.error(`Lỗi tải bình luận cho câu ${questionId}:`, err);
+        listEl.innerHTML = '<div class="text-danger small text-center py-2">Không thể tải danh sách bình luận.</div>';
+    }
+}
+
+/**
+ * Gửi bình luận mới vào câu hỏi
+ */
+async function submitComment(questionId) {
+    const input = document.getElementById(`comment-input-${questionId}`);
+    if (!input) return;
+
+    const content = input.value.trim();
+    if (!content) return;
+
+    try {
+        input.disabled = true;
+        await API.discussion.addComment(questionId, content);
+        input.value = '';
+        await loadComments(questionId);
+
+        Swal.fire({
+            toast: true,
+            position: 'top-end',
+            icon: 'success',
+            title: 'Đã gửi phản biện thành công!',
+            showConfirmButton: false,
+            timer: 1500
+        });
+    } catch (err) {
+        Swal.fire('Lỗi', err.message || 'Không thể gửi bình luận.', 'error');
+    } finally {
+        input.disabled = false;
+        input.focus();
+    }
+}
+
 ``
 
 ---
@@ -7885,6 +8163,21 @@ function setupEventListeners() {
         });
     }
 
+    // Nút mở modal thêm môn / chủ đề mới
+    const btnOpenTopic = document.getElementById('btn-open-topic-modal');
+    if (btnOpenTopic) {
+        btnOpenTopic.addEventListener('click', () => {
+            const modalEl = document.getElementById('createTopicModal');
+            if (modalEl) new bootstrap.Modal(modalEl).show();
+        });
+    }
+
+    // Form tạo chủ đề mới
+    const createTopicForm = document.getElementById('create-topic-form');
+    if (createTopicForm) {
+        createTopicForm.addEventListener('submit', handleCreateTopicSubmit);
+    }
+
     // Nút mở modal thêm câu hỏi mới
     const btnOpenCreate = document.getElementById('btn-open-create-modal');
     if (btnOpenCreate) {
@@ -7906,6 +8199,22 @@ function setupEventListeners() {
     if (btnRefreshStats) {
         btnRefreshStats.addEventListener('click', () => {
             loadTeacherStats();
+        });
+    }
+
+    // Nút làm mới báo lỗi
+    const btnRefreshReports = document.getElementById('btn-refresh-reports');
+    if (btnRefreshReports) {
+        btnRefreshReports.addEventListener('click', () => {
+            loadReportedQuestions();
+        });
+    }
+
+    // Khi chuyển sang Tab Báo Lỗi thì tải dữ liệu
+    const tabReportsBtn = document.getElementById('tab-reports-btn');
+    if (tabReportsBtn) {
+        tabReportsBtn.addEventListener('shown.bs.tab', () => {
+            loadReportedQuestions();
         });
     }
 
@@ -7956,14 +8265,15 @@ function setupEventListeners() {
 }
 
 /**
- * Tải toàn bộ dữ liệu ban đầu: Topics, KPIs, Questions
+ * Tải toàn bộ dữ liệu ban đầu: Topics, KPIs, Questions, Reports
  */
 async function loadInitialData() {
     try {
         await loadTopics();
         await Promise.all([
             loadTeacherStats(),
-            loadQuestions()
+            loadQuestions(),
+            loadReportedQuestions()
         ]);
     } catch (err) {
         console.error('Lỗi khi nạp dữ liệu ban đầu:', err);
@@ -7971,7 +8281,7 @@ async function loadInitialData() {
 }
 
 /**
- * Tải danh sách Chủ Đề để nạp vào các Dropdown
+ * Tải danh sách Chủ Đề để nạp vào các Dropdown và Datalist gợi ý
  */
 async function loadTopics() {
     try {
@@ -7981,12 +8291,12 @@ async function loadTopics() {
 
         const filterSelect = document.getElementById('filter-topic');
         const modalSelect = document.getElementById('modal-topic-id');
-        const aiSelect = document.getElementById('ai-topic-id');
+        const topicDatalist = document.getElementById('topic-datalist');
 
         // Reset options
         if (filterSelect) filterSelect.innerHTML = '<option value="">-- Tất cả chủ đề --</option>';
         if (modalSelect) modalSelect.innerHTML = '<option value="">-- Chọn chủ đề bài học --</option>';
-        if (aiSelect) aiSelect.innerHTML = '<option value="">-- Chọn chủ đề để AI sinh câu hỏi --</option>';
+        if (topicDatalist) topicDatalist.innerHTML = '';
 
         allTopics.forEach(t => {
             topicsMap[t.topicId] = t.topicName;
@@ -8005,15 +8315,111 @@ async function loadTopics() {
                 modalSelect.appendChild(opt2);
             }
 
-            if (aiSelect) {
+            if (topicDatalist) {
                 const opt3 = document.createElement('option');
-                opt3.value = t.topicId;
-                opt3.textContent = t.topicName;
-                aiSelect.appendChild(opt3);
+                opt3.value = t.topicName;
+                topicDatalist.appendChild(opt3);
             }
         });
     } catch (err) {
         console.error('Lỗi tải danh mục chủ đề:', err);
+    }
+}
+
+/**
+ * Tạo môn học / chủ đề mới
+ */
+async function handleCreateTopicSubmit(e) {
+    if (e) e.preventDefault();
+    const nameInput = document.getElementById('new-topic-name');
+    const descInput = document.getElementById('new-topic-desc');
+    const topicName = nameInput ? nameInput.value.trim() : '';
+    const description = descInput ? descInput.value.trim() : '';
+
+    if (!topicName) {
+        Swal.fire('Lỗi', 'Vui lòng nhập tên môn học hoặc chủ đề.', 'warning');
+        return;
+    }
+
+    const btn = document.getElementById('btn-save-topic');
+    if (btn) btn.disabled = true;
+
+    try {
+        await API.topics.create({ topicName, description });
+        const modalEl = document.getElementById('createTopicModal');
+        if (modalEl) {
+            const inst = bootstrap.Modal.getInstance(modalEl);
+            if (inst) inst.hide();
+        }
+        if (nameInput) nameInput.value = '';
+        if (descInput) descInput.value = '';
+
+        Swal.fire({
+            icon: 'success',
+            title: 'Khởi tạo chủ đề thành công!',
+            text: `Chủ đề "${topicName}" đã được lưu vào hệ thống.`,
+            timer: 2000,
+            showConfirmButton: false
+        });
+
+        await loadTopics();
+    } catch (err) {
+        Swal.fire('Lỗi', err.message || 'Không thể tạo chủ đề mới.', 'error');
+    } finally {
+        if (btn) btn.disabled = false;
+    }
+}
+
+/**
+ * Tải danh sách các câu hỏi bị báo lỗi từ người học hoặc đồng nghiệp
+ */
+async function loadReportedQuestions() {
+    const tbody = document.getElementById('reports-tbody');
+    const badge = document.getElementById('reports-count-badge');
+    if (!tbody) return;
+
+    try {
+        const res = await API.discussion.getReported(50);
+        const list = res.data || [];
+
+        if (badge) badge.textContent = list.length;
+
+        if (list.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center py-5 text-muted"><i class="fa-solid fa-circle-check text-success fs-3 d-block mb-2"></i>Tuyệt vời! Hiện tại không có câu hỏi nào bị cộng đồng báo lỗi.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = list.map(item => `
+            <tr>
+                <td class="fw-bold text-muted text-center">${item.questionId}</td>
+                <td>
+                    <div class="fw-semibold text-dark text-truncate" style="max-width: 450px;" title="${escapeHtml(item.questionText)}">
+                        ${escapeHtml(item.questionText)}
+                    </div>
+                </td>
+                <td>
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2 py-1">
+                        ${escapeHtml(item.topicName || 'Chủ đề')}
+                    </span>
+                </td>
+                <td class="text-center">
+                    <span class="badge bg-danger text-white rounded-pill px-3 py-1">
+                        <i class="fa-solid fa-triangle-exclamation me-1"></i>${item.reportCount} lượt
+                    </span>
+                </td>
+                <td class="text-center">
+                    <button class="btn btn-sm btn-outline-primary rounded-pill px-3 me-1" onclick="openEditModal(${item.questionId})">
+                        <i class="fa-solid fa-pen-to-square me-1"></i>Sửa câu
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger rounded-pill px-2" onclick="handleDeleteQuestion(${item.questionId})">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+    } catch (err) {
+        console.error('Lỗi khi tải danh sách báo lỗi:', err);
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-danger">Không thể tải danh sách báo lỗi.</td></tr>';
     }
 }
 
@@ -8410,20 +8816,20 @@ function escapeHtml(str) {
 async function handleAiGenerateSubmit(e) {
     if (e) e.preventDefault();
 
-    const topicId = document.getElementById('ai-topic-id').value;
-    if (!topicId) {
+    const topicInput = document.getElementById('ai-topic-input');
+    const topicName = topicInput ? topicInput.value.trim() : '';
+    if (!topicName) {
         Swal.fire({
             icon: 'warning',
-            title: 'Chưa chọn chủ đề',
-            text: 'Vui lòng chọn chủ đề bài học trước khi yêu cầu AI sinh câu hỏi!'
+            title: 'Chưa nhập môn học / chủ đề',
+            text: 'Vui lòng nhập tên môn học hoặc chọn một chủ đề trước khi yêu cầu AI sinh câu hỏi!'
         });
         return;
     }
 
-    const topicName = topicsMap[topicId] || 'Lập trình Java';
     const difficulty = document.getElementById('ai-difficulty').value;
     const misconceptionTag = document.getElementById('ai-misconception').value;
-    const count = parseInt(document.getElementById('ai-count').value) || 3;
+    const count = parseInt(document.getElementById('ai-count').value) || 5;
     const promptHint = document.getElementById('ai-custom-prompt').value.trim();
 
     const submitBtn = document.getElementById('btn-generate-ai');
@@ -8449,7 +8855,8 @@ async function handleAiGenerateSubmit(e) {
 
         currentGeneratedQuestions = questions.map((q, idx) => ({
             ...q,
-            topicId: parseInt(topicId),
+            topicId: q.topicId || 1,
+            topicName: q.topicName || topicName,
             imported: false,
             _index: idx
         }));
@@ -9095,6 +9502,32 @@ const AppUI = (() => {
                         </div>
 
                         <div class="mb-3">
+                            <label class="form-label fw-semibold small">Vai trò trên diễn đàn <span class="text-danger">*</span></label>
+                            <div class="row g-2">
+                                <div class="col-6">
+                                    <input type="radio" class="btn-check" name="reg-role" id="role-student" value="student" checked>
+                                    <label class="btn btn-outline-primary w-100 py-2 rounded-3 text-start d-flex align-items-center" for="role-student">
+                                        <i class="fa-solid fa-user-graduate me-2 fs-5"></i>
+                                        <div>
+                                            <div class="fw-bold small">Người học</div>
+                                            <small class="text-muted" style="font-size:0.72rem;">Làm bài & thảo luận</small>
+                                        </div>
+                                    </label>
+                                </div>
+                                <div class="col-6">
+                                    <input type="radio" class="btn-check" name="reg-role" id="role-teacher" value="teacher">
+                                    <label class="btn btn-outline-success w-100 py-2 rounded-3 text-start d-flex align-items-center" for="role-teacher">
+                                        <i class="fa-solid fa-chalkboard-user me-2 fs-5"></i>
+                                        <div>
+                                            <div class="fw-bold small">Giảng viên / Soạn đề</div>
+                                            <small class="text-muted" style="font-size:0.72rem;">Đóng góp & quản trị</small>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
                             <label class="form-label fw-semibold small">Sở thích cá nhân <span class="text-muted">(để AI tạo ẩn dụ thân thuộc)</span></label>
                             <input type="text" id="reg-interests" class="form-control" placeholder="Ví dụ: bóng đá, anime, game kiếm hiệp, nấu ăn">
                         </div>
@@ -9173,17 +9606,21 @@ const AppUI = (() => {
             const email = document.getElementById('reg-email').value.trim();
             const password = document.getElementById('reg-password').value;
             const interests = document.getElementById('reg-interests').value.trim();
+            const selectedRoleEl = document.querySelector('input[name="reg-role"]:checked');
+            const role = selectedRoleEl ? selectedRoleEl.value : 'student';
 
             try {
-                await API.auth.register(username, password, fullName, email, interests);
+                await API.auth.register(username, password, fullName, email, interests, role);
+                const targetUrl = (role === 'teacher') ? 'teacher-dashboard.html' : 'index.html';
+
                 Swal.fire({
                     icon: 'success',
                     title: 'Đăng ký thành công!',
-                    text: 'Tài khoản đã sẵn sàng. Đang chuyển hướng vào hệ thống...',
+                    text: `Tài khoản (${role === 'teacher' ? 'Giảng viên' : 'Học viên'}) đã sẵn sàng. Đang chuyển hướng...`,
                     timer: 1500,
                     showConfirmButton: false
                 }).then(() => {
-                    window.location.href = 'index.html';
+                    window.location.href = targetUrl;
                 });
             } catch (err) {
                 Swal.fire('Lỗi đăng ký', err.message || 'Không thể tạo tài khoản.', 'error');
@@ -10221,6 +10658,11 @@ const AppUI = (() => {
                     <i class="fa-solid fa-wand-magic-sparkles text-warning me-2"></i>Trợ Lý AI Soạn Đề & Bài Tập
                 </button>
             </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link fw-bold px-4 py-2 text-danger" id="tab-reports-btn" data-bs-toggle="pill" data-bs-target="#tab-reports" type="button" role="tab">
+                    <i class="fa-solid fa-triangle-exclamation me-2"></i>Báo Lỗi & Phản Hồi (<span id="reports-count-badge">0</span>)
+                </button>
+            </li>
         </ul>
 
         <!-- ── Tab Contents ── -->
@@ -10250,8 +10692,11 @@ const AppUI = (() => {
                                 </div>
                             </div>
                             <div class="col-md-4 text-md-end">
+                                <button class="btn btn-outline-primary rounded-pill px-3 fw-semibold shadow-sm me-2" id="btn-open-topic-modal">
+                                    <i class="fa-solid fa-folder-plus me-1"></i>Thêm Môn / Chủ Đề
+                                </button>
                                 <button class="btn btn-primary rounded-pill px-3 fw-semibold shadow-sm" id="btn-open-create-modal">
-                                    <i class="fa-solid fa-plus me-1"></i>Thêm Mới
+                                    <i class="fa-solid fa-plus me-1"></i>Thêm Câu Hỏi
                                 </button>
                             </div>
                         </div>
@@ -10432,14 +10877,15 @@ const AppUI = (() => {
                             <div class="card-body p-4">
                                 <form id="ai-generator-form">
                                     <div class="row g-3 mb-3">
-                                        <!-- Topic -->
+                                        <!-- Topic Input & Suggestions -->
                                         <div class="col-md-6">
-                                            <label for="ai-topic-id" class="form-label fw-semibold small">
-                                                <i class="fa-solid fa-book-bookmark text-primary me-1"></i>Chủ đề bài học <span class="text-danger">*</span>
+                                            <label for="ai-topic-input" class="form-label fw-semibold small">
+                                                <i class="fa-solid fa-book-bookmark text-primary me-1"></i>Môn học / Chủ đề (Tự do & Liên ngành) <span class="text-danger">*</span>
                                             </label>
-                                            <select class="form-select rounded-3" id="ai-topic-id" required>
-                                                <option value="">-- Đang nạp danh mục chủ đề --</option>
-                                            </select>
+                                            <input type="text" class="form-control rounded-3" id="ai-topic-input" list="topic-datalist" placeholder="Nhập tên môn: OOP, Toán Rời Rạc, Kinh Tế Lượng, Hỗn hợp..." required>
+                                            <datalist id="topic-datalist">
+                                                <!-- Động theo CSDL -->
+                                            </datalist>
                                         </div>
                                         <!-- Difficulty -->
                                         <div class="col-md-6">
@@ -10466,19 +10912,22 @@ const AppUI = (() => {
                                                 <option value="boundary_blindness">Boundary Blindness (Biên: off-by-one &lt;= vs &lt;, mảng rỗng)</option>
                                                 <option value="mental_model_gap">Mental Model Gap (Hiểu sai mô hình: Scope, Static, Tham chiếu)</option>
                                                 <option value="logic_flaw">Logic Flaw (Lỗi suy luận: Đảo ngược điều kiện, break/continue)</option>
+                                                <option value="other">Bẫy mở rộng & Tư duy liên ngành (Bất kỳ môn học nào)</option>
                                             </select>
                                         </div>
                                         <!-- Count -->
                                         <div class="col-md-5">
                                             <label for="ai-count" class="form-label fw-semibold small">
-                                                <i class="fa-solid fa-list-ol text-info me-1"></i>Số lượng câu hỏi (1 - 5)
+                                                <i class="fa-solid fa-list-ol text-info me-1"></i>Số lượng câu hỏi (1 - 25)
                                             </label>
                                             <select class="form-select rounded-3" id="ai-count">
                                                 <option value="1">1 câu hỏi</option>
-                                                <option value="2">2 câu hỏi</option>
-                                                <option value="3" selected>3 câu hỏi (Khuyên dùng)</option>
-                                                <option value="4">4 câu hỏi</option>
-                                                <option value="5">5 câu hỏi</option>
+                                                <option value="3">3 câu hỏi</option>
+                                                <option value="5" selected>5 câu hỏi (Khuyên dùng)</option>
+                                                <option value="10">10 câu hỏi (Đề kiểm tra ngắn)</option>
+                                                <option value="15">15 câu hỏi (Đề giữa kỳ)</option>
+                                                <option value="20">20 câu hỏi (Đề thi đầy đủ)</option>
+                                                <option value="25">25 câu hỏi (Tối đa 1 lần)</option>
                                             </select>
                                         </div>
                                     </div>
@@ -10599,6 +11048,48 @@ const AppUI = (() => {
                 </div>
             </div>
 
+            <!-- ══════════════════════════════════════════════════════════════ -->
+            <!-- TAB 4: Rà Soát Câu Hỏi Bị Báo Lỗi & Phản Hồi Cộng Đồng -->
+            <!-- ══════════════════════════════════════════════════════════════ -->
+            <div class="tab-pane fade" id="tab-reports" role="tabpanel">
+                <div class="card border-0 shadow-sm rounded-3">
+                    <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="fa-solid fa-triangle-exclamation text-danger fs-5"></i>
+                            <div>
+                                <h5 class="fw-bold mb-0 text-dark">Rà Soát Câu Hỏi Bị Báo Lỗi / Nghi Ảo Giác AI</h5>
+                                <p class="text-muted small mb-0">Danh sách câu hỏi được cộng đồng người học và đồng nghiệp báo cáo cần thẩm định</p>
+                            </div>
+                        </div>
+                        <button class="btn btn-sm btn-outline-secondary rounded-pill px-3" id="btn-refresh-reports">
+                            <i class="fa-solid fa-arrows-rotate me-1"></i>Làm mới
+                        </button>
+                    </div>
+                    <div class="card-body p-4 pt-1">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle border-top" id="reports-table">
+                                <thead class="table-light">
+                                    <tr class="text-secondary small">
+                                        <th style="width: 70px;">Mã Câu</th>
+                                        <th>Nội Dung Câu Hỏi</th>
+                                        <th style="width: 160px;">Môn / Chủ Đề</th>
+                                        <th class="text-center" style="width: 140px;">Lượt Báo Lỗi</th>
+                                        <th class="text-center" style="width: 160px;">Thao Tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="reports-tbody">
+                                    <tr>
+                                        <td colspan="5" class="text-center py-4 text-muted">
+                                            <div class="spinner-border spinner-border-sm text-danger me-2"></div>Đang tải danh sách báo lỗi...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
 
     </main>
@@ -10711,6 +11202,40 @@ const AppUI = (() => {
                     <button type="button" class="btn btn-primary rounded-pill px-4 fw-semibold" id="btn-save-question">
                         <i class="fa-solid fa-floppy-disk me-1"></i>Lưu Câu Hỏi
                     </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════ -->
+    <!-- MODAL THÊM CHỦ ĐỀ / MÔN HỌC MỚI -->
+    <!-- ══════════════════════════════════════════════════════════════ -->
+    <div class="modal fade" id="createTopicModal" tabindex="-1" aria-labelledby="createTopicModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4">
+                <div class="modal-header bg-primary text-white border-0 py-3">
+                    <h5 class="modal-title fw-bold" id="createTopicModalLabel">
+                        <i class="fa-solid fa-folder-plus me-2"></i>Thêm Môn Học / Chủ Đề Mới
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <form id="create-topic-form">
+                        <div class="mb-3">
+                            <label for="new-topic-name" class="form-label fw-semibold small">Tên Môn Học / Chủ Đề <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control rounded-3" id="new-topic-name" placeholder="Ví dụ: Thiết Kế Web, Triết Học Mác-Lênin, Giải Tích 1..." required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="new-topic-desc" class="form-label fw-semibold small">Mô tả tóm tắt</label>
+                            <textarea class="form-control rounded-3" id="new-topic-desc" rows="3" placeholder="Mục tiêu kiến thức, nội dung trọng tâm của chủ đề..."></textarea>
+                        </div>
+                        <div class="d-flex justify-content-end gap-2 pt-2">
+                            <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Hủy</button>
+                            <button type="submit" class="btn btn-primary rounded-pill px-4 fw-semibold" id="btn-save-topic">
+                                <i class="fa-solid fa-check me-1"></i>Khởi Tạo Chủ Đề
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>

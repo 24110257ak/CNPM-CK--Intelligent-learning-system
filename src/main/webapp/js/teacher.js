@@ -79,6 +79,21 @@ function setupEventListeners() {
         });
     }
 
+    // Nút mở modal thêm môn / chủ đề mới
+    const btnOpenTopic = document.getElementById('btn-open-topic-modal');
+    if (btnOpenTopic) {
+        btnOpenTopic.addEventListener('click', () => {
+            const modalEl = document.getElementById('createTopicModal');
+            if (modalEl) new bootstrap.Modal(modalEl).show();
+        });
+    }
+
+    // Form tạo chủ đề mới
+    const createTopicForm = document.getElementById('create-topic-form');
+    if (createTopicForm) {
+        createTopicForm.addEventListener('submit', handleCreateTopicSubmit);
+    }
+
     // Nút mở modal thêm câu hỏi mới
     const btnOpenCreate = document.getElementById('btn-open-create-modal');
     if (btnOpenCreate) {
@@ -100,6 +115,22 @@ function setupEventListeners() {
     if (btnRefreshStats) {
         btnRefreshStats.addEventListener('click', () => {
             loadTeacherStats();
+        });
+    }
+
+    // Nút làm mới báo lỗi
+    const btnRefreshReports = document.getElementById('btn-refresh-reports');
+    if (btnRefreshReports) {
+        btnRefreshReports.addEventListener('click', () => {
+            loadReportedQuestions();
+        });
+    }
+
+    // Khi chuyển sang Tab Báo Lỗi thì tải dữ liệu
+    const tabReportsBtn = document.getElementById('tab-reports-btn');
+    if (tabReportsBtn) {
+        tabReportsBtn.addEventListener('shown.bs.tab', () => {
+            loadReportedQuestions();
         });
     }
 
@@ -150,14 +181,15 @@ function setupEventListeners() {
 }
 
 /**
- * Tải toàn bộ dữ liệu ban đầu: Topics, KPIs, Questions
+ * Tải toàn bộ dữ liệu ban đầu: Topics, KPIs, Questions, Reports
  */
 async function loadInitialData() {
     try {
         await loadTopics();
         await Promise.all([
             loadTeacherStats(),
-            loadQuestions()
+            loadQuestions(),
+            loadReportedQuestions()
         ]);
     } catch (err) {
         console.error('Lỗi khi nạp dữ liệu ban đầu:', err);
@@ -165,7 +197,7 @@ async function loadInitialData() {
 }
 
 /**
- * Tải danh sách Chủ Đề để nạp vào các Dropdown
+ * Tải danh sách Chủ Đề để nạp vào các Dropdown và Datalist gợi ý
  */
 async function loadTopics() {
     try {
@@ -175,12 +207,12 @@ async function loadTopics() {
 
         const filterSelect = document.getElementById('filter-topic');
         const modalSelect = document.getElementById('modal-topic-id');
-        const aiSelect = document.getElementById('ai-topic-id');
+        const topicDatalist = document.getElementById('topic-datalist');
 
         // Reset options
         if (filterSelect) filterSelect.innerHTML = '<option value="">-- Tất cả chủ đề --</option>';
         if (modalSelect) modalSelect.innerHTML = '<option value="">-- Chọn chủ đề bài học --</option>';
-        if (aiSelect) aiSelect.innerHTML = '<option value="">-- Chọn chủ đề để AI sinh câu hỏi --</option>';
+        if (topicDatalist) topicDatalist.innerHTML = '';
 
         allTopics.forEach(t => {
             topicsMap[t.topicId] = t.topicName;
@@ -199,15 +231,111 @@ async function loadTopics() {
                 modalSelect.appendChild(opt2);
             }
 
-            if (aiSelect) {
+            if (topicDatalist) {
                 const opt3 = document.createElement('option');
-                opt3.value = t.topicId;
-                opt3.textContent = t.topicName;
-                aiSelect.appendChild(opt3);
+                opt3.value = t.topicName;
+                topicDatalist.appendChild(opt3);
             }
         });
     } catch (err) {
         console.error('Lỗi tải danh mục chủ đề:', err);
+    }
+}
+
+/**
+ * Tạo môn học / chủ đề mới
+ */
+async function handleCreateTopicSubmit(e) {
+    if (e) e.preventDefault();
+    const nameInput = document.getElementById('new-topic-name');
+    const descInput = document.getElementById('new-topic-desc');
+    const topicName = nameInput ? nameInput.value.trim() : '';
+    const description = descInput ? descInput.value.trim() : '';
+
+    if (!topicName) {
+        Swal.fire('Lỗi', 'Vui lòng nhập tên môn học hoặc chủ đề.', 'warning');
+        return;
+    }
+
+    const btn = document.getElementById('btn-save-topic');
+    if (btn) btn.disabled = true;
+
+    try {
+        await API.topics.create({ topicName, description });
+        const modalEl = document.getElementById('createTopicModal');
+        if (modalEl) {
+            const inst = bootstrap.Modal.getInstance(modalEl);
+            if (inst) inst.hide();
+        }
+        if (nameInput) nameInput.value = '';
+        if (descInput) descInput.value = '';
+
+        Swal.fire({
+            icon: 'success',
+            title: 'Khởi tạo chủ đề thành công!',
+            text: `Chủ đề "${topicName}" đã được lưu vào hệ thống.`,
+            timer: 2000,
+            showConfirmButton: false
+        });
+
+        await loadTopics();
+    } catch (err) {
+        Swal.fire('Lỗi', err.message || 'Không thể tạo chủ đề mới.', 'error');
+    } finally {
+        if (btn) btn.disabled = false;
+    }
+}
+
+/**
+ * Tải danh sách các câu hỏi bị báo lỗi từ người học hoặc đồng nghiệp
+ */
+async function loadReportedQuestions() {
+    const tbody = document.getElementById('reports-tbody');
+    const badge = document.getElementById('reports-count-badge');
+    if (!tbody) return;
+
+    try {
+        const res = await API.discussion.getReported(50);
+        const list = res.data || [];
+
+        if (badge) badge.textContent = list.length;
+
+        if (list.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" class="text-center py-5 text-muted"><i class="fa-solid fa-circle-check text-success fs-3 d-block mb-2"></i>Tuyệt vời! Hiện tại không có câu hỏi nào bị cộng đồng báo lỗi.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = list.map(item => `
+            <tr>
+                <td class="fw-bold text-muted text-center">${item.questionId}</td>
+                <td>
+                    <div class="fw-semibold text-dark text-truncate" style="max-width: 450px;" title="${escapeHtml(item.questionText)}">
+                        ${escapeHtml(item.questionText)}
+                    </div>
+                </td>
+                <td>
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2 py-1">
+                        ${escapeHtml(item.topicName || 'Chủ đề')}
+                    </span>
+                </td>
+                <td class="text-center">
+                    <span class="badge bg-danger text-white rounded-pill px-3 py-1">
+                        <i class="fa-solid fa-triangle-exclamation me-1"></i>${item.reportCount} lượt
+                    </span>
+                </td>
+                <td class="text-center">
+                    <button class="btn btn-sm btn-outline-primary rounded-pill px-3 me-1" onclick="openEditModal(${item.questionId})">
+                        <i class="fa-solid fa-pen-to-square me-1"></i>Sửa câu
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger rounded-pill px-2" onclick="handleDeleteQuestion(${item.questionId})">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+    } catch (err) {
+        console.error('Lỗi khi tải danh sách báo lỗi:', err);
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-danger">Không thể tải danh sách báo lỗi.</td></tr>';
     }
 }
 
@@ -604,20 +732,20 @@ function escapeHtml(str) {
 async function handleAiGenerateSubmit(e) {
     if (e) e.preventDefault();
 
-    const topicId = document.getElementById('ai-topic-id').value;
-    if (!topicId) {
+    const topicInput = document.getElementById('ai-topic-input');
+    const topicName = topicInput ? topicInput.value.trim() : '';
+    if (!topicName) {
         Swal.fire({
             icon: 'warning',
-            title: 'Chưa chọn chủ đề',
-            text: 'Vui lòng chọn chủ đề bài học trước khi yêu cầu AI sinh câu hỏi!'
+            title: 'Chưa nhập môn học / chủ đề',
+            text: 'Vui lòng nhập tên môn học hoặc chọn một chủ đề trước khi yêu cầu AI sinh câu hỏi!'
         });
         return;
     }
 
-    const topicName = topicsMap[topicId] || 'Lập trình Java';
     const difficulty = document.getElementById('ai-difficulty').value;
     const misconceptionTag = document.getElementById('ai-misconception').value;
-    const count = parseInt(document.getElementById('ai-count').value) || 3;
+    const count = parseInt(document.getElementById('ai-count').value) || 5;
     const promptHint = document.getElementById('ai-custom-prompt').value.trim();
 
     const submitBtn = document.getElementById('btn-generate-ai');
@@ -643,7 +771,8 @@ async function handleAiGenerateSubmit(e) {
 
         currentGeneratedQuestions = questions.map((q, idx) => ({
             ...q,
-            topicId: parseInt(topicId),
+            topicId: q.topicId || 1,
+            topicName: q.topicName || topicName,
             imported: false,
             _index: idx
         }));

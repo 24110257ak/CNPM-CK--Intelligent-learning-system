@@ -1,6 +1,6 @@
 ﻿# TOAN BO MA NGUON DU AN - HE THONG HOC TAP THONG MINH (INTELLIGENT LMS)
 
-> **Thoi gian tao file:** 2026-09-30 17:49:15
+> **Thoi gian tao file:** 2026-09-30 18:08:40
 > **Tong so file:** 52
 > **Muc dich:** Gom toan bo source code thanh 1 file duy nhat de gui cho ben thu ba xem xet, danh gia va gop y.
 
@@ -6936,6 +6936,121 @@ body { background: radial-gradient(circle at top right, #eef2ff 0, transparent 3
     *, *::before, *::after { scroll-behavior:auto !important; animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; }
 }
 
+/* ═══════════════════════════════════════════════════════════════════
+   Teacher Dashboard Tabs & AI Buttons Hardening (Hover & Active States)
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* Segmented Control Navigation Tabs */
+#dashboardTabs .nav-link {
+    color: #475569 !important;
+    background-color: transparent !important;
+    border-radius: 50rem !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid transparent;
+}
+
+#dashboardTabs .nav-link:hover:not(.active) {
+    background-color: #f1f5f9 !important;
+    color: #0f172a !important;
+    border-color: #e2e8f0 !important;
+    transform: translateY(-1px);
+}
+
+#dashboardTabs .nav-link.active {
+    background: linear-gradient(135deg, #4361ee 0%, #3a56d4 100%) !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 14px rgba(67, 97, 238, 0.35) !important;
+    border-color: transparent !important;
+}
+
+#dashboardTabs .nav-link.active * {
+    color: #ffffff !important;
+}
+
+#dashboardTabs .nav-link.active #reports-count-badge {
+    background-color: #ffffff !important;
+    color: #e71d36 !important;
+    font-weight: 700;
+}
+
+/* Custom AI Buttons with Guaranteed High Contrast Hovering */
+.btn-ai-topic {
+    color: #4361ee !important;
+    background-color: rgba(67, 97, 238, 0.1) !important;
+    border: 1px solid rgba(67, 97, 238, 0.4) !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.btn-ai-topic i {
+    color: #f59e0b;
+    transition: color 0.2s ease;
+}
+.btn-ai-topic:hover, .btn-ai-topic:active, .btn-ai-topic:focus {
+    background-color: #4361ee !important;
+    border-color: #3a56d4 !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 14px rgba(67, 97, 238, 0.35) !important;
+    transform: translateY(-1px);
+}
+.btn-ai-topic:hover *, .btn-ai-topic:active *, .btn-ai-topic:focus * {
+    color: #ffffff !important;
+}
+
+.btn-ai-suggest {
+    color: #d97706 !important;
+    background-color: rgba(245, 158, 11, 0.12) !important;
+    border: 1px solid rgba(245, 158, 11, 0.45) !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.btn-ai-suggest i {
+    color: #f59e0b;
+    transition: color 0.2s ease;
+}
+.btn-ai-suggest:hover, .btn-ai-suggest:active, .btn-ai-suggest:focus {
+    background-color: #f59e0b !important;
+    border-color: #d97706 !important;
+    color: #0f172a !important; /* Luôn đảm bảo chữ đen/xanh đen trên nền vàng, KHÔNG BAO GIỜ bị trắng chìm */
+    box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35) !important;
+    transform: translateY(-1px);
+}
+.btn-ai-suggest:hover *, .btn-ai-suggest:active *, .btn-ai-suggest:focus * {
+    color: #0f172a !important;
+}
+
+.btn-ai-validate {
+    color: #059669 !important;
+    background-color: rgba(16, 185, 129, 0.12) !important;
+    border: 1px solid rgba(16, 185, 129, 0.45) !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.btn-ai-validate i {
+    color: #10b981;
+    transition: color 0.2s ease;
+}
+.btn-ai-validate:hover, .btn-ai-validate:active, .btn-ai-validate:focus {
+    background-color: #10b981 !important;
+    border-color: #059669 !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35) !important;
+    transform: translateY(-1px);
+}
+.btn-ai-validate:hover *, .btn-ai-validate:active *, .btn-ai-validate:focus * {
+    color: #ffffff !important;
+}
+
+.quick-topic-btn {
+    transition: all 0.15s ease;
+    border: 1px solid #cbd5e1;
+    background-color: #f8fafc;
+    color: #475569;
+}
+.quick-topic-btn:hover {
+    background-color: #e0e7ff !important;
+    border-color: #818cf8 !important;
+    color: #3730a3 !important;
+    transform: translateY(-1px);
+}
+
+
 ``
 
 ---
@@ -11602,12 +11717,12 @@ const AppUI = (() => {
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link fw-bold py-2 px-3 rounded-pill text-nowrap text-primary" id="tab-ai-copilot-btn" data-bs-toggle="pill" data-bs-target="#tab-ai-copilot" type="button" role="tab">
+                    <button class="nav-link fw-bold py-2 px-3 rounded-pill text-nowrap" id="tab-ai-copilot-btn" data-bs-toggle="pill" data-bs-target="#tab-ai-copilot" type="button" role="tab">
                         <i class="fa-solid fa-wand-magic-sparkles text-warning me-1"></i>Trợ Lý Soạn Đề AI
                     </button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link fw-bold py-2 px-3 rounded-pill text-nowrap text-danger" id="tab-reports-btn" data-bs-toggle="pill" data-bs-target="#tab-reports" type="button" role="tab">
+                    <button class="nav-link fw-bold py-2 px-3 rounded-pill text-nowrap" id="tab-reports-btn" data-bs-toggle="pill" data-bs-target="#tab-reports" type="button" role="tab">
                         <i class="fa-solid fa-triangle-exclamation me-1"></i>Phản Hồi & Báo Lỗi <span class="badge bg-danger text-white rounded-pill ms-1" id="reports-count-badge">0</span>
                     </button>
                 </li>
@@ -11846,7 +11961,7 @@ const AppUI = (() => {
                                             <label for="ai-topic-input" class="form-label fw-bold text-dark small mb-0">
                                                 <i class="fa-solid fa-book-bookmark text-primary me-1"></i>Môn học / Chủ đề bài thi <span class="text-danger">*</span>
                                             </label>
-                                            <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3 py-1 fw-semibold" id="btn-validate-topic">
+                                            <button type="button" class="btn btn-ai-topic btn-sm rounded-pill px-3 py-1 fw-semibold" id="btn-validate-topic">
                                                 <i class="fa-solid fa-wand-magic-sparkles me-1 text-warning"></i>AI Thẩm Định Môn Học
                                             </button>
                                         </div>
@@ -11900,11 +12015,11 @@ const AppUI = (() => {
                                                 <i class="fa-solid fa-crosshairs text-danger me-1"></i>Bẫy tư duy trọng tâm (Tùy chọn)
                                             </label>
                                             <div class="d-flex gap-2">
-                                                <button type="button" class="btn btn-outline-warning text-dark btn-sm rounded-pill px-3 fw-semibold" id="btn-suggest-misconceptions">
-                                                    <i class="fa-solid fa-lightbulb text-warning me-1"></i>AI Gợi Ý Bẫy
+                                                <button type="button" class="btn btn-ai-suggest btn-sm rounded-pill px-3 fw-semibold" id="btn-suggest-misconceptions">
+                                                    <i class="fa-solid fa-lightbulb me-1"></i>AI Gợi Ý Bẫy
                                                 </button>
-                                                <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-3 fw-semibold" id="btn-validate-misconception">
-                                                    <i class="fa-solid fa-shield-halved text-success me-1"></i>Thẩm Định Bẫy
+                                                <button type="button" class="btn btn-ai-validate btn-sm rounded-pill px-3 fw-semibold" id="btn-validate-misconception">
+                                                    <i class="fa-solid fa-shield-halved me-1"></i>Thẩm Định Bẫy
                                                 </button>
                                             </div>
                                         </div>

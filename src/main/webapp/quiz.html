@@ -13,7 +13,173 @@
     <!-- Highlight.js CSS for Code syntax -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="css/app.css">
+    <link rel="stylesheet" href="css/app.css?v=2.2">
+    <style>
+        /* ── Dynamic AI Loading Overlay & Orb Animations ── */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .loading-card {
+            max-width: 480px;
+            width: 90%;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            animation: fadeInScale 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .ai-orb-container {
+            position: relative;
+            width: 110px;
+            height: 110px;
+            margin: 0 auto 20px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .ai-orb-ring-outer {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 3px solid transparent;
+            border-top-color: #4361ee;
+            border-right-color: #8b5cf6;
+            -webkit-animation: orbSpin 2s linear infinite;
+            animation: orbSpin 2s linear infinite;
+        }
+
+        .ai-orb-ring-inner {
+            position: absolute;
+            width: 80%;
+            height: 80%;
+            border-radius: 50%;
+            border: 2.5px dashed #4cc9f0;
+            -webkit-animation: orbSpinReverse 2.5s linear infinite;
+            animation: orbSpinReverse 2.5s linear infinite;
+            opacity: 0.85;
+        }
+
+        .ai-orb-core {
+            position: relative;
+            width: 66px;
+            height: 66px;
+            background: linear-gradient(135deg, #4361ee 0%, #7209b7 50%, #4cc9f0 100%);
+            background-size: 200% 200%;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            box-shadow: 0 0 25px rgba(67, 97, 238, 0.6), inset 0 0 12px rgba(255, 255, 255, 0.4);
+            -webkit-animation: orbFloat 2.2s ease-in-out infinite;
+            animation: orbFloat 2.2s ease-in-out infinite;
+        }
+
+        .ai-orb-core i {
+            -webkit-animation: iconBreath 2s ease-in-out infinite;
+            animation: iconBreath 2s ease-in-out infinite;
+            filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.9));
+        }
+
+        @-webkit-keyframes orbSpin {
+            0% { -webkit-transform: rotate(0deg); }
+            100% { -webkit-transform: rotate(360deg); }
+        }
+        @keyframes orbSpin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @-webkit-keyframes orbSpinReverse {
+            0% { -webkit-transform: rotate(360deg); }
+            100% { -webkit-transform: rotate(0deg); }
+        }
+        @keyframes orbSpinReverse {
+            0% { transform: rotate(360deg); }
+            100% { transform: rotate(0deg); }
+        }
+
+        @-webkit-keyframes orbFloat {
+            0%, 100% { -webkit-transform: translateY(0); }
+            50% { -webkit-transform: translateY(-6px); }
+        }
+        @keyframes orbFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-6px); }
+        }
+
+        @-webkit-keyframes iconBreath {
+            0%, 100% { -webkit-transform: scale(0.94); }
+            50% { -webkit-transform: scale(1.15); }
+        }
+        @keyframes iconBreath {
+            0%, 100% { transform: scale(0.94); }
+            50% { transform: scale(1.15); }
+        }
+
+        .loading-progress-track {
+            width: 100%;
+            height: 6px;
+            background: #e2e8f0;
+            border-radius: 99px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .loading-progress-bar {
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(90deg, #4361ee 0%, #7209b7 50%, #4cc9f0 100%);
+            background-size: 200% 100%;
+            border-radius: 99px;
+            -webkit-animation: progressBarMove 1.8s linear infinite;
+            animation: progressBarMove 1.8s linear infinite;
+        }
+
+        @-webkit-keyframes progressBarMove {
+            0% { background-position: 100% 0; }
+            100% { background-position: -100% 0; }
+        }
+        @keyframes progressBarMove {
+            0% { background-position: 100% 0; }
+            100% { background-position: -100% 0; }
+        }
+
+        .typing-dots span {
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            background: #4361ee;
+            border-radius: 50%;
+            -webkit-animation: typingBounce 1.2s infinite ease-in-out both;
+            animation: typingBounce 1.2s infinite ease-in-out both;
+            margin: 0 2px;
+        }
+        .typing-dots span:nth-child(1) { -webkit-animation-delay: -0.32s; animation-delay: -0.32s; }
+        .typing-dots span:nth-child(2) { -webkit-animation-delay: -0.16s; animation-delay: -0.16s; }
+        .typing-dots span:nth-child(3) { -webkit-animation-delay: 0s; animation-delay: 0s; }
+
+        @-webkit-keyframes typingBounce {
+            0%, 80%, 100% { -webkit-transform: scale(0); }
+            40% { -webkit-transform: scale(1); }
+        }
+        @keyframes typingBounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+    </style>
 </head>
 <body class="bg-light">
 
@@ -21,7 +187,7 @@
     <nav class="navbar navbar-custom sticky-top py-2">
         <div class="container d-flex justify-content-between align-items-center">
             <div class="d-flex align-items-center gap-3">
-                <a href="index.html" class="btn btn-sm btn-outline-secondary rounded-circle" title="Quay lại">
+                <a href="index.html" class="btn btn-sm btn-outline-secondary rounded-circle" id="btn-quiz-back" title="Quay lại">
                     <i class="fa-solid fa-arrow-left"></i>
                 </a>
                 <div>

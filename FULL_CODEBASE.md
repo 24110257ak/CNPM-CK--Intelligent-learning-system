@@ -1,6 +1,6 @@
 ﻿# TOAN BO MA NGUON DU AN - HE THONG HOC TAP THONG MINH (INTELLIGENT LMS)
 
-> **Thoi gian tao file:** 2026-09-30 22:00:42
+> **Thoi gian tao file:** 2026-09-30 22:14:00
 > **Tong so file:** 58
 > **Muc dich:** Gom toan bo source code thanh 1 file duy nhat de gui cho ben thu ba xem xet, danh gia va gop y.
 
@@ -4463,15 +4463,20 @@ import java.util.Map;
 public class AIService {
 
     private static final String MODEL_NAME = getEffectiveModel();
+    private static final String FALLBACK_MODEL = getEffectiveFallbackModel();
     private final Client client;
     private final boolean isConfigured;
 
     private static String getEffectiveModel() {
-        String model = ConfigLoader.get("GEMINI_MODEL", "gemini-3.6-flash").trim();
-        if (model.equalsIgnoreCase("gemini-2.5-flash") || model.equalsIgnoreCase("gemini-1.5-flash") || model.equalsIgnoreCase("gemini-2.0-flash")) {
-            return "gemini-3.6-flash";
+        String model = ConfigLoader.get("GEMINI_MODEL", "gemini-2.5-flash").trim();
+        if (model.isEmpty() || model.contains("3.6") || model.contains("3.8")) {
+            return "gemini-2.5-flash";
         }
-        return model.isEmpty() ? "gemini-3.6-flash" : model;
+        return model;
+    }
+
+    private static String getEffectiveFallbackModel() {
+        return MODEL_NAME.contains("2.5") ? "gemini-1.5-flash" : "gemini-2.5-flash";
     }
 
     public AIService() {
@@ -4540,7 +4545,7 @@ public class AIService {
             try {
                 response = client.models.generateContent(MODEL_NAME, prompt, config);
             } catch (Exception modelErr) {
-                String fallbackModel = MODEL_NAME.equals("gemini-3.6-flash") ? "gemini-3.8-flash" : "gemini-3.6-flash";
+                String fallbackModel = FALLBACK_MODEL;
                 response = client.models.generateContent(fallbackModel, prompt, config);
             }
 
@@ -4586,7 +4591,7 @@ public class AIService {
             try {
                 response = client.models.generateContent(MODEL_NAME, fullPrompt, config);
             } catch (Exception modelErr) {
-                String fallbackModel = MODEL_NAME.equals("gemini-3.6-flash") ? "gemini-3.8-flash" : "gemini-3.6-flash";
+                String fallbackModel = FALLBACK_MODEL;
                 response = client.models.generateContent(fallbackModel, fullPrompt, config);
             }
 
@@ -4651,7 +4656,7 @@ public class AIService {
             try {
                 response = client.models.generateContent(MODEL_NAME, prompt, config);
             } catch (Exception modelErr) {
-                String fallbackModel = MODEL_NAME.equals("gemini-3.6-flash") ? "gemini-3.8-flash" : "gemini-3.6-flash";
+                String fallbackModel = FALLBACK_MODEL;
                 response = client.models.generateContent(fallbackModel, prompt, config);
             }
 
@@ -4706,7 +4711,7 @@ public class AIService {
             try {
                 response = client.models.generateContent(MODEL_NAME, fullPrompt, config);
             } catch (Exception modelErr) {
-                String fallbackModel = MODEL_NAME.equals("gemini-3.6-flash") ? "gemini-3.8-flash" : "gemini-3.6-flash";
+                String fallbackModel = FALLBACK_MODEL;
                 response = client.models.generateContent(fallbackModel, fullPrompt, config);
             }
 
@@ -4745,7 +4750,7 @@ public class AIService {
             try {
                 response = client.models.generateContent(MODEL_NAME, prompt, config);
             } catch (Exception modelErr) {
-                String fallbackModel = MODEL_NAME.equals("gemini-3.6-flash") ? "gemini-3.8-flash" : "gemini-3.6-flash";
+                String fallbackModel = FALLBACK_MODEL;
                 response = client.models.generateContent(fallbackModel, prompt, config);
             }
 
@@ -4803,7 +4808,7 @@ public class AIService {
             try {
                 response = client.models.generateContent(MODEL_NAME, prompt, config);
             } catch (Exception modelErr) {
-                String fallbackModel = MODEL_NAME.equals("gemini-3.6-flash") ? "gemini-3.8-flash" : "gemini-3.6-flash";
+                String fallbackModel = FALLBACK_MODEL;
                 response = client.models.generateContent(fallbackModel, prompt, config);
             }
 
@@ -4864,7 +4869,7 @@ public class AIService {
             try {
                 response = client.models.generateContent(MODEL_NAME, prompt, config);
             } catch (Exception modelErr) {
-                String fallbackModel = MODEL_NAME.equals("gemini-3.6-flash") ? "gemini-3.8-flash" : "gemini-3.6-flash";
+                String fallbackModel = FALLBACK_MODEL;
                 response = client.models.generateContent(fallbackModel, prompt, config);
             }
 
@@ -4917,7 +4922,7 @@ public class AIService {
             try {
                 response = client.models.generateContent(MODEL_NAME, prompt, config);
             } catch (Exception modelErr) {
-                String fallbackModel = MODEL_NAME.equals("gemini-3.6-flash") ? "gemini-3.8-flash" : "gemini-3.6-flash";
+                String fallbackModel = FALLBACK_MODEL;
                 response = client.models.generateContent(fallbackModel, prompt, config);
             }
 
@@ -5328,6 +5333,8 @@ import com.lms.model.User;
 import com.lms.model.UserAnswer;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Service quản lý toàn bộ chu trình thi trắc nghiệm và kích hoạt AI củng cố kiến thức.
@@ -5404,8 +5411,11 @@ public class QuizService {
     public Map<String, Object> submitQuiz(int sessionId, int userId, List<Map<String, Object>> submittedAnswers) {
         QuizSession ownedSession = quizDAO.findSessionForUser(sessionId, userId);
         if (ownedSession == null) throw new SecurityException("Phiên làm bài không tồn tại hoặc không thuộc tài khoản hiện tại.");
-        if (ownedSession.getCompletedAt() != null || quizDAO.countAnswersBySession(sessionId) > 0)
-            throw new IllegalStateException("Phiên làm bài này đã được nộp trước đó.");
+        if (ownedSession.getCompletedAt() != null || quizDAO.countAnswersBySession(sessionId) > 0) {
+            // Idempotency: Phiên làm bài này đã được nộp hoặc đã chấm điểm trước đó.
+            // Tự động trả về kết quả đã chấm thay vì ném lỗi khiến học sinh bị kẹt giao diện.
+            return buildExistingSubmissionResult(ownedSession, userId);
+        }
         if (submittedAnswers == null || submittedAnswers.isEmpty())
             throw new IllegalArgumentException("Danh sách câu trả lời không được để trống.");
         if (submittedAnswers.size() != ownedSession.getTotalQuestions())
@@ -5429,6 +5439,7 @@ public class QuizService {
         int totalQuestions = submittedAnswers.size();
         List<Map<String, Object>> gradedAnswers = new ArrayList<>();
         List<RemedialLesson> remedialLessons = new ArrayList<>();
+        List<CompletableFuture<RemedialLesson>> lessonFutures = new ArrayList<>();
 
         for (Map<String, Object> ansMap : submittedAnswers) {
             int questionId = ((Number) ansMap.get("questionId")).intValue();
@@ -5468,13 +5479,40 @@ public class QuizService {
             graded.put("explanation", q.getExplanation());
             gradedAnswers.add(graded);
 
-            // ★ Confidence Tagging & Error Detection: Kích hoạt AI nếu SAI hoặc ĐÚNG nhưng GUESS
+            // ★ Confidence Tagging & Error Detection: Kích hoạt AI song song nếu SAI hoặc ĐÚNG nhưng GUESS
             if (answerId > 0 && ua.needsAIAnalysis()) {
-                RemedialLesson lesson = aiService.analyzeError(q, ua, userInterests);
-                lesson.setUserId(userId);
-                lesson.setAnswerId(answerId);
-                quizDAO.saveRemedialLesson(lesson);
-                remedialLessons.add(lesson);
+                final Question finalQ = q;
+                final UserAnswer finalUa = ua;
+                final int finalAnswerId = answerId;
+                lessonFutures.add(CompletableFuture.supplyAsync(() -> {
+                    try {
+                        RemedialLesson lesson = aiService.analyzeError(finalQ, finalUa, userInterests);
+                        if (lesson == null) {
+                            lesson = FallbackService.generateFallbackLesson(finalQ, finalUa);
+                        }
+                        lesson.setUserId(userId);
+                        lesson.setAnswerId(finalAnswerId);
+                        return lesson;
+                    } catch (Exception e) {
+                        RemedialLesson fb = FallbackService.generateFallbackLesson(finalQ, finalUa);
+                        fb.setUserId(userId);
+                        fb.setAnswerId(finalAnswerId);
+                        return fb;
+                    }
+                }));
+            }
+        }
+
+        // Chờ kết quả AI với timeout tối đa 8 giây (đảm bảo request không bao giờ bị Render / Client timeout)
+        for (CompletableFuture<RemedialLesson> future : lessonFutures) {
+            try {
+                RemedialLesson lesson = future.get(8, TimeUnit.SECONDS);
+                if (lesson != null) {
+                    quizDAO.saveRemedialLesson(lesson);
+                    remedialLessons.add(lesson);
+                }
+            } catch (Exception e) {
+                future.cancel(true);
             }
         }
 
@@ -5521,6 +5559,49 @@ public class QuizService {
         details.put("answers", answers);
         details.put("remedialLessons", lessons);
         return details;
+    }
+
+    /**
+     * Tái tạo kết quả chấm điểm cho phiên thi đã nộp trước đó (Idempotent recovery).
+     */
+    private Map<String, Object> buildExistingSubmissionResult(QuizSession session, int userId) {
+        int sessionId = session.getSessionId();
+        List<UserAnswer> userAnswers = quizDAO.getAnswersBySession(sessionId);
+        List<RemedialLesson> lessons = quizDAO.getRemedialLessonsBySession(sessionId);
+
+        List<Map<String, Object>> gradedAnswers = new ArrayList<>();
+        int correctCount = 0;
+        for (UserAnswer ua : userAnswers) {
+            if (ua.isCorrect()) correctCount++;
+            Optional<Question> qOpt = questionDAO.findById(ua.getQuestionId());
+            Map<String, Object> graded = new HashMap<>();
+            graded.put("questionId", ua.getQuestionId());
+            graded.put("chosenAnswer", ua.getUserAnswer());
+            graded.put("isCorrect", ua.isCorrect());
+            graded.put("confidenceLevel", ua.getConfidenceLevel());
+            if (qOpt.isPresent()) {
+                Question q = qOpt.get();
+                graded.put("questionText", q.getQuestionText());
+                graded.put("correctAnswer", q.getCorrectAnswer());
+                graded.put("explanation", q.getExplanation());
+            }
+            gradedAnswers.add(graded);
+        }
+
+        int total = session.getTotalQuestions() > 0 ? session.getTotalQuestions() : userAnswers.size();
+        double score = session.getCompletedAt() != null ? session.getScore() : (total > 0 ? Math.round(((double) correctCount / total) * 10.0 * 10.0) / 10.0 : 0.0);
+        double percentage = total > 0 ? Math.round(((double) correctCount / total) * 100.0 * 10.0) / 10.0 : 0.0;
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("sessionId", sessionId);
+        response.put("userId", userId);
+        response.put("totalQuestions", total);
+        response.put("correctCount", correctCount);
+        response.put("score", score);
+        response.put("percentage", percentage);
+        response.put("gradedAnswers", gradedAnswers);
+        response.put("remedialLessons", lessons);
+        return response;
     }
 }
 
@@ -8432,7 +8513,7 @@ const API = {
     },
     quiz: {
         start: topicId => API.request('/quiz/start', { method:'POST', body:JSON.stringify({topicId}) }),
-        submit: (sessionId,answers) => API.request('/quiz/submit', { method:'POST', body:JSON.stringify({sessionId,answers}), timeout:45000 }),
+        submit: (sessionId,answers) => API.request('/quiz/submit', { method:'POST', body:JSON.stringify({sessionId,answers}), timeout:60000 }),
         history: () => API.request('/quiz/history'),
         session: sessionId => API.request(`/quiz/session/${encodeURIComponent(sessionId)}`)
     },
@@ -9611,6 +9692,27 @@ function setupEventListeners() {
     if (btnReport) {
         btnReport.addEventListener('click', handleQuizReportQuestion);
     }
+
+    // Nút quay lại trang chủ với xác nhận
+    const btnBack = document.getElementById('btn-quiz-back');
+    if (btnBack) {
+        btnBack.addEventListener('click', (e) => {
+            e.preventDefault();
+            Swal.fire({
+                title: 'Tạm dừng làm bài?',
+                text: 'Tiến độ câu hỏi hiện tại đã được lưu. Bạn có muốn quay lại danh mục môn học không?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Quay lại',
+                cancelButtonText: 'Tiếp tục làm'
+            }).then((res) => {
+                if (res.isConfirmed) {
+                    saveProgressToStorage();
+                    window.location.href = 'index.html';
+                }
+            });
+        });
+    }
 }
 
 /**
@@ -9723,6 +9825,9 @@ async function initQuiz() {
                         }
                     } else {
                         localStorage.removeItem(storageKey);
+                        userAnswers = {};
+                        currentIndex = 0;
+                        timeLeft = 15 * 60;
                     }
                 }
             } catch (e) {
@@ -10004,6 +10109,10 @@ async function submitQuiz(force = false) {
         };
     });
 
+    // DỌN DẸP TIẾN ĐỘ DỞ DANG NGAY KHI TIẾN HÀNH NỘP BÀI (tránh trường hợp thoát ra vào lại bị hỏi khôi phục)
+    const storageKey = `quiz_progress_${topicId}`;
+    localStorage.removeItem(storageKey);
+
     try {
         clearInterval(timerInterval);
         const res = await API.quiz.submit(sessionId, answersPayload);
@@ -10011,8 +10120,8 @@ async function submitQuiz(force = false) {
         // Dọn dẹp cycle timer
         clearInterval(cycleTimer);
 
-        // ★ DỌN DẸP LOCALSTORAGE TRIỆT ĐỂ khi nộp bài thành công
-        localStorage.removeItem(`quiz_progress_${topicId}`);
+        // Đảm bảo dọn dẹp triệt để localStorage
+        localStorage.removeItem(storageKey);
 
         // Lưu kết quả vào sessionStorage để trang result.html hiển thị
         sessionStorage.setItem('last_quiz_result', JSON.stringify(res.data));
@@ -10022,11 +10131,54 @@ async function submitQuiz(force = false) {
 
     } catch (err) {
         clearInterval(cycleTimer);
+        const msg = (err.message || '').toLowerCase();
+
+        // 1. Nếu hệ thống báo phiên đã được nộp hoặc đã hoàn tất:
+        if (msg.includes('đã được nộp') || msg.includes('đã nộp') || err.status === 409) {
+            localStorage.removeItem(storageKey);
+            if (overlay) overlay.classList.add('d-none');
+            Swal.fire({
+                icon: 'info',
+                title: 'Bài làm đã hoàn tất',
+                text: 'Hệ thống đã ghi nhận bài thi của bạn trước đó. Đang chuyển tới trang xem kết quả...',
+                timer: 1600,
+                showConfirmButton: false
+            }).then(() => {
+                window.location.href = `result.html?sessionId=${sessionId}`;
+            });
+            return;
+        }
+
+        // 2. Thử kiểm tra xem backend đã chấm xong chưa (tránh trường hợp timeout mạng phía client nhưng server đã lưu)
+        try {
+            const check = await API.quiz.session(sessionId);
+            if (check && check.data && check.data.session && check.data.session.completedAt) {
+                localStorage.removeItem(storageKey);
+                sessionStorage.setItem('last_quiz_result', JSON.stringify(check.data));
+                window.location.href = `result.html?sessionId=${sessionId}`;
+                return;
+            }
+        } catch (checkErr) {
+            // Bỏ qua lỗi kiểm tra
+        }
+
         if (overlay) overlay.classList.add('d-none');
+
+        // 3. Nếu thật sự lỗi không nộp được:
         Swal.fire({
             icon: 'error',
             title: 'Lỗi nộp bài',
-            text: err.message || 'Không thể kết nối đến máy chủ. Vui lòng thử lại.'
+            text: err.message || 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra mạng hoặc thử lại.',
+            showCancelButton: true,
+            confirmButtonText: 'Thử nộp lại',
+            cancelButtonText: 'Về trang chủ'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                submitQuiz(true);
+            } else {
+                localStorage.removeItem(storageKey);
+                window.location.href = 'index.html';
+            }
         });
     }
 }
@@ -13544,7 +13696,7 @@ const AppUI = (() => {
     <!-- FontAwesome 6 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="css/app.css">
+    <link rel="stylesheet" href="css/app.css?v=2.2">
 </head>
 <body>
 
@@ -13828,7 +13980,7 @@ const AppUI = (() => {
     <!-- SweetAlert2 -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="css/app.css">
+    <link rel="stylesheet" href="css/app.css?v=2.2">
 </head>
 <body>
 
@@ -14156,7 +14308,173 @@ const AppUI = (() => {
     <!-- Highlight.js CSS for Code syntax -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="css/app.css">
+    <link rel="stylesheet" href="css/app.css?v=2.2">
+    <style>
+        /* ── Dynamic AI Loading Overlay & Orb Animations ── */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .loading-card {
+            max-width: 480px;
+            width: 90%;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            animation: fadeInScale 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .ai-orb-container {
+            position: relative;
+            width: 110px;
+            height: 110px;
+            margin: 0 auto 20px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .ai-orb-ring-outer {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 3px solid transparent;
+            border-top-color: #4361ee;
+            border-right-color: #8b5cf6;
+            -webkit-animation: orbSpin 2s linear infinite;
+            animation: orbSpin 2s linear infinite;
+        }
+
+        .ai-orb-ring-inner {
+            position: absolute;
+            width: 80%;
+            height: 80%;
+            border-radius: 50%;
+            border: 2.5px dashed #4cc9f0;
+            -webkit-animation: orbSpinReverse 2.5s linear infinite;
+            animation: orbSpinReverse 2.5s linear infinite;
+            opacity: 0.85;
+        }
+
+        .ai-orb-core {
+            position: relative;
+            width: 66px;
+            height: 66px;
+            background: linear-gradient(135deg, #4361ee 0%, #7209b7 50%, #4cc9f0 100%);
+            background-size: 200% 200%;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ffffff;
+            box-shadow: 0 0 25px rgba(67, 97, 238, 0.6), inset 0 0 12px rgba(255, 255, 255, 0.4);
+            -webkit-animation: orbFloat 2.2s ease-in-out infinite;
+            animation: orbFloat 2.2s ease-in-out infinite;
+        }
+
+        .ai-orb-core i {
+            -webkit-animation: iconBreath 2s ease-in-out infinite;
+            animation: iconBreath 2s ease-in-out infinite;
+            filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.9));
+        }
+
+        @-webkit-keyframes orbSpin {
+            0% { -webkit-transform: rotate(0deg); }
+            100% { -webkit-transform: rotate(360deg); }
+        }
+        @keyframes orbSpin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @-webkit-keyframes orbSpinReverse {
+            0% { -webkit-transform: rotate(360deg); }
+            100% { -webkit-transform: rotate(0deg); }
+        }
+        @keyframes orbSpinReverse {
+            0% { transform: rotate(360deg); }
+            100% { transform: rotate(0deg); }
+        }
+
+        @-webkit-keyframes orbFloat {
+            0%, 100% { -webkit-transform: translateY(0); }
+            50% { -webkit-transform: translateY(-6px); }
+        }
+        @keyframes orbFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-6px); }
+        }
+
+        @-webkit-keyframes iconBreath {
+            0%, 100% { -webkit-transform: scale(0.94); }
+            50% { -webkit-transform: scale(1.15); }
+        }
+        @keyframes iconBreath {
+            0%, 100% { transform: scale(0.94); }
+            50% { transform: scale(1.15); }
+        }
+
+        .loading-progress-track {
+            width: 100%;
+            height: 6px;
+            background: #e2e8f0;
+            border-radius: 99px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .loading-progress-bar {
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(90deg, #4361ee 0%, #7209b7 50%, #4cc9f0 100%);
+            background-size: 200% 100%;
+            border-radius: 99px;
+            -webkit-animation: progressBarMove 1.8s linear infinite;
+            animation: progressBarMove 1.8s linear infinite;
+        }
+
+        @-webkit-keyframes progressBarMove {
+            0% { background-position: 100% 0; }
+            100% { background-position: -100% 0; }
+        }
+        @keyframes progressBarMove {
+            0% { background-position: 100% 0; }
+            100% { background-position: -100% 0; }
+        }
+
+        .typing-dots span {
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            background: #4361ee;
+            border-radius: 50%;
+            -webkit-animation: typingBounce 1.2s infinite ease-in-out both;
+            animation: typingBounce 1.2s infinite ease-in-out both;
+            margin: 0 2px;
+        }
+        .typing-dots span:nth-child(1) { -webkit-animation-delay: -0.32s; animation-delay: -0.32s; }
+        .typing-dots span:nth-child(2) { -webkit-animation-delay: -0.16s; animation-delay: -0.16s; }
+        .typing-dots span:nth-child(3) { -webkit-animation-delay: 0s; animation-delay: 0s; }
+
+        @-webkit-keyframes typingBounce {
+            0%, 80%, 100% { -webkit-transform: scale(0); }
+            40% { -webkit-transform: scale(1); }
+        }
+        @keyframes typingBounce {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+    </style>
 </head>
 <body class="bg-light">
 
@@ -14164,7 +14482,7 @@ const AppUI = (() => {
     <nav class="navbar navbar-custom sticky-top py-2">
         <div class="container d-flex justify-content-between align-items-center">
             <div class="d-flex align-items-center gap-3">
-                <a href="index.html" class="btn btn-sm btn-outline-secondary rounded-circle" title="Quay lại">
+                <a href="index.html" class="btn btn-sm btn-outline-secondary rounded-circle" id="btn-quiz-back" title="Quay lại">
                     <i class="fa-solid fa-arrow-left"></i>
                 </a>
                 <div>
@@ -14376,7 +14694,7 @@ const AppUI = (() => {
     <!-- Highlight.js CSS for Code syntax -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="css/app.css">
+    <link rel="stylesheet" href="css/app.css?v=2.2">
 </head>
 <body class="bg-light">
 
@@ -14593,7 +14911,7 @@ const AppUI = (() => {
     <!-- Highlight.js CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="css/app.css">
+    <link rel="stylesheet" href="css/app.css?v=2.2">
     <style>
         .badge-syntax { background-color: #ef4444; color: #ffffff !important; font-weight: 600; }
         .badge-boundary { background-color: #d97706; color: #ffffff !important; font-weight: 600; }

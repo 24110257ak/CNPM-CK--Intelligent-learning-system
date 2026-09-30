@@ -87,6 +87,27 @@ function setupEventListeners() {
     if (btnReport) {
         btnReport.addEventListener('click', handleQuizReportQuestion);
     }
+
+    // Nút quay lại trang chủ với xác nhận
+    const btnBack = document.getElementById('btn-quiz-back');
+    if (btnBack) {
+        btnBack.addEventListener('click', (e) => {
+            e.preventDefault();
+            Swal.fire({
+                title: 'Tạm dừng làm bài?',
+                text: 'Tiến độ câu hỏi hiện tại đã được lưu. Bạn có muốn quay lại danh mục môn học không?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Quay lại',
+                cancelButtonText: 'Tiếp tục làm'
+            }).then((res) => {
+                if (res.isConfirmed) {
+                    saveProgressToStorage();
+                    window.location.href = 'index.html';
+                }
+            });
+        });
+    }
 }
 
 /**
@@ -199,6 +220,9 @@ async function initQuiz() {
                         }
                     } else {
                         localStorage.removeItem(storageKey);
+                        userAnswers = {};
+                        currentIndex = 0;
+                        timeLeft = 15 * 60;
                     }
                 }
             } catch (e) {
@@ -480,6 +504,10 @@ async function submitQuiz(force = false) {
         };
     });
 
+    // DỌN DẸP TIẾN ĐỘ DỞ DANG NGAY KHI TIẾN HÀNH NỘP BÀI (tránh trường hợp thoát ra vào lại bị hỏi khôi phục)
+    const storageKey = `quiz_progress_${topicId}`;
+    localStorage.removeItem(storageKey);
+
     try {
         clearInterval(timerInterval);
         const res = await API.quiz.submit(sessionId, answersPayload);
@@ -487,8 +515,8 @@ async function submitQuiz(force = false) {
         // Dọn dẹp cycle timer
         clearInterval(cycleTimer);
 
-        // ★ DỌN DẸP LOCALSTORAGE TRIỆT ĐỂ khi nộp bài thành công
-        localStorage.removeItem(`quiz_progress_${topicId}`);
+        // Đảm bảo dọn dẹp triệt để localStorage
+        localStorage.removeItem(storageKey);
 
         // Lưu kết quả vào sessionStorage để trang result.html hiển thị
         sessionStorage.setItem('last_quiz_result', JSON.stringify(res.data));
@@ -498,11 +526,54 @@ async function submitQuiz(force = false) {
 
     } catch (err) {
         clearInterval(cycleTimer);
+        const msg = (err.message || '').toLowerCase();
+
+        // 1. Nếu hệ thống báo phiên đã được nộp hoặc đã hoàn tất:
+        if (msg.includes('đã được nộp') || msg.includes('đã nộp') || err.status === 409) {
+            localStorage.removeItem(storageKey);
+            if (overlay) overlay.classList.add('d-none');
+            Swal.fire({
+                icon: 'info',
+                title: 'Bài làm đã hoàn tất',
+                text: 'Hệ thống đã ghi nhận bài thi của bạn trước đó. Đang chuyển tới trang xem kết quả...',
+                timer: 1600,
+                showConfirmButton: false
+            }).then(() => {
+                window.location.href = `result.html?sessionId=${sessionId}`;
+            });
+            return;
+        }
+
+        // 2. Thử kiểm tra xem backend đã chấm xong chưa (tránh trường hợp timeout mạng phía client nhưng server đã lưu)
+        try {
+            const check = await API.quiz.session(sessionId);
+            if (check && check.data && check.data.session && check.data.session.completedAt) {
+                localStorage.removeItem(storageKey);
+                sessionStorage.setItem('last_quiz_result', JSON.stringify(check.data));
+                window.location.href = `result.html?sessionId=${sessionId}`;
+                return;
+            }
+        } catch (checkErr) {
+            // Bỏ qua lỗi kiểm tra
+        }
+
         if (overlay) overlay.classList.add('d-none');
+
+        // 3. Nếu thật sự lỗi không nộp được:
         Swal.fire({
             icon: 'error',
             title: 'Lỗi nộp bài',
-            text: err.message || 'Không thể kết nối đến máy chủ. Vui lòng thử lại.'
+            text: err.message || 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra mạng hoặc thử lại.',
+            showCancelButton: true,
+            confirmButtonText: 'Thử nộp lại',
+            cancelButtonText: 'Về trang chủ'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                submitQuiz(true);
+            } else {
+                localStorage.removeItem(storageKey);
+                window.location.href = 'index.html';
+            }
         });
     }
 }

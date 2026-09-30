@@ -26,15 +26,20 @@ import java.util.Map;
 public class AIService {
 
     private static final String MODEL_NAME = getEffectiveModel();
+    private static final String FALLBACK_MODEL = getEffectiveFallbackModel();
     private final Client client;
     private final boolean isConfigured;
 
     private static String getEffectiveModel() {
-        String model = ConfigLoader.get("GEMINI_MODEL", "gemini-3.6-flash").trim();
-        if (model.equalsIgnoreCase("gemini-2.5-flash") || model.equalsIgnoreCase("gemini-1.5-flash") || model.equalsIgnoreCase("gemini-2.0-flash")) {
-            return "gemini-3.6-flash";
+        String model = ConfigLoader.get("GEMINI_MODEL", "gemini-2.5-flash").trim();
+        if (model.isEmpty() || model.contains("3.6") || model.contains("3.8")) {
+            return "gemini-2.5-flash";
         }
-        return model.isEmpty() ? "gemini-3.6-flash" : model;
+        return model;
+    }
+
+    private static String getEffectiveFallbackModel() {
+        return MODEL_NAME.contains("2.5") ? "gemini-1.5-flash" : "gemini-2.5-flash";
     }
 
     public AIService() {
@@ -103,7 +108,7 @@ public class AIService {
             try {
                 response = client.models.generateContent(MODEL_NAME, prompt, config);
             } catch (Exception modelErr) {
-                String fallbackModel = MODEL_NAME.equals("gemini-3.6-flash") ? "gemini-3.8-flash" : "gemini-3.6-flash";
+                String fallbackModel = FALLBACK_MODEL;
                 response = client.models.generateContent(fallbackModel, prompt, config);
             }
 
@@ -149,7 +154,7 @@ public class AIService {
             try {
                 response = client.models.generateContent(MODEL_NAME, fullPrompt, config);
             } catch (Exception modelErr) {
-                String fallbackModel = MODEL_NAME.equals("gemini-3.6-flash") ? "gemini-3.8-flash" : "gemini-3.6-flash";
+                String fallbackModel = FALLBACK_MODEL;
                 response = client.models.generateContent(fallbackModel, fullPrompt, config);
             }
 
@@ -214,7 +219,7 @@ public class AIService {
             try {
                 response = client.models.generateContent(MODEL_NAME, prompt, config);
             } catch (Exception modelErr) {
-                String fallbackModel = MODEL_NAME.equals("gemini-3.6-flash") ? "gemini-3.8-flash" : "gemini-3.6-flash";
+                String fallbackModel = FALLBACK_MODEL;
                 response = client.models.generateContent(fallbackModel, prompt, config);
             }
 
@@ -269,7 +274,7 @@ public class AIService {
             try {
                 response = client.models.generateContent(MODEL_NAME, fullPrompt, config);
             } catch (Exception modelErr) {
-                String fallbackModel = MODEL_NAME.equals("gemini-3.6-flash") ? "gemini-3.8-flash" : "gemini-3.6-flash";
+                String fallbackModel = FALLBACK_MODEL;
                 response = client.models.generateContent(fallbackModel, fullPrompt, config);
             }
 
@@ -308,7 +313,7 @@ public class AIService {
             try {
                 response = client.models.generateContent(MODEL_NAME, prompt, config);
             } catch (Exception modelErr) {
-                String fallbackModel = MODEL_NAME.equals("gemini-3.6-flash") ? "gemini-3.8-flash" : "gemini-3.6-flash";
+                String fallbackModel = FALLBACK_MODEL;
                 response = client.models.generateContent(fallbackModel, prompt, config);
             }
 
@@ -366,7 +371,7 @@ public class AIService {
             try {
                 response = client.models.generateContent(MODEL_NAME, prompt, config);
             } catch (Exception modelErr) {
-                String fallbackModel = MODEL_NAME.equals("gemini-3.6-flash") ? "gemini-3.8-flash" : "gemini-3.6-flash";
+                String fallbackModel = FALLBACK_MODEL;
                 response = client.models.generateContent(fallbackModel, prompt, config);
             }
 
@@ -427,7 +432,7 @@ public class AIService {
             try {
                 response = client.models.generateContent(MODEL_NAME, prompt, config);
             } catch (Exception modelErr) {
-                String fallbackModel = MODEL_NAME.equals("gemini-3.6-flash") ? "gemini-3.8-flash" : "gemini-3.6-flash";
+                String fallbackModel = FALLBACK_MODEL;
                 response = client.models.generateContent(fallbackModel, prompt, config);
             }
 
@@ -480,7 +485,7 @@ public class AIService {
             try {
                 response = client.models.generateContent(MODEL_NAME, prompt, config);
             } catch (Exception modelErr) {
-                String fallbackModel = MODEL_NAME.equals("gemini-3.6-flash") ? "gemini-3.8-flash" : "gemini-3.6-flash";
+                String fallbackModel = FALLBACK_MODEL;
                 response = client.models.generateContent(fallbackModel, prompt, config);
             }
 

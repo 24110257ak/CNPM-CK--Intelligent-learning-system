@@ -157,7 +157,7 @@ const API = {
     },
     quiz: {
         start: topicId => API.request('/quiz/start', { method:'POST', body:JSON.stringify({topicId}) }),
-        submit: (sessionId,answers) => API.request('/quiz/submit', { method:'POST', body:JSON.stringify({sessionId,answers}), timeout:45000 }),
+        submit: (sessionId,answers) => API.request('/quiz/submit', { method:'POST', body:JSON.stringify({sessionId,answers}), timeout:60000 }),
         history: () => API.request('/quiz/history'),
         session: sessionId => API.request(`/quiz/session/${encodeURIComponent(sessionId)}`)
     },

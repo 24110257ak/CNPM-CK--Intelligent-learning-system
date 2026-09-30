@@ -11,6 +11,8 @@ import com.lms.model.User;
 import com.lms.model.UserAnswer;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Service quản lý toàn bộ chu trình thi trắc nghiệm và kích hoạt AI củng cố kiến thức.
@@ -87,8 +89,11 @@ public class QuizService {
     public Map<String, Object> submitQuiz(int sessionId, int userId, List<Map<String, Object>> submittedAnswers) {
         QuizSession ownedSession = quizDAO.findSessionForUser(sessionId, userId);
         if (ownedSession == null) throw new SecurityException("Phiên làm bài không tồn tại hoặc không thuộc tài khoản hiện tại.");
-        if (ownedSession.getCompletedAt() != null || quizDAO.countAnswersBySession(sessionId) > 0)
-            throw new IllegalStateException("Phiên làm bài này đã được nộp trước đó.");
+        if (ownedSession.getCompletedAt() != null || quizDAO.countAnswersBySession(sessionId) > 0) {
+            // Idempotency: Phiên làm bài này đã được nộp hoặc đã chấm điểm trước đó.
+            // Tự động trả về kết quả đã chấm thay vì ném lỗi khiến học sinh bị kẹt giao diện.
+            return buildExistingSubmissionResult(ownedSession, userId);
+        }
         if (submittedAnswers == null || submittedAnswers.isEmpty())
             throw new IllegalArgumentException("Danh sách câu trả lời không được để trống.");
         if (submittedAnswers.size() != ownedSession.getTotalQuestions())
@@ -112,6 +117,7 @@ public class QuizService {
         int totalQuestions = submittedAnswers.size();
         List<Map<String, Object>> gradedAnswers = new ArrayList<>();
         List<RemedialLesson> remedialLessons = new ArrayList<>();
+        List<CompletableFuture<RemedialLesson>> lessonFutures = new ArrayList<>();
 
         for (Map<String, Object> ansMap : submittedAnswers) {
             int questionId = ((Number) ansMap.get("questionId")).intValue();
@@ -151,13 +157,40 @@ public class QuizService {
             graded.put("explanation", q.getExplanation());
             gradedAnswers.add(graded);
 
-            // ★ Confidence Tagging & Error Detection: Kích hoạt AI nếu SAI hoặc ĐÚNG nhưng GUESS
+            // ★ Confidence Tagging & Error Detection: Kích hoạt AI song song nếu SAI hoặc ĐÚNG nhưng GUESS
             if (answerId > 0 && ua.needsAIAnalysis()) {
-                RemedialLesson lesson = aiService.analyzeError(q, ua, userInterests);
-                lesson.setUserId(userId);
-                lesson.setAnswerId(answerId);
-                quizDAO.saveRemedialLesson(lesson);
-                remedialLessons.add(lesson);
+                final Question finalQ = q;
+                final UserAnswer finalUa = ua;
+                final int finalAnswerId = answerId;
+                lessonFutures.add(CompletableFuture.supplyAsync(() -> {
+                    try {
+                        RemedialLesson lesson = aiService.analyzeError(finalQ, finalUa, userInterests);
+                        if (lesson == null) {
+                            lesson = FallbackService.generateFallbackLesson(finalQ, finalUa);
+                        }
+                        lesson.setUserId(userId);
+                        lesson.setAnswerId(finalAnswerId);
+                        return lesson;
+                    } catch (Exception e) {
+                        RemedialLesson fb = FallbackService.generateFallbackLesson(finalQ, finalUa);
+                        fb.setUserId(userId);
+                        fb.setAnswerId(finalAnswerId);
+                        return fb;
+                    }
+                }));
+            }
+        }
+
+        // Chờ kết quả AI với timeout tối đa 8 giây (đảm bảo request không bao giờ bị Render / Client timeout)
+        for (CompletableFuture<RemedialLesson> future : lessonFutures) {
+            try {
+                RemedialLesson lesson = future.get(8, TimeUnit.SECONDS);
+                if (lesson != null) {
+                    quizDAO.saveRemedialLesson(lesson);
+                    remedialLessons.add(lesson);
+                }
+            } catch (Exception e) {
+                future.cancel(true);
             }
         }
 
@@ -204,5 +237,48 @@ public class QuizService {
         details.put("answers", answers);
         details.put("remedialLessons", lessons);
         return details;
+    }
+
+    /**
+     * Tái tạo kết quả chấm điểm cho phiên thi đã nộp trước đó (Idempotent recovery).
+     */
+    private Map<String, Object> buildExistingSubmissionResult(QuizSession session, int userId) {
+        int sessionId = session.getSessionId();
+        List<UserAnswer> userAnswers = quizDAO.getAnswersBySession(sessionId);
+        List<RemedialLesson> lessons = quizDAO.getRemedialLessonsBySession(sessionId);
+
+        List<Map<String, Object>> gradedAnswers = new ArrayList<>();
+        int correctCount = 0;
+        for (UserAnswer ua : userAnswers) {
+            if (ua.isCorrect()) correctCount++;
+            Optional<Question> qOpt = questionDAO.findById(ua.getQuestionId());
+            Map<String, Object> graded = new HashMap<>();
+            graded.put("questionId", ua.getQuestionId());
+            graded.put("chosenAnswer", ua.getUserAnswer());
+            graded.put("isCorrect", ua.isCorrect());
+            graded.put("confidenceLevel", ua.getConfidenceLevel());
+            if (qOpt.isPresent()) {
+                Question q = qOpt.get();
+                graded.put("questionText", q.getQuestionText());
+                graded.put("correctAnswer", q.getCorrectAnswer());
+                graded.put("explanation", q.getExplanation());
+            }
+            gradedAnswers.add(graded);
+        }
+
+        int total = session.getTotalQuestions() > 0 ? session.getTotalQuestions() : userAnswers.size();
+        double score = session.getCompletedAt() != null ? session.getScore() : (total > 0 ? Math.round(((double) correctCount / total) * 10.0 * 10.0) / 10.0 : 0.0);
+        double percentage = total > 0 ? Math.round(((double) correctCount / total) * 100.0 * 10.0) / 10.0 : 0.0;
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("sessionId", sessionId);
+        response.put("userId", userId);
+        response.put("totalQuestions", total);
+        response.put("correctCount", correctCount);
+        response.put("score", score);
+        response.put("percentage", percentage);
+        response.put("gradedAnswers", gradedAnswers);
+        response.put("remedialLessons", lessons);
+        return response;
     }
 }

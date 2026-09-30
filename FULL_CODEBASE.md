@@ -1,6 +1,6 @@
 ﻿# TOAN BO MA NGUON DU AN - HE THONG HOC TAP THONG MINH (INTELLIGENT LMS)
 
-> **Thoi gian tao file:** 2026-09-30 20:11:05
+> **Thoi gian tao file:** 2026-09-30 20:29:11
 > **Tong so file:** 58
 > **Muc dich:** Gom toan bo source code thanh 1 file duy nhat de gui cho ben thu ba xem xet, danh gia va gop y.
 
@@ -7438,6 +7438,27 @@ body {
     letter-spacing: -0.5px;
     color: var(--primary-color) !important;
 }
+.navbar-custom .nav-link {
+    font-weight: 500;
+    color: #64748b;
+    padding: 0.45rem 0.95rem;
+    border-radius: 50rem;
+    transition: all 0.15s ease-in-out;
+    display: inline-flex;
+    align-items: center;
+}
+.navbar-custom .nav-link:hover {
+    color: var(--primary-color);
+    background-color: rgba(67, 97, 238, 0.08);
+}
+.navbar-custom .nav-link.active {
+    color: var(--primary-color) !important;
+    font-weight: 700 !important;
+    background-color: rgba(67, 97, 238, 0.12) !important;
+}
+.navbar-custom .nav-link.active i {
+    color: var(--primary-color) !important;
+}
 
 /* ── Hero / Banner ── */
 .hero-banner {
@@ -12819,7 +12840,7 @@ const AppUI = (() => {
                     </li>
                     <li class="nav-item">
                         <a class="nav-link fw-semibold" href="community.html">
-                            <i class="fa-solid fa-comments me-1 text-info"></i>Diễn Đàn Cộng Đồng
+                            <i class="fa-solid fa-comments me-1"></i>Diễn Đàn Cộng Đồng
                         </a>
                     </li>
                     <li class="nav-item">
@@ -13098,18 +13119,18 @@ const AppUI = (() => {
             <div class="collapse navbar-collapse" id="navContent">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-3">
                     <li class="nav-item">
-                        <a class="nav-link active fw-semibold" href="index.html"><i class="fa-solid fa-book-open me-1"></i>Chủ Đề Ôn Tập</a>
+                        <a class="nav-link active fw-bold text-primary" href="index.html"><i class="fa-solid fa-book-open me-1"></i>Chủ Đề Ôn Tập</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link fw-semibold" href="community.html">
-                            <i class="fa-solid fa-comments me-1 text-info"></i>Diễn Đàn Cộng Đồng
+                            <i class="fa-solid fa-comments me-1"></i>Diễn Đàn Cộng Đồng
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link fw-semibold" href="history.html"><i class="fa-solid fa-chart-line me-1"></i>Lịch Sử & Tiến Độ</a>
                     </li>
                     <li class="nav-item d-none" id="nav-teacher-link">
-                        <a class="nav-link fw-bold text-primary" href="teacher-dashboard.html"><i class="fa-solid fa-chalkboard-user me-1"></i>Trang Giảng Viên</a>
+                        <a class="nav-link fw-bold text-indigo" href="teacher-dashboard.html" style="color: #6366f1;"><i class="fa-solid fa-chalkboard-user me-1"></i>Trang Giảng Viên</a>
                     </li>
                 </ul>
                 <div class="d-flex align-items-center gap-3">
@@ -13525,7 +13546,7 @@ const AppUI = (() => {
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link fw-semibold" href="history.html"><i class="fa-solid fa-chart-line me-1"></i>Lịch Sử & Tiến Độ</a>
+                        <a class="nav-link active fw-bold text-primary" href="history.html"><i class="fa-solid fa-chart-line me-1"></i>Lịch Sử & Tiến Độ</a>
                     </li>
                     <li class="nav-item d-none" id="nav-teacher-link">
                         <a class="nav-link fw-bold text-indigo" href="teacher-dashboard.html" style="color: #6366f1;"><i class="fa-solid fa-chalkboard-user me-1"></i>Trang Giảng Viên</a>
@@ -13763,8 +13784,8 @@ const AppUI = (() => {
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link fw-semibold text-primary" href="community.html">
-                            <i class="fa-solid fa-comments me-1 text-info"></i>Diễn Đàn Cộng Đồng
+                        <a class="nav-link fw-semibold" href="community.html">
+                            <i class="fa-solid fa-comments me-1"></i>Diễn Đàn Cộng Đồng
                         </a>
                     </li>
                 </ul>

@@ -38,6 +38,27 @@ body {
     letter-spacing: -0.5px;
     color: var(--primary-color) !important;
 }
+.navbar-custom .nav-link {
+    font-weight: 500;
+    color: #64748b;
+    padding: 0.45rem 0.95rem;
+    border-radius: 50rem;
+    transition: all 0.15s ease-in-out;
+    display: inline-flex;
+    align-items: center;
+}
+.navbar-custom .nav-link:hover {
+    color: var(--primary-color);
+    background-color: rgba(67, 97, 238, 0.08);
+}
+.navbar-custom .nav-link.active {
+    color: var(--primary-color) !important;
+    font-weight: 700 !important;
+    background-color: rgba(67, 97, 238, 0.12) !important;
+}
+.navbar-custom .nav-link.active i {
+    color: var(--primary-color) !important;
+}
 
 /* ── Hero / Banner ── */
 .hero-banner {

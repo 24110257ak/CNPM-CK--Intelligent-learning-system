@@ -5,7 +5,7 @@
 ---
 
 ## Current Phase
-**Giai đoạn 7 ✅ HOÀN THÀNH — Trợ Lý AI Giảng Viên (Teacher AI Co-Pilot & AI Question Generator Studio)**
+**Giai đoạn 9 ✅ HOÀN THÀNH — Bảo Mật & Ổn Định (Security & Resilience Audit) & Vận Hành 24/7 (UptimeRobot Keep-Alive)**
 
 ## Completed Milestones
 - [x] **Phase 0:** Thiết lập nền móng kiến trúc, 12 ADRs, schema.sql 7 bảng 3NF cho SQL Server, pom.xml cấu hình Jetty 11 & Gemini SDK v1.64.0.
@@ -91,7 +91,9 @@
 | ADR-010 | Gemini SDK **v1.64.0** (stable 07/2026) | Latest, hỗ trợ ResponseSchema + async |
 | ADR-011 | **Template-First Policy** — Bootstrap 5 + Floating Chat Widget | Không viết UI from scratch; chỉ Data Binding |
 | ADR-012 | CDN cho FontAwesome, SweetAlert2, Highlight.js, Marked.js | Nhẹ, không cài local, luôn cập nhật |
+| ADR-013 | **Git Branching Strategy** (`main` vs `refactor-experiment`) | Giữ `main` làm Production Fallback ổn định, nhánh phụ để audit & kiểm thử |
+| ADR-014 | **24/7 Cloud Availability** (Render + UptimeRobot Keep-Alive) | Khắc phục Spin-down 15p của Render free tier, đảm bảo 744h/tháng luôn online tức thì |
 
 ---
 
-*Cập nhật lần cuối: 2026-09-07 14:10 (GMT+7)*
+*Cập nhật lần cuối: 2026-09-30 (GMT+7)*

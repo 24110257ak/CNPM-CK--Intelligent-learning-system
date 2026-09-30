@@ -213,6 +213,16 @@ PORT=8080
 
 Truy cập: **`http://localhost:8080/auth.html`**
 
+### Cách 3: Triển Khai Cloud & Cơ Chế Hoạt Động 24/7 (Zero Cold-Start)
+
+Hệ thống đã được đóng gói và kiểm thử triển khai trên nền tảng đám mây:
+1. **Cloud Web Service (Render):** Chạy trực tiếp từ `Dockerfile` liên kết tự động với repository GitHub.
+2. **Serverless Database (Neon.tech PostgreSQL):** Lưu trữ CSDL quan hệ trên đám mây với tính năng Auto-Migration.
+3. **Cơ Chế Giữ Thức 24/7 (UptimeRobot Keep-Alive):**
+   - Render bản Free sẽ tự động ngủ sau 15 phút idle (gây trễ cold-start 30-50s).
+   - Thiết lập monitor trên [UptimeRobot.com](https://uptimerobot.com) ping định kỳ **10 phút/lần** vào endpoint `https://cnpm-ck-intelligent-learning-system.onrender.com/auth.html`.
+   - Kết quả: Web luôn thức 24/7, phản hồi dưới 1 giây mà vẫn nằm trọn trong hạn mức miễn phí 744/750 giờ/tháng của Render!
+
 ---
 
 ## 🔑 6. Danh Sách Tài Khoản Thử Nghiệm
@@ -233,8 +243,9 @@ Hệ thống học tập thông minh/
 ├── .dockerignore                      # Loại trừ các file rác khi build image
 ├── pom.xml                            # Quản lý dependency (Jetty 11, PostgreSQL, Gson, BCrypt...)
 ├── export_codebase.ps1                # Script tự động xuất toàn bộ mã nguồn ra FULL_CODEBASE.md
-├── FULL_CODEBASE.md                   # File tổng hợp toàn bộ 47 file mã nguồn của dự án
+├── FULL_CODEBASE.md                   # File tổng hợp toàn bộ 48 file mã nguồn của dự án
 ├── PROJECT_STATE.md                   # Sổ tay ghi chép tiến độ kỹ thuật giữa các phiên
+├── REFACTOR_REPORT.md                 # Báo cáo kiểm toán bảo mật & khả năng phục hồi (Audit)
 ├── README.md                          # Tài liệu kiến trúc và hướng dẫn vận hành toàn diện
 ├── src/
 │   └── main/
@@ -249,7 +260,13 @@ Hệ thống học tập thông minh/
 │       │   └── db/schema.sql          # Kịch bản CSDL PostgreSQL (DDL, Indexes & Initial Data)
 │       └── webapp/
 │           ├── css/app.css            # Hệ thống CSS Design Tokens, Glassmorphism & Animations
-│           ├── js/                    # Mã JavaScript hướng module (api.js, quiz.js, teacher.js...)
+│           ├── js/                    # Mã JavaScript hướng module
+│           │   ├── api.js             # Transport layer: timeout, abort, retry, offline detection
+│           │   ├── ui.js              # Presentation utility: safe markdown, sanitize HTML chống XSS
+│           │   ├── quiz.js            # Logic làm bài thi & Autosave
+│           │   ├── result.js          # Logic kết quả & Adaptive Mini-Quiz
+│           │   ├── teacher.js         # Logic Teacher Dashboard & Studio AI
+│           │   └── chat-widget.js     # Trợ giảng AI đa nhân cách
 │           ├── auth.html              # Màn hình Đăng nhập & Đăng ký (Toggle Password Eyes)
 │           ├── index.html             # Cổng thông tin môn học & chọn chủ đề ôn luyện
 │           ├── quiz.html              # Màn hình thi trắc nghiệm & Gắn nhãn tự tin
@@ -265,10 +282,11 @@ Hệ thống học tập thông minh/
 - **Phiên bản:** 1.0-SNAPSHOT (Production Cloud Deployed on Render)
 - **Bản quyền:** Đồ Án Nhóm Phát Triển LMS Thông Minh 2026.
 
+---
 
-## Refactor 2026-09-22
-- API client: timeout, abort, offline handling, typed ApiError, safe retry for GET.
-- Authorization: quiz session detail and submission now enforce owner checks.
-- Submission integrity: duplicate questions, wrong-topic question IDs, resubmission and incomplete answer sets are rejected.
-- Frontend: shared safe markdown/HTML utilities, mobile/a11y/focus/reduced-motion improvements, skeleton/empty-state primitives.
-- CORS: credentialed wildcard reflection removed; optional explicit allowlist via `CORS_ALLOWED_ORIGINS`.
+## 🛡️ 9. Gói Cải Tiến Bảo Mật & Ổn Định (Refactor 2026-09-22)
+- **API Transport Resilience:** `js/api.js` bổ sung timeout (10s), AbortController, bắt lỗi offline, `ApiError` có phân loại và retry có kiểm soát đối với phương thức `GET`.
+- **Phòng chống IDOR (Object-Level Authorization):** `QuizServlet` và `QuizDAO` siết chặt quyền sở hữu, ngăn chặn sinh viên xem kết quả session của tài khoản khác.
+- **Tính toàn vẹn bài thi (Submission Integrity):** Ngăn chặn gửi trùng câu hỏi, câu hỏi lệch topic, nộp lại session đã hoàn tất và thiếu câu trả lời.
+- **Bảo mật Frontend & XSS Sanitization:** `js/ui.js` chuẩn hóa lọc và vô hiệu hóa các thẻ script, sự kiện độc hại trong cú pháp Markdown do người dùng hoặc AI sinh ra trước khi render vào DOM.
+- **CORS Allowlist:** Loại bỏ wildcard reflection khi có credentials, cho phép chỉ định rõ danh sách domain được phép qua biến `CORS_ALLOWED_ORIGINS`.

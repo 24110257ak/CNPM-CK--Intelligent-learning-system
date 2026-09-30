@@ -2,8 +2,10 @@ package com.lms.servlet;
 
 import com.google.gson.JsonObject;
 import com.lms.dao.CommunityDAO;
+import com.lms.dao.TopicDAO;
 import com.lms.model.CommunityComment;
 import com.lms.model.CommunityPost;
+import com.lms.model.Topic;
 import com.lms.model.User;
 import com.lms.util.JsonHelper;
 import jakarta.servlet.annotation.WebServlet;
@@ -15,6 +17,7 @@ import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Controller RESTful phục vụ Diễn đàn & Không gian cộng đồng học tập phong cách Discord / Facebook.
@@ -109,11 +112,29 @@ public class CommunityServlet extends HttpServlet {
                 String content = body.has("content") ? body.get("content").getAsString().trim() : "";
                 String channel = body.has("channel") ? body.get("channel").getAsString().trim() : "general";
                 Integer topicId = (body.has("topicId") && !body.get("topicId").isJsonNull()) ? body.get("topicId").getAsInt() : null;
+                String topicName = body.has("topicName") ? body.get("topicName").getAsString().trim() : "";
 
                 if (title.isEmpty() || content.isEmpty()) {
                     resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                     resp.getWriter().write(JsonHelper.error("Tiêu đề và nội dung bài viết không được để trống."));
                     return;
+                }
+
+                // Nếu người dùng nhập tên môn từ bàn phím mà chưa có topicId
+                if (topicId == null && !topicName.isEmpty()) {
+                    TopicDAO topicDAO = new TopicDAO();
+                    Optional<Topic> existing = topicDAO.findByName(topicName);
+                    if (existing.isPresent()) {
+                        topicId = existing.get().getTopicId();
+                    } else {
+                        Topic newTopic = new Topic();
+                        newTopic.setTopicName(topicName);
+                        newTopic.setDescription("Chủ đề khởi tạo từ diễn đàn học tập");
+                        newTopic = topicDAO.create(newTopic);
+                        if (newTopic != null) {
+                            topicId = newTopic.getTopicId();
+                        }
+                    }
                 }
 
                 int postId = communityDAO.createPost(user.getUserId(), topicId, channel, title, content);

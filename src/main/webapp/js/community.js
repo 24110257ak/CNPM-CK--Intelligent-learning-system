@@ -9,6 +9,49 @@ let currentChannel = 'all';
 let currentTopicId = null;
 let allTopics = [];
 let cachedFeedPosts = [];
+let currentPostMood = null;
+
+/**
+ * Các hàm hỗ trợ mẫu nội dung học tập chuyên sâu (Code, Mẹo Né Bẫy, Thăm dò, Trích dẫn)
+ */
+function appendToContent(template) {
+    const textarea = document.getElementById('post-content-input');
+    if (!textarea) return;
+    if (textarea.value.trim().length > 0) {
+        textarea.value += '\n\n' + template;
+    } else {
+        textarea.value = template;
+    }
+    textarea.focus();
+}
+
+function insertCodeTemplate() {
+    appendToContent('```java\n// Dán đoạn mã hoặc lỗi cần giải đáp tại đây\npublic class Solution {\n    public static void main(String[] args) {\n        \n    }\n}\n```');
+}
+window.insertCodeTemplate = insertCodeTemplate;
+
+function insertTipTemplate() {
+    appendToContent('> ⚠️ **Bẫy tư duy thường gặp:**\n> - ❌ Lầm tưởng: [Hiểu sai hoặc phương án bẫy phổ biến]\n> - 💡 Bản chất đúng: [Nguyên lý và lý giải chính xác]');
+}
+window.insertTipTemplate = insertTipTemplate;
+
+function insertQuizTemplate() {
+    appendToContent('**❓ Thử thách câu hỏi nhanh:**\n[Nội dung câu hỏi tình huống hoặc đoạn code bẫy]\n\n- [A] Phương án A\n- [B] Phương án B\n- [C] Phương án C\n- [D] Phương án D\n\n👉 *Các bạn chọn phương án nào và vì sao?*');
+}
+window.insertQuizTemplate = insertQuizTemplate;
+
+function insertCitationTemplate() {
+    appendToContent('> 📖 **Tài liệu tham khảo:** Giáo trình / Slide bài giảng [Tên môn], Chương [Số], Trang [Số].');
+}
+window.insertCitationTemplate = insertCitationTemplate;
+
+function removeSelectedMood() {
+    currentPostMood = null;
+    const badge = document.getElementById('selected-mood-badge');
+    if (badge) badge.classList.add('d-none');
+}
+window.removeSelectedMood = removeSelectedMood;
+
 
 /**
  * Lấy danh sách ID các bài viết đã bị người dùng hiện tại ẩn
@@ -184,22 +227,82 @@ function setupEventListeners() {
         });
     }
 
-    // Mở Modal tạo bài viết
+    // Mở Modal tạo bài viết (Cá nhân hóa theo người dùng & kênh)
     const openComposer = document.getElementById('btn-open-create-post');
     if (openComposer) {
         openComposer.addEventListener('click', () => {
             const modalEl = document.getElementById('createPostModal');
             if (modalEl) {
-                // Đặt kênh mặc định theo kênh đang xem
+                // Cá nhân hóa thông tin tác giả và gợi ý câu hỏi thân thiện
+                const authorNameEl = document.getElementById('modal-composer-author-name');
+                const modalAvatarEl = document.getElementById('modal-composer-avatar');
+                const postContent = document.getElementById('post-content-input');
+                const authorName = (currentUser && (currentUser.fullName || currentUser.username)) || 'Bạn';
+                if (authorNameEl) authorNameEl.textContent = authorName;
+                if (modalAvatarEl) {
+                    modalAvatarEl.textContent = authorName.charAt(0).toUpperCase();
+                    if (API.auth.isTeacher()) {
+                        modalAvatarEl.className = 'author-avatar avatar-teacher';
+                    }
+                }
+                if (postContent) {
+                    postContent.placeholder = `${authorName} ơi, bạn đang thắc mắc hay muốn chia sẻ điều gì về bài học hôm nay?`;
+                }
+
+                // Đồng bộ kênh theo kênh hiện tại đang xem
                 const channelSelect = document.getElementById('post-channel-select');
+                const channelLabel = document.getElementById('selected-channel-label');
                 if (channelSelect && currentChannel !== 'all') {
                     channelSelect.value = currentChannel;
+                    const matchingOpt = document.querySelector(`.channel-option[data-channel="${currentChannel}"]`);
+                    if (matchingOpt && channelLabel) {
+                        channelLabel.textContent = matchingOpt.textContent.trim().replace(/^#\s*/, '');
+                    }
                 }
                 const modal = new bootstrap.Modal(modalEl);
                 modal.show();
             }
         });
     }
+
+    // Chọn kênh từ dropdown pill của modal
+    document.querySelectorAll('.channel-option').forEach(opt => {
+        opt.addEventListener('click', (e) => {
+            e.preventDefault();
+            const ch = opt.getAttribute('data-channel');
+            const hiddenInput = document.getElementById('post-channel-select');
+            const labelEl = document.getElementById('selected-channel-label');
+            if (hiddenInput) hiddenInput.value = ch;
+            if (labelEl) labelEl.textContent = opt.textContent.trim().replace(/^#\s*/, '');
+        });
+    });
+
+    // Chọn nhanh môn học (Quick topic chips)
+    document.querySelectorAll('.post-quick-topic-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const topic = btn.getAttribute('data-topic');
+            const input = document.getElementById('post-topic-input');
+            if (input) {
+                input.value = topic;
+                input.focus();
+            }
+        });
+    });
+
+    // Chọn trạng thái học tập (Learning Mood)
+    document.querySelectorAll('.mood-option').forEach(opt => {
+        opt.addEventListener('click', (e) => {
+            e.preventDefault();
+            const mood = opt.getAttribute('data-mood');
+            currentPostMood = mood;
+            const badge = document.getElementById('selected-mood-badge');
+            const textEl = document.getElementById('selected-mood-text');
+            if (badge && textEl) {
+                textEl.textContent = mood;
+                badge.classList.remove('d-none');
+            }
+        });
+    });
 
     // Form submit tạo bài viết
     const createForm = document.getElementById('create-post-form');
@@ -222,7 +325,7 @@ function updateChannelHeader() {
 }
 
 /**
- * Tải danh sách môn học để đưa vào dropdown
+ * Tải danh sách môn học để đưa vào dropdown lọc & datalist tự do
  */
 async function loadTopics() {
     try {
@@ -230,7 +333,14 @@ async function loadTopics() {
         allTopics = res.data || [];
 
         const filterSelect = document.getElementById('filter-topic-select');
-        const postTopicSelect = document.getElementById('post-topic-select');
+        const topicDatalist = document.getElementById('post-topic-datalist');
+
+        if (filterSelect) {
+            filterSelect.innerHTML = '<option value="">-- Mọi môn học & đề thi --</option>';
+        }
+        if (topicDatalist) {
+            topicDatalist.innerHTML = '';
+        }
 
         allTopics.forEach(t => {
             if (filterSelect) {
@@ -239,11 +349,10 @@ async function loadTopics() {
                 opt.textContent = t.topicName;
                 filterSelect.appendChild(opt);
             }
-            if (postTopicSelect) {
+            if (topicDatalist) {
                 const opt2 = document.createElement('option');
-                opt2.value = t.topicId;
-                opt2.textContent = t.topicName;
-                postTopicSelect.appendChild(opt2);
+                opt2.value = t.topicName;
+                topicDatalist.appendChild(opt2);
             }
         });
     } catch (err) {
@@ -440,25 +549,41 @@ function renderPostCard(p) {
 }
 
 /**
- * Xử lý tạo bài viết mới
+ * Xử lý tạo bài viết mới (Hỗ trợ linh hoạt Topic theo ID hoặc tên tự do, kèm trạng thái học tập)
  */
 async function handleCreatePost(e) {
     e.preventDefault();
     const title = document.getElementById('post-title-input').value.trim();
-    const content = document.getElementById('post-content-input').value.trim();
-    const channel = document.getElementById('post-channel-select').value;
-    const topicIdVal = document.getElementById('post-topic-select').value;
-    const topicId = topicIdVal ? parseInt(topicIdVal, 10) : null;
+    let content = document.getElementById('post-content-input').value.trim();
+    const channel = document.getElementById('post-channel-select')?.value || 'general';
+    const topicInput = (document.getElementById('post-topic-input')?.value || '').trim();
     const submitBtn = document.getElementById('btn-submit-post');
 
     if (!title || !content) {
-        Swal.fire('Lỗi', 'Vui lòng điền đầy đủ tiêu đề và nội dung bài viết!', 'warning');
+        Swal.fire('Lỗi', 'Vui lòng điền đầy đủ tiêu đề và nội dung bài học!', 'warning');
         return;
+    }
+
+    // Gắn trạng thái học tập nếu có chọn
+    if (currentPostMood) {
+        content = `[${currentPostMood}]\n\n` + content;
+    }
+
+    let topicId = null;
+    let topicName = null;
+
+    if (topicInput) {
+        const matched = allTopics.find(t => (t.topicName || '').trim().toLowerCase() === topicInput.toLowerCase());
+        if (matched) {
+            topicId = matched.topicId;
+        } else {
+            topicName = topicInput;
+        }
     }
 
     try {
         if (submitBtn) submitBtn.disabled = true;
-        const res = await API.community.createPost({ title, content, channel, topicId });
+        const res = await API.community.createPost({ title, content, channel, topicId, topicName });
 
         // Đóng modal & reset form
         const modalEl = document.getElementById('createPostModal');
@@ -467,11 +592,12 @@ async function handleCreatePost(e) {
             if (inst) inst.hide();
         }
         document.getElementById('create-post-form').reset();
+        removeSelectedMood();
 
         Swal.fire({
             icon: 'success',
             title: 'Đăng bài thành công!',
-            text: 'Bài viết của bạn đã được xuất bản trên diễn đàn cộng đồng.',
+            text: 'Bài thảo luận học tập của bạn đã được xuất bản trên diễn đàn cộng đồng.',
             timer: 2000,
             showConfirmButton: false
         });

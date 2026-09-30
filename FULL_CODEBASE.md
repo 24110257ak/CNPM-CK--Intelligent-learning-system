@@ -1,6 +1,6 @@
 ﻿# TOAN BO MA NGUON DU AN - HE THONG HOC TAP THONG MINH (INTELLIGENT LMS)
 
-> **Thoi gian tao file:** 2026-09-30 20:35:45
+> **Thoi gian tao file:** 2026-09-30 20:49:55
 > **Tong so file:** 58
 > **Muc dich:** Gom toan bo source code thanh 1 file duy nhat de gui cho ben thu ba xem xet, danh gia va gop y.
 
@@ -6001,8 +6001,10 @@ package com.lms.servlet;
 
 import com.google.gson.JsonObject;
 import com.lms.dao.CommunityDAO;
+import com.lms.dao.TopicDAO;
 import com.lms.model.CommunityComment;
 import com.lms.model.CommunityPost;
+import com.lms.model.Topic;
 import com.lms.model.User;
 import com.lms.util.JsonHelper;
 import jakarta.servlet.annotation.WebServlet;
@@ -6014,6 +6016,7 @@ import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Controller RESTful phục vụ Diễn đàn & Không gian cộng đồng học tập phong cách Discord / Facebook.
@@ -6108,11 +6111,29 @@ public class CommunityServlet extends HttpServlet {
                 String content = body.has("content") ? body.get("content").getAsString().trim() : "";
                 String channel = body.has("channel") ? body.get("channel").getAsString().trim() : "general";
                 Integer topicId = (body.has("topicId") && !body.get("topicId").isJsonNull()) ? body.get("topicId").getAsInt() : null;
+                String topicName = body.has("topicName") ? body.get("topicName").getAsString().trim() : "";
 
                 if (title.isEmpty() || content.isEmpty()) {
                     resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
                     resp.getWriter().write(JsonHelper.error("Tiêu đề và nội dung bài viết không được để trống."));
                     return;
+                }
+
+                // Nếu người dùng nhập tên môn từ bàn phím mà chưa có topicId
+                if (topicId == null && !topicName.isEmpty()) {
+                    TopicDAO topicDAO = new TopicDAO();
+                    Optional<Topic> existing = topicDAO.findByName(topicName);
+                    if (existing.isPresent()) {
+                        topicId = existing.get().getTopicId();
+                    } else {
+                        Topic newTopic = new Topic();
+                        newTopic.setTopicName(topicName);
+                        newTopic.setDescription("Chủ đề khởi tạo từ diễn đàn học tập");
+                        newTopic = topicDAO.create(newTopic);
+                        if (newTopic != null) {
+                            topicId = newTopic.getTopicId();
+                        }
+                    }
                 }
 
                 int postId = communityDAO.createPost(user.getUserId(), topicId, channel, title, content);
@@ -8292,6 +8313,49 @@ let currentChannel = 'all';
 let currentTopicId = null;
 let allTopics = [];
 let cachedFeedPosts = [];
+let currentPostMood = null;
+
+/**
+ * Các hàm hỗ trợ mẫu nội dung học tập chuyên sâu (Code, Mẹo Né Bẫy, Thăm dò, Trích dẫn)
+ */
+function appendToContent(template) {
+    const textarea = document.getElementById('post-content-input');
+    if (!textarea) return;
+    if (textarea.value.trim().length > 0) {
+        textarea.value += '\n\n' + template;
+    } else {
+        textarea.value = template;
+    }
+    textarea.focus();
+}
+
+function insertCodeTemplate() {
+    appendToContent('```java\n// Dán đoạn mã hoặc lỗi cần giải đáp tại đây\npublic class Solution {\n    public static void main(String[] args) {\n        \n    }\n}\n```');
+}
+window.insertCodeTemplate = insertCodeTemplate;
+
+function insertTipTemplate() {
+    appendToContent('> ⚠️ **Bẫy tư duy thường gặp:**\n> - ❌ Lầm tưởng: [Hiểu sai hoặc phương án bẫy phổ biến]\n> - 💡 Bản chất đúng: [Nguyên lý và lý giải chính xác]');
+}
+window.insertTipTemplate = insertTipTemplate;
+
+function insertQuizTemplate() {
+    appendToContent('**❓ Thử thách câu hỏi nhanh:**\n[Nội dung câu hỏi tình huống hoặc đoạn code bẫy]\n\n- [A] Phương án A\n- [B] Phương án B\n- [C] Phương án C\n- [D] Phương án D\n\n👉 *Các bạn chọn phương án nào và vì sao?*');
+}
+window.insertQuizTemplate = insertQuizTemplate;
+
+function insertCitationTemplate() {
+    appendToContent('> 📖 **Tài liệu tham khảo:** Giáo trình / Slide bài giảng [Tên môn], Chương [Số], Trang [Số].');
+}
+window.insertCitationTemplate = insertCitationTemplate;
+
+function removeSelectedMood() {
+    currentPostMood = null;
+    const badge = document.getElementById('selected-mood-badge');
+    if (badge) badge.classList.add('d-none');
+}
+window.removeSelectedMood = removeSelectedMood;
+
 
 /**
  * Lấy danh sách ID các bài viết đã bị người dùng hiện tại ẩn
@@ -8467,22 +8531,82 @@ function setupEventListeners() {
         });
     }
 
-    // Mở Modal tạo bài viết
+    // Mở Modal tạo bài viết (Cá nhân hóa theo người dùng & kênh)
     const openComposer = document.getElementById('btn-open-create-post');
     if (openComposer) {
         openComposer.addEventListener('click', () => {
             const modalEl = document.getElementById('createPostModal');
             if (modalEl) {
-                // Đặt kênh mặc định theo kênh đang xem
+                // Cá nhân hóa thông tin tác giả và gợi ý câu hỏi thân thiện
+                const authorNameEl = document.getElementById('modal-composer-author-name');
+                const modalAvatarEl = document.getElementById('modal-composer-avatar');
+                const postContent = document.getElementById('post-content-input');
+                const authorName = (currentUser && (currentUser.fullName || currentUser.username)) || 'Bạn';
+                if (authorNameEl) authorNameEl.textContent = authorName;
+                if (modalAvatarEl) {
+                    modalAvatarEl.textContent = authorName.charAt(0).toUpperCase();
+                    if (API.auth.isTeacher()) {
+                        modalAvatarEl.className = 'author-avatar avatar-teacher';
+                    }
+                }
+                if (postContent) {
+                    postContent.placeholder = `${authorName} ơi, bạn đang thắc mắc hay muốn chia sẻ điều gì về bài học hôm nay?`;
+                }
+
+                // Đồng bộ kênh theo kênh hiện tại đang xem
                 const channelSelect = document.getElementById('post-channel-select');
+                const channelLabel = document.getElementById('selected-channel-label');
                 if (channelSelect && currentChannel !== 'all') {
                     channelSelect.value = currentChannel;
+                    const matchingOpt = document.querySelector(`.channel-option[data-channel="${currentChannel}"]`);
+                    if (matchingOpt && channelLabel) {
+                        channelLabel.textContent = matchingOpt.textContent.trim().replace(/^#\s*/, '');
+                    }
                 }
                 const modal = new bootstrap.Modal(modalEl);
                 modal.show();
             }
         });
     }
+
+    // Chọn kênh từ dropdown pill của modal
+    document.querySelectorAll('.channel-option').forEach(opt => {
+        opt.addEventListener('click', (e) => {
+            e.preventDefault();
+            const ch = opt.getAttribute('data-channel');
+            const hiddenInput = document.getElementById('post-channel-select');
+            const labelEl = document.getElementById('selected-channel-label');
+            if (hiddenInput) hiddenInput.value = ch;
+            if (labelEl) labelEl.textContent = opt.textContent.trim().replace(/^#\s*/, '');
+        });
+    });
+
+    // Chọn nhanh môn học (Quick topic chips)
+    document.querySelectorAll('.post-quick-topic-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const topic = btn.getAttribute('data-topic');
+            const input = document.getElementById('post-topic-input');
+            if (input) {
+                input.value = topic;
+                input.focus();
+            }
+        });
+    });
+
+    // Chọn trạng thái học tập (Learning Mood)
+    document.querySelectorAll('.mood-option').forEach(opt => {
+        opt.addEventListener('click', (e) => {
+            e.preventDefault();
+            const mood = opt.getAttribute('data-mood');
+            currentPostMood = mood;
+            const badge = document.getElementById('selected-mood-badge');
+            const textEl = document.getElementById('selected-mood-text');
+            if (badge && textEl) {
+                textEl.textContent = mood;
+                badge.classList.remove('d-none');
+            }
+        });
+    });
 
     // Form submit tạo bài viết
     const createForm = document.getElementById('create-post-form');
@@ -8505,7 +8629,7 @@ function updateChannelHeader() {
 }
 
 /**
- * Tải danh sách môn học để đưa vào dropdown
+ * Tải danh sách môn học để đưa vào dropdown lọc & datalist tự do
  */
 async function loadTopics() {
     try {
@@ -8513,7 +8637,14 @@ async function loadTopics() {
         allTopics = res.data || [];
 
         const filterSelect = document.getElementById('filter-topic-select');
-        const postTopicSelect = document.getElementById('post-topic-select');
+        const topicDatalist = document.getElementById('post-topic-datalist');
+
+        if (filterSelect) {
+            filterSelect.innerHTML = '<option value="">-- Mọi môn học & đề thi --</option>';
+        }
+        if (topicDatalist) {
+            topicDatalist.innerHTML = '';
+        }
 
         allTopics.forEach(t => {
             if (filterSelect) {
@@ -8522,11 +8653,10 @@ async function loadTopics() {
                 opt.textContent = t.topicName;
                 filterSelect.appendChild(opt);
             }
-            if (postTopicSelect) {
+            if (topicDatalist) {
                 const opt2 = document.createElement('option');
-                opt2.value = t.topicId;
-                opt2.textContent = t.topicName;
-                postTopicSelect.appendChild(opt2);
+                opt2.value = t.topicName;
+                topicDatalist.appendChild(opt2);
             }
         });
     } catch (err) {
@@ -8723,25 +8853,41 @@ function renderPostCard(p) {
 }
 
 /**
- * Xử lý tạo bài viết mới
+ * Xử lý tạo bài viết mới (Hỗ trợ linh hoạt Topic theo ID hoặc tên tự do, kèm trạng thái học tập)
  */
 async function handleCreatePost(e) {
     e.preventDefault();
     const title = document.getElementById('post-title-input').value.trim();
-    const content = document.getElementById('post-content-input').value.trim();
-    const channel = document.getElementById('post-channel-select').value;
-    const topicIdVal = document.getElementById('post-topic-select').value;
-    const topicId = topicIdVal ? parseInt(topicIdVal, 10) : null;
+    let content = document.getElementById('post-content-input').value.trim();
+    const channel = document.getElementById('post-channel-select')?.value || 'general';
+    const topicInput = (document.getElementById('post-topic-input')?.value || '').trim();
     const submitBtn = document.getElementById('btn-submit-post');
 
     if (!title || !content) {
-        Swal.fire('Lỗi', 'Vui lòng điền đầy đủ tiêu đề và nội dung bài viết!', 'warning');
+        Swal.fire('Lỗi', 'Vui lòng điền đầy đủ tiêu đề và nội dung bài học!', 'warning');
         return;
+    }
+
+    // Gắn trạng thái học tập nếu có chọn
+    if (currentPostMood) {
+        content = `[${currentPostMood}]\n\n` + content;
+    }
+
+    let topicId = null;
+    let topicName = null;
+
+    if (topicInput) {
+        const matched = allTopics.find(t => (t.topicName || '').trim().toLowerCase() === topicInput.toLowerCase());
+        if (matched) {
+            topicId = matched.topicId;
+        } else {
+            topicName = topicInput;
+        }
     }
 
     try {
         if (submitBtn) submitBtn.disabled = true;
-        const res = await API.community.createPost({ title, content, channel, topicId });
+        const res = await API.community.createPost({ title, content, channel, topicId, topicName });
 
         // Đóng modal & reset form
         const modalEl = document.getElementById('createPostModal');
@@ -8750,11 +8896,12 @@ async function handleCreatePost(e) {
             if (inst) inst.hide();
         }
         document.getElementById('create-post-form').reset();
+        removeSelectedMood();
 
         Swal.fire({
             icon: 'success',
             title: 'Đăng bài thành công!',
-            text: 'Bài viết của bạn đã được xuất bản trên diễn đàn cộng đồng.',
+            text: 'Bài thảo luận học tập của bạn đã được xuất bản trên diễn đàn cộng đồng.',
             timer: 2000,
             showConfirmButton: false
         });
@@ -12816,55 +12963,129 @@ const AppUI = (() => {
     </main>
 
     <!-- ── Modal Tạo Bài Viết Mới (Create Post Modal) ── -->
+    <!-- ── Modal Tạo Bài Viết Mới (Facebook Style Composer Modal) ── -->
     <div class="modal fade" id="createPostModal" tabindex="-1" aria-labelledby="createPostModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content border-0 shadow-lg rounded-4">
-                <div class="modal-header border-0 py-3 bg-white border-bottom">
-                    <h5 class="modal-title fw-bold text-dark" id="createPostModalLabel">
-                        <i class="fa-solid fa-feather-pointed text-primary me-2"></i>Tạo Bài Thảo Luận Mới
+        <div class="modal-dialog modal-dialog-centered" style="max-width: 580px;">
+            <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+                <!-- Modal Header (Facebook Centered Header) -->
+                <div class="modal-header border-bottom py-3 px-4 position-relative bg-white">
+                    <h5 class="modal-title fw-bold text-dark w-100 text-center mb-0" id="createPostModalLabel" style="font-size: 1.15rem;">
+                        Tạo bài viết
                     </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close position-absolute end-0 me-3" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body p-4">
+
+                <div class="modal-body p-4 bg-white">
                     <form id="create-post-form">
-                        <div class="row g-3 mb-3">
-                            <div class="col-md-6">
-                                <label for="post-channel-select" class="form-label fw-bold small text-dark">Kênh thảo luận <span class="text-danger">*</span></label>
-                                <select class="form-select rounded-3 py-2" id="post-channel-select" required>
-                                    <option value="general"># thảo-luận-chung</option>
-                                    <option value="qna"># hỏi-đáp-bài-tập</option>
-                                    <option value="tips"># mẹo-né-bẫy-tư-duy</option>
-                                    <option value="showcase"># đề-xuất-đề-hay</option>
-                                </select>
+                        <!-- User Info & Audience/Channel Selector (Facebook Style) -->
+                        <div class="d-flex align-items-center gap-3 mb-3">
+                            <div class="author-avatar avatar-student" id="modal-composer-avatar" style="width: 46px; height: 46px; font-size: 1.15rem;">
+                                U
                             </div>
-                            <div class="col-md-6">
-                                <label for="post-topic-select" class="form-label fw-bold small text-dark">Môn học liên quan (Tùy chọn)</label>
-                                <select class="form-select rounded-3 py-2" id="post-topic-select">
-                                    <option value="">-- Thảo luận tự do / Không chọn môn --</option>
-                                    <!-- Injected dynamically -->
-                                </select>
+                            <div>
+                                <div class="fw-bold text-dark mb-1" id="modal-composer-author-name">Người Dùng</div>
+                                <div class="d-flex align-items-center gap-2 flex-wrap">
+                                    <!-- Kênh đăng (Channel Pill) -->
+                                    <div class="dropdown">
+                                        <button class="btn btn-light btn-sm rounded-pill px-2.5 py-1 text-secondary fw-semibold border d-flex align-items-center gap-1" type="button" data-bs-toggle="dropdown" id="btn-select-channel-pill" style="font-size: 0.8rem;">
+                                            <i class="fa-solid fa-hashtag text-primary"></i>
+                                            <span id="selected-channel-label">thảo-luận-chung</span>
+                                            <i class="fa-solid fa-caret-down text-muted ms-1"></i>
+                                        </button>
+                                        <ul class="dropdown-menu shadow-sm border-0 rounded-3 p-1" style="font-size: 0.85rem;">
+                                            <li><a class="dropdown-item channel-option py-1.5" href="#" data-channel="general"><i class="fa-solid fa-comments me-2 text-info"></i># thảo-luận-chung</a></li>
+                                            <li><a class="dropdown-item channel-option py-1.5" href="#" data-channel="qna"><i class="fa-solid fa-circle-question me-2 text-danger"></i># hỏi-đáp-bài-tập</a></li>
+                                            <li><a class="dropdown-item channel-option py-1.5" href="#" data-channel="tips"><i class="fa-solid fa-lightbulb me-2 text-warning"></i># mẹo-né-bẫy-tư-duy</a></li>
+                                            <li><a class="dropdown-item channel-option py-1.5" href="#" data-channel="showcase"><i class="fa-solid fa-star me-2 text-success"></i># đề-xuất-đề-hay</a></li>
+                                        </ul>
+                                    </div>
+                                    <input type="hidden" id="post-channel-select" value="general">
+
+                                    <!-- Mood Tag Pill (Cảm xúc học tập) -->
+                                    <span class="badge bg-light text-secondary border rounded-pill px-2.5 py-1 fw-semibold d-none" id="selected-mood-badge" style="font-size: 0.78rem;">
+                                        <span id="selected-mood-text">🚀 Hào hứng</span>
+                                        <i class="fa-solid fa-xmark ms-1 text-danger cursor-pointer" onclick="removeSelectedMood()" title="Bỏ cảm xúc" style="cursor: pointer;"></i>
+                                    </span>
+                                </div>
                             </div>
                         </div>
 
+                        <!-- Tiêu đề tóm tắt -->
                         <div class="mb-3">
-                            <label for="post-title-input" class="form-label fw-bold small text-dark">Tiêu đề bài viết <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control rounded-3 py-2" id="post-title-input" placeholder="Tóm tắt ngắn gọn câu hỏi hoặc chủ đề bạn muốn bàn luận..." required maxlength="255">
+                            <input type="text" class="form-control rounded-3 py-2 px-3 fw-bold" id="post-title-input" placeholder="Tiêu đề tóm tắt thắc mắc hoặc chủ đề thảo luận..." required maxlength="255" style="border: 1px solid #e2e8f0; font-size: 0.98rem;">
                         </div>
 
+                        <!-- Textarea Nội Dung (Facebook Large Textarea) -->
                         <div class="mb-3">
-                            <label for="post-content-input" class="form-label fw-bold small text-dark d-flex justify-content-between">
-                                <span>Nội dung chi tiết <span class="text-danger">*</span></span>
-                                <span class="text-muted fw-normal small">Hỗ trợ Markdown & Code blocks</span>
-                            </label>
-                            <textarea class="form-control rounded-3" id="post-content-input" rows="5" placeholder="Mô tả cụ thể thắc mắc, đoạn code gây lỗi, hoặc kinh nghiệm bạn muốn chia sẻ với mọi người..." required></textarea>
+                            <textarea class="form-control border-0 px-1 py-2" id="post-content-input" rows="4" placeholder="Bạn đang thắc mắc hay muốn chia sẻ điều gì về bài học hôm nay?" required style="resize: none; font-size: 1.05rem; line-height: 1.6; outline: none; box-shadow: none;"></textarea>
                         </div>
 
-                        <div class="d-flex justify-content-end gap-2 pt-2">
-                            <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Hủy</button>
-                            <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" id="btn-submit-post">
-                                <i class="fa-solid fa-paper-plane me-1"></i>Đăng Bài Lên Diễn Đàn
-                            </button>
+                        <!-- Khu vực Chọn Môn Học (Cải tiến như Teacher Dashboard: Input tự do + Datalist + Quick Chips) -->
+                        <div class="p-3 bg-light rounded-4 border mb-3" id="post-topic-wrapper">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <label for="post-topic-input" class="form-label fw-bold small text-dark mb-0">
+                                    <i class="fa-solid fa-book-bookmark text-primary me-1"></i>Chủ đề / Môn học liên quan
+                                </label>
+                                <span class="badge bg-white text-muted border rounded-pill px-2 py-0.5" style="font-size: 0.7rem;">Tự do gõ hoặc chọn</span>
+                            </div>
+                            <input type="text" class="form-control bg-white rounded-3 py-2 small" id="post-topic-input" list="post-topic-datalist" placeholder="Nhập tên môn bất kỳ: OOP, CTDL, CSDL, Toán rời rạc, Kinh tế, Triết học..." autocomplete="off">
+                            <datalist id="post-topic-datalist">
+                                <!-- Động nạp từ DB -->
+                            </datalist>
+                            <!-- Gợi ý nhanh các môn phổ biến (1-click) -->
+                            <div class="d-flex align-items-center flex-wrap gap-1 mt-2">
+                                <span class="text-muted small me-1" style="font-size: 0.74rem;"><i class="fa-regular fa-compass me-1"></i>Chọn nhanh:</span>
+                                <button type="button" class="btn btn-white btn-sm text-secondary bg-white border rounded-pill py-0 px-2 post-quick-topic-btn" style="font-size: 0.74rem;" data-topic="Lập Trình Hướng Đối Tượng Java">Java OOP</button>
+                                <button type="button" class="btn btn-white btn-sm text-secondary bg-white border rounded-pill py-0 px-2 post-quick-topic-btn" style="font-size: 0.74rem;" data-topic="Cấu Trúc Dữ Liệu & Giải Thuật">CTDL & Giải Thuật</button>
+                                <button type="button" class="btn btn-white btn-sm text-secondary bg-white border rounded-pill py-0 px-2 post-quick-topic-btn" style="font-size: 0.74rem;" data-topic="Toán Rời Rạc & Xác Suất">Toán Rời Rạc</button>
+                                <button type="button" class="btn btn-white btn-sm text-secondary bg-white border rounded-pill py-0 px-2 post-quick-topic-btn" style="font-size: 0.74rem;" data-topic="Cơ Sở Dữ Liệu Quan Hệ & SQL">CSDL & SQL</button>
+                                <button type="button" class="btn btn-white btn-sm text-secondary bg-white border rounded-pill py-0 px-2 post-quick-topic-btn" style="font-size: 0.74rem;" data-topic="Mạng Máy Tính & Viễn Thông">Mạng Máy Tính</button>
+                            </div>
                         </div>
+
+                        <!-- Thanh công cụ "Thêm vào bài thảo luận học tập" (Facebook Style Academic Toolbar) -->
+                        <div class="border rounded-4 p-2.5 px-3 d-flex justify-content-between align-items-center mb-3 bg-white shadow-sm flex-wrap gap-2">
+                            <span class="fw-bold small text-dark" style="font-size: 0.88rem;">
+                                <i class="fa-solid fa-wand-magic-sparkles text-primary me-1"></i>Thêm vào bài học của bạn
+                            </span>
+                            <div class="d-flex align-items-center gap-1 flex-wrap">
+                                <!-- Chèn Khối Code -->
+                                <button type="button" class="btn btn-light btn-sm rounded-circle p-0 d-flex align-items-center justify-content-center text-primary" style="width: 36px; height: 36px;" title="Chèn khối code lập trình (Java/C++/Python/SQL)" onclick="insertCodeTemplate()">
+                                    <i class="fa-solid fa-code fa-lg"></i>
+                                </button>
+                                <!-- Chèn Mẹo Né Bẫy Kiến Thức -->
+                                <button type="button" class="btn btn-light btn-sm rounded-circle p-0 d-flex align-items-center justify-content-center text-warning" style="width: 36px; height: 36px;" title="Chèn mẫu phân tích Bẫy tư duy / Lầm tưởng" onclick="insertTipTemplate()">
+                                    <i class="fa-solid fa-lightbulb fa-lg"></i>
+                                </button>
+                                <!-- Chèn Câu hỏi trắc nghiệm mini -->
+                                <button type="button" class="btn btn-light btn-sm rounded-circle p-0 d-flex align-items-center justify-content-center text-success" style="width: 36px; height: 36px;" title="Chèn câu hỏi trắc nghiệm mini / bình chọn" onclick="insertQuizTemplate()">
+                                    <i class="fa-solid fa-square-poll-vertical fa-lg"></i>
+                                </button>
+                                <!-- Chèn Trích dẫn Giáo trình / Slide -->
+                                <button type="button" class="btn btn-light btn-sm rounded-circle p-0 d-flex align-items-center justify-content-center text-info" style="width: 36px; height: 36px;" title="Chèn trích dẫn giáo trình / tài liệu ôn tập" onclick="insertCitationTemplate()">
+                                    <i class="fa-solid fa-book-open fa-lg"></i>
+                                </button>
+                                <!-- Cảm xúc & Trạng thái học tập (Dropdown) -->
+                                <div class="dropdown">
+                                    <button type="button" class="btn btn-light btn-sm rounded-circle p-0 d-flex align-items-center justify-content-center text-danger" style="width: 36px; height: 36px;" data-bs-toggle="dropdown" title="Trạng thái học tập / Cảm xúc">
+                                        <i class="fa-regular fa-face-smile fa-lg"></i>
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-3 p-2" style="font-size: 0.85rem; min-width: 200px;">
+                                        <li><h6 class="dropdown-header small text-uppercase fw-bold text-muted" style="font-size: 0.7rem;">Trạng thái học tập:</h6></li>
+                                        <li><a class="dropdown-item mood-option py-1.5 rounded-2" href="#" data-mood="🚀 Hào hứng học tập"><i class="fa-solid fa-rocket text-primary me-2"></i>🚀 Hào hứng học tập</a></li>
+                                        <li><a class="dropdown-item mood-option py-1.5 rounded-2" href="#" data-mood="🆘 Cần trợ giúp bài tập"><i class="fa-solid fa-circle-exclamation text-danger me-2"></i>🆘 Cần trợ giúp bài tập</a></li>
+                                        <li><a class="dropdown-item mood-option py-1.5 rounded-2" href="#" data-mood="💡 Đã thông não bẫy đề"><i class="fa-solid fa-lightbulb text-warning me-2"></i>💡 Đã thông não bẫy đề</a></li>
+                                        <li><a class="dropdown-item mood-option py-1.5 rounded-2" href="#" data-mood="🤯 Đau đầu vì gặp bug"><i class="fa-solid fa-bug text-danger me-2"></i>🤯 Đau đầu vì gặp bug</a></li>
+                                        <li><a class="dropdown-item mood-option py-1.5 rounded-2" href="#" data-mood="☕ Cày đêm ôn thi"><i class="fa-solid fa-mug-hot text-secondary me-2"></i>☕ Cày đêm ôn thi</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Nút Đăng Bài (Facebook Full-width Style) -->
+                        <button type="submit" class="btn btn-primary w-100 py-2.5 rounded-3 fw-bold shadow-sm" id="btn-submit-post">
+                            <i class="fa-solid fa-paper-plane me-1"></i>Đăng bài
+                        </button>
                     </form>
                 </div>
             </div>

@@ -129,28 +129,77 @@ async function initResult() {
  * Render toàn bộ giao diện kết quả thi
  */
 function renderResult(data) {
-    const score = data.score !== undefined ? data.score : 0;
-    const total = data.totalQuestions || 0;
-    const correct = data.correctCount || 0;
-    const wrong = total - correct;
+    const sessionObj = data.session || data;
+    const total = data.totalQuestions || sessionObj.totalQuestions || 0;
+    const correct = data.correctCount !== undefined ? data.correctCount : (sessionObj.correctCount || 0);
+    const wrong = Math.max(0, total - correct);
+
+    // Tính điểm thang 10 & phần trăm chính xác (%)
+    let percent = 0;
+    let score10 = 0;
+
+    if (data.percentage !== undefined) {
+        percent = Number(data.percentage);
+    } else if (total > 0) {
+        percent = (correct / total) * 100;
+    }
+
+    if (data.score !== undefined) {
+        score10 = Number(data.score);
+    } else if (sessionObj.score !== undefined) {
+        score10 = Number(sessionObj.score);
+    } else if (total > 0) {
+        score10 = (correct / total) * 10;
+    }
+
+    // Nếu dữ liệu cũ lưu score theo thang 100 (score > 10):
+    if (score10 > 10) {
+        percent = score10;
+        score10 = percent / 10;
+    }
+
+    // Làm tròn hiển thị
+    const roundedPercent = Math.round(percent);
+    const formattedScore10 = (Math.round(score10 * 10) / 10).toFixed(1);
 
     // Tính số câu đoán mò (GUESS)
-    const graded = data.gradedAnswers || [];
+    const graded = data.gradedAnswers || data.answers || [];
     const guessCount = graded.filter(a => a.confidenceLevel === 'GUESS').length;
 
-    document.getElementById('score-value').textContent = `${Math.round(score)}%`;
+    const scoreValEl = document.getElementById('score-value');
+    if (scoreValEl) scoreValEl.textContent = `${roundedPercent}%`;
+
+    const scoreScaleEl = document.getElementById('score-scale');
+    if (scoreScaleEl) scoreScaleEl.textContent = `${formattedScore10} / 10 điểm`;
+
+    const circleEl = document.getElementById('score-circle');
+    if (circleEl) {
+        circleEl.className = 'd-inline-flex flex-column align-items-center justify-content-center rounded-circle shadow-sm';
+        if (roundedPercent >= 80) {
+            circleEl.classList.add('bg-success-subtle', 'text-success');
+        } else if (roundedPercent >= 50) {
+            circleEl.classList.add('bg-primary-subtle', 'text-primary');
+        } else {
+            circleEl.classList.add('bg-warning-subtle', 'text-warning');
+        }
+    }
+
     document.getElementById('correct-count').textContent = correct;
     document.getElementById('wrong-count').textContent = wrong;
     document.getElementById('guess-count').textContent = guessCount;
 
-    // Tiêu đề nhận xét
+    // Tiêu đề nhận xét theo tỷ lệ %
     const headlineEl = document.getElementById('result-headline');
-    if (score >= 90) {
-        headlineEl.textContent = 'Xuất Sắc! Bạn đã làm chủ rất tốt kiến thức!';
-    } else if (score >= 70) {
-        headlineEl.textContent = 'Rất Tốt! Tuy nhiên vẫn còn điểm cần lưu ý.';
-    } else {
-        headlineEl.textContent = 'Cố Gắng Lên! Đọc kỹ phân tích AI và làm bài tập phục hồi bên dưới nhé.';
+    if (headlineEl) {
+        if (roundedPercent >= 90) {
+            headlineEl.textContent = 'Xuất Sắc! Bạn đã làm chủ rất tốt kiến thức!';
+        } else if (roundedPercent >= 70) {
+            headlineEl.textContent = 'Rất Tốt! Tuy nhiên vẫn còn điểm cần lưu ý.';
+        } else if (roundedPercent >= 50) {
+            headlineEl.textContent = 'Khá Tốt! Hãy ôn thêm một số khái niệm còn phân vân.';
+        } else {
+            headlineEl.textContent = 'Cố Gắng Lên! Đọc kỹ phân tích AI và làm bài tập phục hồi bên dưới nhé.';
+        }
     }
 
     // Render Bài Học Củng Cố AI (Remedial Lessons)

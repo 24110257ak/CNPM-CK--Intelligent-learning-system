@@ -1,6 +1,6 @@
 ﻿# TOAN BO MA NGUON DU AN - HE THONG HOC TAP THONG MINH (INTELLIGENT LMS)
 
-> **Thoi gian tao file:** 2026-09-30 22:22:28
+> **Thoi gian tao file:** 2026-09-30 22:50:27
 > **Tong so file:** 58
 > **Muc dich:** Gom toan bo source code thanh 1 file duy nhat de gui cho ben thu ba xem xet, danh gia va gop y.
 
@@ -5526,6 +5526,7 @@ public class QuizService {
 
         Map<String, Object> response = new HashMap<>();
         response.put("sessionId", sessionId);
+        response.put("session", ownedSession);
         response.put("userId", userId);
         response.put("totalQuestions", totalQuestions);
         response.put("correctCount", correctCount);
@@ -5550,15 +5551,7 @@ public class QuizService {
     public Map<String, Object> getSessionDetails(int sessionId, int userId) {
         QuizSession session = quizDAO.findSessionForUser(sessionId, userId);
         if (session == null) throw new SecurityException("Bạn không có quyền xem phiên làm bài này.");
-        List<UserAnswer> answers = quizDAO.getAnswersBySession(sessionId);
-        List<RemedialLesson> lessons = quizDAO.getRemedialLessonsBySession(sessionId);
-
-        Map<String, Object> details = new HashMap<>();
-        details.put("sessionId", sessionId);
-        details.put("session", session);
-        details.put("answers", answers);
-        details.put("remedialLessons", lessons);
-        return details;
+        return buildExistingSubmissionResult(session, userId);
     }
 
     /**
@@ -5594,6 +5587,7 @@ public class QuizService {
 
         Map<String, Object> response = new HashMap<>();
         response.put("sessionId", sessionId);
+        response.put("session", session);
         response.put("userId", userId);
         response.put("totalQuestions", total);
         response.put("correctCount", correctCount);
@@ -10395,28 +10389,77 @@ async function initResult() {
  * Render toàn bộ giao diện kết quả thi
  */
 function renderResult(data) {
-    const score = data.score !== undefined ? data.score : 0;
-    const total = data.totalQuestions || 0;
-    const correct = data.correctCount || 0;
-    const wrong = total - correct;
+    const sessionObj = data.session || data;
+    const total = data.totalQuestions || sessionObj.totalQuestions || 0;
+    const correct = data.correctCount !== undefined ? data.correctCount : (sessionObj.correctCount || 0);
+    const wrong = Math.max(0, total - correct);
+
+    // Tính điểm thang 10 & phần trăm chính xác (%)
+    let percent = 0;
+    let score10 = 0;
+
+    if (data.percentage !== undefined) {
+        percent = Number(data.percentage);
+    } else if (total > 0) {
+        percent = (correct / total) * 100;
+    }
+
+    if (data.score !== undefined) {
+        score10 = Number(data.score);
+    } else if (sessionObj.score !== undefined) {
+        score10 = Number(sessionObj.score);
+    } else if (total > 0) {
+        score10 = (correct / total) * 10;
+    }
+
+    // Nếu dữ liệu cũ lưu score theo thang 100 (score > 10):
+    if (score10 > 10) {
+        percent = score10;
+        score10 = percent / 10;
+    }
+
+    // Làm tròn hiển thị
+    const roundedPercent = Math.round(percent);
+    const formattedScore10 = (Math.round(score10 * 10) / 10).toFixed(1);
 
     // Tính số câu đoán mò (GUESS)
-    const graded = data.gradedAnswers || [];
+    const graded = data.gradedAnswers || data.answers || [];
     const guessCount = graded.filter(a => a.confidenceLevel === 'GUESS').length;
 
-    document.getElementById('score-value').textContent = `${Math.round(score)}%`;
+    const scoreValEl = document.getElementById('score-value');
+    if (scoreValEl) scoreValEl.textContent = `${roundedPercent}%`;
+
+    const scoreScaleEl = document.getElementById('score-scale');
+    if (scoreScaleEl) scoreScaleEl.textContent = `${formattedScore10} / 10 điểm`;
+
+    const circleEl = document.getElementById('score-circle');
+    if (circleEl) {
+        circleEl.className = 'd-inline-flex flex-column align-items-center justify-content-center rounded-circle shadow-sm';
+        if (roundedPercent >= 80) {
+            circleEl.classList.add('bg-success-subtle', 'text-success');
+        } else if (roundedPercent >= 50) {
+            circleEl.classList.add('bg-primary-subtle', 'text-primary');
+        } else {
+            circleEl.classList.add('bg-warning-subtle', 'text-warning');
+        }
+    }
+
     document.getElementById('correct-count').textContent = correct;
     document.getElementById('wrong-count').textContent = wrong;
     document.getElementById('guess-count').textContent = guessCount;
 
-    // Tiêu đề nhận xét
+    // Tiêu đề nhận xét theo tỷ lệ %
     const headlineEl = document.getElementById('result-headline');
-    if (score >= 90) {
-        headlineEl.textContent = 'Xuất Sắc! Bạn đã làm chủ rất tốt kiến thức!';
-    } else if (score >= 70) {
-        headlineEl.textContent = 'Rất Tốt! Tuy nhiên vẫn còn điểm cần lưu ý.';
-    } else {
-        headlineEl.textContent = 'Cố Gắng Lên! Đọc kỹ phân tích AI và làm bài tập phục hồi bên dưới nhé.';
+    if (headlineEl) {
+        if (roundedPercent >= 90) {
+            headlineEl.textContent = 'Xuất Sắc! Bạn đã làm chủ rất tốt kiến thức!';
+        } else if (roundedPercent >= 70) {
+            headlineEl.textContent = 'Rất Tốt! Tuy nhiên vẫn còn điểm cần lưu ý.';
+        } else if (roundedPercent >= 50) {
+            headlineEl.textContent = 'Khá Tốt! Hãy ôn thêm một số khái niệm còn phân vân.';
+        } else {
+            headlineEl.textContent = 'Cố Gắng Lên! Đọc kỹ phân tích AI và làm bài tập phục hồi bên dưới nhé.';
+        }
     }
 
     // Render Bài Học Củng Cố AI (Remedial Lessons)
@@ -11560,9 +11603,11 @@ function renderRecentSessions(sessions) {
     }
 
     tbody.innerHTML = sessions.map(s => {
+        const rawScore = Number(s.score) || 0;
+        const normalizedScore = rawScore > 10.0 ? (rawScore / 10.0) : rawScore;
         let scoreBadge = 'bg-success';
-        if (s.score < 5.0) scoreBadge = 'bg-danger';
-        else if (s.score < 8.0) scoreBadge = 'bg-warning text-dark';
+        if (normalizedScore < 5.0) scoreBadge = 'bg-danger';
+        else if (normalizedScore < 8.0) scoreBadge = 'bg-warning text-dark';
 
         const completedTime = s.completedAt ? s.completedAt.replace('T', ' ').substring(0, 19) : '--';
 
@@ -11576,7 +11621,7 @@ function renderRecentSessions(sessions) {
                 <td><span class="badge bg-light text-dark border">${escapeHtml(s.topicName || 'Chủ đề')}</span></td>
                 <td class="text-center fw-semibold">${s.correctCount} / ${s.totalQuestions}</td>
                 <td class="text-center">
-                    <span class="badge ${scoreBadge} px-2 py-1 fs-6">${Number(s.score).toFixed(1)}</span>
+                    <span class="badge ${scoreBadge} px-2 py-1 fs-6">${normalizedScore.toFixed(1)}</span>
                 </td>
                 <td class="text-muted small">${completedTime}</td>
             </tr>
@@ -13975,20 +14020,31 @@ const AppUI = (() => {
                 let totalScore = 0;
                 let highest = 0;
                 sessions.forEach(s => {
-                    const sc = s.score || 0;
-                    totalScore += sc;
-                    if (sc > highest) highest = sc;
+                    const sc = s.score !== undefined ? Number(s.score) : 0;
+                    let p = 0;
+                    if (s.totalQuestions > 0 && s.correctCount !== undefined) {
+                        p = Math.round((s.correctCount / s.totalQuestions) * 100);
+                    } else if (sc <= 10) {
+                        p = Math.round(sc * 10);
+                    } else {
+                        p = Math.round(sc);
+                    }
+                    s._percent = p;
+                    s._score10 = sc <= 10 ? sc : (Math.round((sc / 10) * 10) / 10);
+                    totalScore += p;
+                    if (p > highest) highest = p;
                 });
-                const avg = Math.round(totalScore / sessions.length);
+                const avg = sessions.length > 0 ? Math.round(totalScore / sessions.length) : 0;
 
                 document.getElementById('stat-total-tests').textContent = sessions.length;
-                document.getElementById('stat-highest-score').textContent = `${Math.round(highest)}%`;
+                document.getElementById('stat-highest-score').textContent = `${highest}%`;
                 document.getElementById('stat-avg-score').textContent = `${avg}%`;
 
                 // Render bảng
                 tbody.innerHTML = sessions.map(s => {
-                    const score = Math.round(s.score || 0);
-                    const badgeColor = score >= 80 ? 'bg-success' : (score >= 50 ? 'bg-warning text-dark' : 'bg-danger');
+                    const percent = s._percent;
+                    const score10 = Number(s._score10).toFixed(1);
+                    const badgeColor = percent >= 80 ? 'bg-success' : (percent >= 50 ? 'bg-primary' : 'bg-danger');
                     const dateStr = s.completedAt ? new Date(s.completedAt).toLocaleString('vi-VN') : (s.startedAt ? new Date(s.startedAt).toLocaleString('vi-VN') : '--');
 
                     return `
@@ -13996,7 +14052,10 @@ const AppUI = (() => {
                             <td class="ps-4 fw-semibold text-muted">#${s.sessionId}</td>
                             <td class="fw-bold text-dark">${s.topicName || ('Chủ đề #' + s.topicId)}</td>
                             <td>${s.correctCount || 0} / ${s.totalQuestions || 0}</td>
-                            <td><span class="badge ${badgeColor} rounded-pill px-3 py-1 fs-6">${score}%</span></td>
+                            <td>
+                                <span class="badge ${badgeColor} rounded-pill px-3 py-1 fs-6">${score10} / 10</span>
+                                <span class="text-muted small ms-1">(${percent}%)</span>
+                            </td>
                             <td class="text-muted small">${dateStr}</td>
                             <td class="text-end pe-4">
                                 <a href="result.html?sessionId=${s.sessionId}" class="btn btn-sm btn-outline-primary rounded-pill px-3">
@@ -15006,9 +15065,9 @@ const AppUI = (() => {
         <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white">
             <div class="row align-items-center text-center text-md-start">
                 <div class="col-md-3 text-center mb-3 mb-md-0">
-                    <div class="d-inline-flex flex-column align-items-center justify-content-center bg-primary-subtle text-primary rounded-circle shadow-sm" style="width: 120px; height: 120px;">
-                        <span class="fs-1 fw-bold" id="score-value">0%</span>
-                        <small class="text-muted" style="font-size: 0.75rem;">Điểm số</small>
+                    <div class="d-inline-flex flex-column align-items-center justify-content-center bg-primary-subtle text-primary rounded-circle shadow-sm" style="width: 120px; height: 120px;" id="score-circle">
+                        <span class="fs-1 fw-bold lh-1 mb-1" id="score-value">0%</span>
+                        <small class="text-muted fw-semibold" id="score-scale" style="font-size: 0.75rem;">0.0 / 10</small>
                     </div>
                 </div>
                 <div class="col-md-9">

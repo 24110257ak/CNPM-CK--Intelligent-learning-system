@@ -225,20 +225,31 @@
                 let totalScore = 0;
                 let highest = 0;
                 sessions.forEach(s => {
-                    const sc = s.score || 0;
-                    totalScore += sc;
-                    if (sc > highest) highest = sc;
+                    const sc = s.score !== undefined ? Number(s.score) : 0;
+                    let p = 0;
+                    if (s.totalQuestions > 0 && s.correctCount !== undefined) {
+                        p = Math.round((s.correctCount / s.totalQuestions) * 100);
+                    } else if (sc <= 10) {
+                        p = Math.round(sc * 10);
+                    } else {
+                        p = Math.round(sc);
+                    }
+                    s._percent = p;
+                    s._score10 = sc <= 10 ? sc : (Math.round((sc / 10) * 10) / 10);
+                    totalScore += p;
+                    if (p > highest) highest = p;
                 });
-                const avg = Math.round(totalScore / sessions.length);
+                const avg = sessions.length > 0 ? Math.round(totalScore / sessions.length) : 0;
 
                 document.getElementById('stat-total-tests').textContent = sessions.length;
-                document.getElementById('stat-highest-score').textContent = `${Math.round(highest)}%`;
+                document.getElementById('stat-highest-score').textContent = `${highest}%`;
                 document.getElementById('stat-avg-score').textContent = `${avg}%`;
 
                 // Render bảng
                 tbody.innerHTML = sessions.map(s => {
-                    const score = Math.round(s.score || 0);
-                    const badgeColor = score >= 80 ? 'bg-success' : (score >= 50 ? 'bg-warning text-dark' : 'bg-danger');
+                    const percent = s._percent;
+                    const score10 = Number(s._score10).toFixed(1);
+                    const badgeColor = percent >= 80 ? 'bg-success' : (percent >= 50 ? 'bg-primary' : 'bg-danger');
                     const dateStr = s.completedAt ? new Date(s.completedAt).toLocaleString('vi-VN') : (s.startedAt ? new Date(s.startedAt).toLocaleString('vi-VN') : '--');
 
                     return `
@@ -246,7 +257,10 @@
                             <td class="ps-4 fw-semibold text-muted">#${s.sessionId}</td>
                             <td class="fw-bold text-dark">${s.topicName || ('Chủ đề #' + s.topicId)}</td>
                             <td>${s.correctCount || 0} / ${s.totalQuestions || 0}</td>
-                            <td><span class="badge ${badgeColor} rounded-pill px-3 py-1 fs-6">${score}%</span></td>
+                            <td>
+                                <span class="badge ${badgeColor} rounded-pill px-3 py-1 fs-6">${score10} / 10</span>
+                                <span class="text-muted small ms-1">(${percent}%)</span>
+                            </td>
                             <td class="text-muted small">${dateStr}</td>
                             <td class="text-end pe-4">
                                 <a href="result.html?sessionId=${s.sessionId}" class="btn btn-sm btn-outline-primary rounded-pill px-3">

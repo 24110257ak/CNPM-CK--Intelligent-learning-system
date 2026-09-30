@@ -449,9 +449,11 @@ function renderRecentSessions(sessions) {
     }
 
     tbody.innerHTML = sessions.map(s => {
+        const rawScore = Number(s.score) || 0;
+        const normalizedScore = rawScore > 10.0 ? (rawScore / 10.0) : rawScore;
         let scoreBadge = 'bg-success';
-        if (s.score < 5.0) scoreBadge = 'bg-danger';
-        else if (s.score < 8.0) scoreBadge = 'bg-warning text-dark';
+        if (normalizedScore < 5.0) scoreBadge = 'bg-danger';
+        else if (normalizedScore < 8.0) scoreBadge = 'bg-warning text-dark';
 
         const completedTime = s.completedAt ? s.completedAt.replace('T', ' ').substring(0, 19) : '--';
 
@@ -465,7 +467,7 @@ function renderRecentSessions(sessions) {
                 <td><span class="badge bg-light text-dark border">${escapeHtml(s.topicName || 'Chủ đề')}</span></td>
                 <td class="text-center fw-semibold">${s.correctCount} / ${s.totalQuestions}</td>
                 <td class="text-center">
-                    <span class="badge ${scoreBadge} px-2 py-1 fs-6">${Number(s.score).toFixed(1)}</span>
+                    <span class="badge ${scoreBadge} px-2 py-1 fs-6">${normalizedScore.toFixed(1)}</span>
                 </td>
                 <td class="text-muted small">${completedTime}</td>
             </tr>

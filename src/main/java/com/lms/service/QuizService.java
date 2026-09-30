@@ -204,6 +204,7 @@ public class QuizService {
 
         Map<String, Object> response = new HashMap<>();
         response.put("sessionId", sessionId);
+        response.put("session", ownedSession);
         response.put("userId", userId);
         response.put("totalQuestions", totalQuestions);
         response.put("correctCount", correctCount);
@@ -228,15 +229,7 @@ public class QuizService {
     public Map<String, Object> getSessionDetails(int sessionId, int userId) {
         QuizSession session = quizDAO.findSessionForUser(sessionId, userId);
         if (session == null) throw new SecurityException("Bạn không có quyền xem phiên làm bài này.");
-        List<UserAnswer> answers = quizDAO.getAnswersBySession(sessionId);
-        List<RemedialLesson> lessons = quizDAO.getRemedialLessonsBySession(sessionId);
-
-        Map<String, Object> details = new HashMap<>();
-        details.put("sessionId", sessionId);
-        details.put("session", session);
-        details.put("answers", answers);
-        details.put("remedialLessons", lessons);
-        return details;
+        return buildExistingSubmissionResult(session, userId);
     }
 
     /**
@@ -272,6 +265,7 @@ public class QuizService {
 
         Map<String, Object> response = new HashMap<>();
         response.put("sessionId", sessionId);
+        response.put("session", session);
         response.put("userId", userId);
         response.put("totalQuestions", total);
         response.put("correctCount", correctCount);

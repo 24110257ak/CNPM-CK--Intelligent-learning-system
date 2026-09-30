@@ -387,8 +387,14 @@ async function loadFeed() {
     const emptyEl = document.getElementById('posts-empty');
     const container = document.getElementById('posts-container');
 
-    if (loadingEl) loadingEl.style.display = 'block';
-    if (emptyEl) emptyEl.style.display = 'none';
+    if (loadingEl) {
+        loadingEl.classList.remove('d-none');
+        loadingEl.style.display = 'block';
+    }
+    if (emptyEl) {
+        emptyEl.classList.add('d-none');
+        emptyEl.style.display = 'none';
+    }
     if (container) container.innerHTML = '';
 
     try {
@@ -396,16 +402,25 @@ async function loadFeed() {
         const posts = res.data || [];
         cachedFeedPosts = posts;
 
-        if (loadingEl) loadingEl.style.display = 'none';
+        if (loadingEl) {
+            loadingEl.classList.add('d-none');
+            loadingEl.style.setProperty('display', 'none', 'important');
+        }
 
         if (posts.length === 0) {
-            if (emptyEl) emptyEl.style.display = 'block';
+            if (emptyEl) {
+                emptyEl.classList.remove('d-none');
+                emptyEl.style.display = 'block';
+            }
             return;
         }
 
         container.innerHTML = posts.map(renderPostCard).join('');
     } catch (err) {
-        if (loadingEl) loadingEl.style.display = 'none';
+        if (loadingEl) {
+            loadingEl.classList.add('d-none');
+            loadingEl.style.setProperty('display', 'none', 'important');
+        }
         if (container) {
             container.innerHTML = `
                 <div class="alert alert-danger py-3 px-4 rounded-4 small">

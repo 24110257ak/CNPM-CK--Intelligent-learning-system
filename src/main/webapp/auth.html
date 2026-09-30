@@ -11,7 +11,7 @@
     <!-- SweetAlert2 -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="css/app.css">
+    <link rel="stylesheet" href="css/app.css?v=2.2">
     <style>
         .toggle-password-btn {
             border-color: #dee2e6;
@@ -28,6 +28,30 @@
         .toggle-password-btn:focus {
             box-shadow: none;
             outline: none;
+        }
+
+        /* Hardware-accelerated button spinner */
+        .lms-spinner-btn {
+            display: inline-block;
+            width: 1.05rem;
+            height: 1.05rem;
+            vertical-align: -0.15em;
+            border: 2px solid rgba(255, 255, 255, 0.35);
+            border-top-color: #ffffff !important;
+            border-right-color: #ffffff !important;
+            border-radius: 50%;
+            -webkit-animation: lmsSpin 0.65s linear infinite !important;
+            animation: lmsSpin 0.65s linear infinite !important;
+        }
+
+        @-webkit-keyframes lmsSpin {
+            0% { -webkit-transform: rotate(0deg); }
+            100% { -webkit-transform: rotate(360deg); }
+        }
+
+        @keyframes lmsSpin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
     </style>
 </head>
@@ -191,7 +215,7 @@
             e.preventDefault();
             const btn = document.getElementById('login-submit-btn');
             btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i>Đang kiểm tra...';
+            btn.innerHTML = '<span class="lms-spinner-btn me-2"></span>Đang kiểm tra...';
 
             const username = document.getElementById('login-username').value.trim();
             const password = document.getElementById('login-password').value;
@@ -223,7 +247,7 @@
             e.preventDefault();
             const btn = document.getElementById('reg-submit-btn');
             btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i>Đang tạo tài khoản...';
+            btn.innerHTML = '<span class="lms-spinner-btn me-2"></span>Đang tạo tài khoản...';
 
             const username = document.getElementById('reg-username').value.trim();
             const fullName = document.getElementById('reg-fullname').value.trim();

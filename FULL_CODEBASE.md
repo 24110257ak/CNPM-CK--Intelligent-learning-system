@@ -1,6 +1,6 @@
 ﻿# TOAN BO MA NGUON DU AN - HE THONG HOC TAP THONG MINH (INTELLIGENT LMS)
 
-> **Thoi gian tao file:** 2026-09-30 21:38:39
+> **Thoi gian tao file:** 2026-09-30 22:00:42
 > **Tong so file:** 58
 > **Muc dich:** Gom toan bo source code thanh 1 file duy nhat de gui cho ben thu ba xem xet, danh gia va gop y.
 
@@ -8039,22 +8039,48 @@ body {
     background: #e2e8f0;
 }
 
-/* ── Modern Dual-Tone Spinner & Typing Dots ── */
+/* ── Modern Dual-Tone Spinner, Button Spinner & Typing Dots ── */
 .lms-spinner {
-    width: 38px;
-    height: 38px;
-    border: 3.5px solid rgba(67, 97, 238, 0.15);
+    width: 32px;
+    height: 32px;
+    border: 3px solid rgba(67, 97, 238, 0.18);
     border-top-color: #4361ee;
     border-right-color: #7209b7;
     border-radius: 50%;
-    animation: orbSpin 0.75s linear infinite;
+    -webkit-animation: lmsSpin 0.75s linear infinite !important;
+    animation: lmsSpin 0.75s linear infinite !important;
     display: inline-block;
+    vertical-align: middle;
 }
 
 .lms-spinner-sm {
-    width: 20px;
-    height: 20px;
+    width: 18px;
+    height: 18px;
     border-width: 2.5px;
+}
+
+/* Button Spinner - Dành riêng cho các nút bấm xác thực, nộp bài */
+.lms-spinner-btn {
+    display: inline-block;
+    width: 1rem;
+    height: 1rem;
+    vertical-align: -0.15em;
+    border: 2.2px solid rgba(255, 255, 255, 0.35);
+    border-top-color: #ffffff !important;
+    border-right-color: #ffffff !important;
+    border-radius: 50%;
+    -webkit-animation: lmsSpin 0.7s linear infinite !important;
+    animation: lmsSpin 0.7s linear infinite !important;
+}
+
+@-webkit-keyframes lmsSpin {
+    0% { -webkit-transform: rotate(0deg); }
+    100% { -webkit-transform: rotate(360deg); }
+}
+
+@keyframes lmsSpin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
 
 .typing-dots {
@@ -8997,8 +9023,14 @@ async function loadFeed() {
     const emptyEl = document.getElementById('posts-empty');
     const container = document.getElementById('posts-container');
 
-    if (loadingEl) loadingEl.style.display = 'block';
-    if (emptyEl) emptyEl.style.display = 'none';
+    if (loadingEl) {
+        loadingEl.classList.remove('d-none');
+        loadingEl.style.display = 'block';
+    }
+    if (emptyEl) {
+        emptyEl.classList.add('d-none');
+        emptyEl.style.display = 'none';
+    }
     if (container) container.innerHTML = '';
 
     try {
@@ -9006,16 +9038,25 @@ async function loadFeed() {
         const posts = res.data || [];
         cachedFeedPosts = posts;
 
-        if (loadingEl) loadingEl.style.display = 'none';
+        if (loadingEl) {
+            loadingEl.classList.add('d-none');
+            loadingEl.style.setProperty('display', 'none', 'important');
+        }
 
         if (posts.length === 0) {
-            if (emptyEl) emptyEl.style.display = 'block';
+            if (emptyEl) {
+                emptyEl.classList.remove('d-none');
+                emptyEl.style.display = 'block';
+            }
             return;
         }
 
         container.innerHTML = posts.map(renderPostCard).join('');
     } catch (err) {
-        if (loadingEl) loadingEl.style.display = 'none';
+        if (loadingEl) {
+            loadingEl.classList.add('d-none');
+            loadingEl.style.setProperty('display', 'none', 'important');
+        }
         if (container) {
             container.innerHTML = `
                 <div class="alert alert-danger py-3 px-4 rounded-4 small">
@@ -12647,7 +12688,7 @@ const AppUI = (() => {
     <!-- SweetAlert2 -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="css/app.css">
+    <link rel="stylesheet" href="css/app.css?v=2.2">
     <style>
         .toggle-password-btn {
             border-color: #dee2e6;
@@ -12664,6 +12705,30 @@ const AppUI = (() => {
         .toggle-password-btn:focus {
             box-shadow: none;
             outline: none;
+        }
+
+        /* Hardware-accelerated button spinner */
+        .lms-spinner-btn {
+            display: inline-block;
+            width: 1.05rem;
+            height: 1.05rem;
+            vertical-align: -0.15em;
+            border: 2px solid rgba(255, 255, 255, 0.35);
+            border-top-color: #ffffff !important;
+            border-right-color: #ffffff !important;
+            border-radius: 50%;
+            -webkit-animation: lmsSpin 0.65s linear infinite !important;
+            animation: lmsSpin 0.65s linear infinite !important;
+        }
+
+        @-webkit-keyframes lmsSpin {
+            0% { -webkit-transform: rotate(0deg); }
+            100% { -webkit-transform: rotate(360deg); }
+        }
+
+        @keyframes lmsSpin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
     </style>
 </head>
@@ -12827,7 +12892,7 @@ const AppUI = (() => {
             e.preventDefault();
             const btn = document.getElementById('login-submit-btn');
             btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i>Đang kiểm tra...';
+            btn.innerHTML = '<span class="lms-spinner-btn me-2"></span>Đang kiểm tra...';
 
             const username = document.getElementById('login-username').value.trim();
             const password = document.getElementById('login-password').value;
@@ -12859,7 +12924,7 @@ const AppUI = (() => {
             e.preventDefault();
             const btn = document.getElementById('reg-submit-btn');
             btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i>Đang tạo tài khoản...';
+            btn.innerHTML = '<span class="lms-spinner-btn me-2"></span>Đang tạo tài khoản...';
 
             const username = document.getElementById('reg-username').value.trim();
             const fullName = document.getElementById('reg-fullname').value.trim();
@@ -12936,7 +13001,7 @@ const AppUI = (() => {
     <!-- SweetAlert2 -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="css/app.css">
+    <link rel="stylesheet" href="css/app.css?v=2.2">
     <style>
         /* Discord / Facebook Inspired Community Styling */
         .channel-btn {
@@ -13205,13 +13270,13 @@ const AppUI = (() => {
                 </div>
 
                 <!-- Dynamic Posts Loading (Facebook Style Skeleton Shimmer) -->
-                <div id="posts-loading" class="d-flex flex-column gap-3 mb-3">
-                    <div class="d-flex align-items-center justify-content-center gap-2 py-2 text-muted small">
+                <div id="posts-loading" class="mb-3">
+                    <div class="d-flex align-items-center justify-content-center gap-2 py-2 mb-2 text-muted small">
                         <div class="lms-spinner lms-spinner-sm"></div>
                         <span class="fw-semibold">Đang cập nhật dòng thời gian thảo luận...</span>
                     </div>
                     <!-- Skeleton Post Card 1 -->
-                    <div class="skeleton-card shadow-sm rounded-4 p-4 bg-white">
+                    <div class="skeleton-card shadow-sm rounded-4 p-4 bg-white mb-3">
                         <div class="d-flex align-items-center gap-3 mb-3">
                             <div class="skeleton-shimmer skeleton-avatar"></div>
                             <div class="flex-grow-1">

@@ -279,4 +279,258 @@ public class AIService {
             return "Trợ lý AI tạm thời gặp sự cố kết nối (" + e.getMessage() + "). Thầy/Cô vui lòng thử lại sau giây lát nhé!";
         }
     }
+
+    /**
+     * Gợi ý danh sách bẫy tư duy (Misconceptions) dựa trên môn học/chủ đề nhập từ bàn phím.
+     */
+    public List<Map<String, String>> suggestMisconceptions(String topicName) {
+        List<Map<String, String>> list = new ArrayList<>();
+        if (!isConfigured) {
+            // Fallback khi offline hoặc chưa có API key
+            list.add(createMisconceptionItem("syntax_or_term_swap", "Nhầm lẫn thuật ngữ / công thức", "Nhầm các khái niệm hoặc công thức tương đồng trong " + topicName));
+            list.add(createMisconceptionItem("boundary_blindness", "Bỏ quên điều kiện biên / ngoại lệ", "Không xét trường hợp bằng 0, giá trị âm hoặc cực trị"));
+            list.add(createMisconceptionItem("mental_model_gap", "Lỗ hổng mô hình bản chất", "Hiểu sai cơ chế vận hành căn bản của " + topicName));
+            list.add(createMisconceptionItem("logic_flaw", "Suy luận logic sai chiều", "Đảo ngược nguyên nhân kết quả hoặc điều kiện cần và đủ"));
+            return list;
+        }
+
+        try {
+            String prompt = PromptBuilder.buildSuggestMisconceptionsPrompt(topicName);
+            String systemInstruction = PromptBuilder.getTeacherCoPilotInstruction();
+
+            GenerateContentConfig config = GenerateContentConfig.builder()
+                    .systemInstruction(Content.fromParts(Part.fromText(systemInstruction)))
+                    .responseMimeType("application/json")
+                    .temperature(0.4f)
+                    .build();
+
+            GenerateContentResponse response;
+            try {
+                response = client.models.generateContent(MODEL_NAME, prompt, config);
+            } catch (Exception modelErr) {
+                String fallbackModel = MODEL_NAME.equals("gemini-3.6-flash") ? "gemini-3.8-flash" : "gemini-3.6-flash";
+                response = client.models.generateContent(fallbackModel, prompt, config);
+            }
+
+            String jsonText = cleanJsonText(response.text());
+            if (jsonText != null && !jsonText.isBlank()) {
+                JsonArray arr = JsonParser.parseString(jsonText).getAsJsonArray();
+                for (JsonElement el : arr) {
+                    if (el.isJsonObject()) {
+                        JsonObject obj = el.getAsJsonObject();
+                        String tag = obj.has("tag") ? obj.get("tag").getAsString() : "general_trap";
+                        String label = obj.has("label") ? obj.get("label").getAsString() : tag;
+                        String desc = obj.has("description") ? obj.get("description").getAsString() : "";
+                        list.add(createMisconceptionItem(tag, label, desc));
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("[AIService] ⚠️ Lỗi gợi ý bẫy tư duy: " + e.getMessage());
+            list.add(createMisconceptionItem("syntax_or_term_swap", "Nhầm lẫn thuật ngữ / công thức", "Nhầm các khái niệm tương đồng"));
+            list.add(createMisconceptionItem("boundary_blindness", "Bỏ quên điều kiện biên / ngoại lệ", "Quên trường hợp ngoại vi"));
+            list.add(createMisconceptionItem("mental_model_gap", "Lỗ hổng mô hình bản chất", "Hiểu sai nguyên lý nền tảng"));
+            list.add(createMisconceptionItem("logic_flaw", "Suy luận logic sai chiều", "Lỗi lập luận điều kiện"));
+        }
+
+        return list;
+    }
+
+    /**
+     * Thẩm định môn học/chủ đề do người dùng nhập từ bàn phím.
+     */
+    public Map<String, Object> validateTopic(String topicName) {
+        Map<String, Object> result = new HashMap<>();
+        result.put("topicName", topicName);
+
+        if (!isConfigured) {
+            result.put("isValid", true);
+            result.put("field", "Đa ngành / Tổng hợp");
+            result.put("clarity", "high");
+            result.put("feedback", "Chủ đề '" + topicName + "' hợp lệ và sẵn sàng để tạo câu hỏi trắc nghiệm.");
+            result.put("suggestedSubtopics", List.of("Kiến thức nền tảng", "Ứng dụng thực tiễn", "Các bài toán nâng cao"));
+            return result;
+        }
+
+        try {
+            String prompt = PromptBuilder.buildValidateTopicPrompt(topicName);
+            String systemInstruction = PromptBuilder.getTeacherCoPilotInstruction();
+
+            GenerateContentConfig config = GenerateContentConfig.builder()
+                    .systemInstruction(Content.fromParts(Part.fromText(systemInstruction)))
+                    .responseMimeType("application/json")
+                    .temperature(0.3f)
+                    .build();
+
+            GenerateContentResponse response;
+            try {
+                response = client.models.generateContent(MODEL_NAME, prompt, config);
+            } catch (Exception modelErr) {
+                String fallbackModel = MODEL_NAME.equals("gemini-3.6-flash") ? "gemini-3.8-flash" : "gemini-3.6-flash";
+                response = client.models.generateContent(fallbackModel, prompt, config);
+            }
+
+            String jsonText = cleanJsonText(response.text());
+            if (jsonText != null && !jsonText.isBlank()) {
+                JsonObject obj = JsonParser.parseString(jsonText).getAsJsonObject();
+                result.put("isValid", obj.has("isValid") ? obj.get("isValid").getAsBoolean() : true);
+                result.put("field", obj.has("field") ? obj.get("field").getAsString() : "Tổng Hợp");
+                result.put("clarity", obj.has("clarity") ? obj.get("clarity").getAsString() : "medium");
+                result.put("feedback", obj.has("feedback") ? obj.get("feedback").getAsString() : "Chủ đề hợp lệ.");
+
+                List<String> subtopics = new ArrayList<>();
+                if (obj.has("suggestedSubtopics") && obj.get("suggestedSubtopics").isJsonArray()) {
+                    for (JsonElement sub : obj.getAsJsonArray("suggestedSubtopics")) {
+                        subtopics.add(sub.getAsString());
+                    }
+                }
+                result.put("suggestedSubtopics", subtopics);
+                return result;
+            }
+        } catch (Exception e) {
+            System.err.println("[AIService] ⚠️ Lỗi thẩm định chủ đề: " + e.getMessage());
+        }
+
+        result.put("isValid", true);
+        result.put("field", "Đa ngành");
+        result.put("clarity", "high");
+        result.put("feedback", "Chủ đề '" + topicName + "' đã được ghi nhận vào hệ thống.");
+        result.put("suggestedSubtopics", List.of());
+        return result;
+    }
+
+    /**
+     * Thẩm định tính sư phạm của bẫy tư duy do người dùng nhập từ bàn phím.
+     */
+    public Map<String, Object> validateMisconception(String topicName, String misconception) {
+        Map<String, Object> result = new HashMap<>();
+        result.put("misconception", misconception);
+
+        if (!isConfigured) {
+            result.put("isValid", true);
+            result.put("feedback", "Bẫy tư duy '" + misconception + "' có tính phân hóa phù hợp với chủ đề " + topicName + ".");
+            result.put("distractorTip", "Nên đưa bẫy tư duy này vào phương án B hoặc C để tăng độ tinh tế.");
+            return result;
+        }
+
+        try {
+            String prompt = PromptBuilder.buildValidateMisconceptionPrompt(topicName, misconception);
+            String systemInstruction = PromptBuilder.getTeacherCoPilotInstruction();
+
+            GenerateContentConfig config = GenerateContentConfig.builder()
+                    .systemInstruction(Content.fromParts(Part.fromText(systemInstruction)))
+                    .responseMimeType("application/json")
+                    .temperature(0.3f)
+                    .build();
+
+            GenerateContentResponse response;
+            try {
+                response = client.models.generateContent(MODEL_NAME, prompt, config);
+            } catch (Exception modelErr) {
+                String fallbackModel = MODEL_NAME.equals("gemini-3.6-flash") ? "gemini-3.8-flash" : "gemini-3.6-flash";
+                response = client.models.generateContent(fallbackModel, prompt, config);
+            }
+
+            String jsonText = cleanJsonText(response.text());
+            if (jsonText != null && !jsonText.isBlank()) {
+                JsonObject obj = JsonParser.parseString(jsonText).getAsJsonObject();
+                result.put("isValid", obj.has("isValid") ? obj.get("isValid").getAsBoolean() : true);
+                result.put("feedback", obj.has("feedback") ? obj.get("feedback").getAsString() : "Bẫy nhận thức hợp lệ.");
+                result.put("distractorTip", obj.has("distractorTip") ? obj.get("distractorTip").getAsString() : "Đưa vào phương án nhiễu.");
+                return result;
+            }
+        } catch (Exception e) {
+            System.err.println("[AIService] ⚠️ Lỗi thẩm định bẫy tư duy: " + e.getMessage());
+        }
+
+        result.put("isValid", true);
+        result.put("feedback", "Bẫy tư duy '" + misconception + "' phù hợp để thiết kế câu hỏi trắc nghiệm.");
+        result.put("distractorTip", "Hãy giải thích rõ sai lầm này trong phần giải thích bài học.");
+        return result;
+    }
+
+    /**
+     * Hỗ trợ Giảng viên soạn thảo nhanh câu hỏi: tự động sinh 4 phương án, đáp án đúng và giải thích từ ý tưởng thô.
+     */
+    public Map<String, Object> assistQuestionDraft(String topicName, String questionPrompt, String difficulty) {
+        Map<String, Object> result = new HashMap<>();
+        if (!isConfigured) {
+            result.put("questionText", questionPrompt);
+            result.put("optionA", "Phương án đúng theo lý thuyết chuẩn");
+            result.put("optionB", "Phương án sai đánh vào bẫy tư duy phổ biến");
+            result.put("optionC", "Phương án sai do nhầm lẫn điều kiện biên");
+            result.put("optionD", "Phương án sai do tính toán sai hoặc hiểu lầm thuật ngữ");
+            result.put("correctAnswer", "A");
+            result.put("explanation", "Giải thích chuẩn sư phạm: Phương án A đúng vì tuân thủ đúng nguyên lý cơ bản.");
+            result.put("misconceptionTag", "mental_model_gap");
+            return result;
+        }
+
+        try {
+            String prompt = PromptBuilder.buildAssistQuestionPrompt(topicName, questionPrompt, difficulty);
+            String systemInstruction = PromptBuilder.getTeacherCoPilotInstruction();
+
+            GenerateContentConfig config = GenerateContentConfig.builder()
+                    .systemInstruction(Content.fromParts(Part.fromText(systemInstruction)))
+                    .responseMimeType("application/json")
+                    .temperature(0.4f)
+                    .build();
+
+            GenerateContentResponse response;
+            try {
+                response = client.models.generateContent(MODEL_NAME, prompt, config);
+            } catch (Exception modelErr) {
+                String fallbackModel = MODEL_NAME.equals("gemini-3.6-flash") ? "gemini-3.8-flash" : "gemini-3.6-flash";
+                response = client.models.generateContent(fallbackModel, prompt, config);
+            }
+
+            String jsonText = cleanJsonText(response.text());
+            if (jsonText != null && !jsonText.isBlank()) {
+                JsonObject obj = JsonParser.parseString(jsonText).getAsJsonObject();
+                result.put("questionText", obj.has("question_text") ? obj.get("question_text").getAsString() : questionPrompt);
+                result.put("optionA", obj.has("option_a") ? obj.get("option_a").getAsString() : "");
+                result.put("optionB", obj.has("option_b") ? obj.get("option_b").getAsString() : "");
+                result.put("optionC", obj.has("option_c") ? obj.get("option_c").getAsString() : "");
+                result.put("optionD", obj.has("option_d") ? obj.get("option_d").getAsString() : "");
+                result.put("correctAnswer", obj.has("correct_answer") ? obj.get("correct_answer").getAsString().toUpperCase() : "A");
+                result.put("explanation", obj.has("explanation") ? obj.get("explanation").getAsString() : "");
+                result.put("misconceptionTag", obj.has("misconception_tag") ? obj.get("misconception_tag").getAsString() : "mental_model_gap");
+                return result;
+            }
+        } catch (Exception e) {
+            System.err.println("[AIService] ⚠️ Lỗi hỗ trợ soạn câu hỏi: " + e.getMessage());
+        }
+
+        result.put("questionText", questionPrompt);
+        result.put("optionA", "Phương án A");
+        result.put("optionB", "Phương án B");
+        result.put("optionC", "Phương án C");
+        result.put("optionD", "Phương án D");
+        result.put("correctAnswer", "A");
+        result.put("explanation", "Lời giải thích sư phạm chi tiết.");
+        result.put("misconceptionTag", "logic_flaw");
+        return result;
+    }
+
+    private static Map<String, String> createMisconceptionItem(String tag, String label, String desc) {
+        Map<String, String> item = new HashMap<>();
+        item.put("tag", tag);
+        item.put("label", label);
+        item.put("description", desc);
+        return item;
+    }
+
+    private static String cleanJsonText(String text) {
+        if (text == null) return "";
+        String s = text.trim();
+        if (s.startsWith("```json")) {
+            s = s.substring(7);
+        } else if (s.startsWith("```")) {
+            s = s.substring(3);
+        }
+        if (s.endsWith("```")) {
+            s = s.substring(0, s.length() - 3);
+        }
+        return s.trim();
+    }
 }

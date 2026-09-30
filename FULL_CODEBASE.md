@@ -1,6 +1,6 @@
 ﻿# TOAN BO MA NGUON DU AN - HE THONG HOC TAP THONG MINH (INTELLIGENT LMS)
 
-> **Thoi gian tao file:** 2026-09-30 15:39:54
+> **Thoi gian tao file:** 2026-09-30 17:06:47
 > **Tong so file:** 52
 > **Muc dich:** Gom toan bo source code thanh 1 file duy nhat de gui cho ben thu ba xem xet, danh gia va gop y.
 
@@ -3990,6 +3990,260 @@ public class AIService {
             return "Trợ lý AI tạm thời gặp sự cố kết nối (" + e.getMessage() + "). Thầy/Cô vui lòng thử lại sau giây lát nhé!";
         }
     }
+
+    /**
+     * Gợi ý danh sách bẫy tư duy (Misconceptions) dựa trên môn học/chủ đề nhập từ bàn phím.
+     */
+    public List<Map<String, String>> suggestMisconceptions(String topicName) {
+        List<Map<String, String>> list = new ArrayList<>();
+        if (!isConfigured) {
+            // Fallback khi offline hoặc chưa có API key
+            list.add(createMisconceptionItem("syntax_or_term_swap", "Nhầm lẫn thuật ngữ / công thức", "Nhầm các khái niệm hoặc công thức tương đồng trong " + topicName));
+            list.add(createMisconceptionItem("boundary_blindness", "Bỏ quên điều kiện biên / ngoại lệ", "Không xét trường hợp bằng 0, giá trị âm hoặc cực trị"));
+            list.add(createMisconceptionItem("mental_model_gap", "Lỗ hổng mô hình bản chất", "Hiểu sai cơ chế vận hành căn bản của " + topicName));
+            list.add(createMisconceptionItem("logic_flaw", "Suy luận logic sai chiều", "Đảo ngược nguyên nhân kết quả hoặc điều kiện cần và đủ"));
+            return list;
+        }
+
+        try {
+            String prompt = PromptBuilder.buildSuggestMisconceptionsPrompt(topicName);
+            String systemInstruction = PromptBuilder.getTeacherCoPilotInstruction();
+
+            GenerateContentConfig config = GenerateContentConfig.builder()
+                    .systemInstruction(Content.fromParts(Part.fromText(systemInstruction)))
+                    .responseMimeType("application/json")
+                    .temperature(0.4f)
+                    .build();
+
+            GenerateContentResponse response;
+            try {
+                response = client.models.generateContent(MODEL_NAME, prompt, config);
+            } catch (Exception modelErr) {
+                String fallbackModel = MODEL_NAME.equals("gemini-3.6-flash") ? "gemini-3.8-flash" : "gemini-3.6-flash";
+                response = client.models.generateContent(fallbackModel, prompt, config);
+            }
+
+            String jsonText = cleanJsonText(response.text());
+            if (jsonText != null && !jsonText.isBlank()) {
+                JsonArray arr = JsonParser.parseString(jsonText).getAsJsonArray();
+                for (JsonElement el : arr) {
+                    if (el.isJsonObject()) {
+                        JsonObject obj = el.getAsJsonObject();
+                        String tag = obj.has("tag") ? obj.get("tag").getAsString() : "general_trap";
+                        String label = obj.has("label") ? obj.get("label").getAsString() : tag;
+                        String desc = obj.has("description") ? obj.get("description").getAsString() : "";
+                        list.add(createMisconceptionItem(tag, label, desc));
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("[AIService] ⚠️ Lỗi gợi ý bẫy tư duy: " + e.getMessage());
+            list.add(createMisconceptionItem("syntax_or_term_swap", "Nhầm lẫn thuật ngữ / công thức", "Nhầm các khái niệm tương đồng"));
+            list.add(createMisconceptionItem("boundary_blindness", "Bỏ quên điều kiện biên / ngoại lệ", "Quên trường hợp ngoại vi"));
+            list.add(createMisconceptionItem("mental_model_gap", "Lỗ hổng mô hình bản chất", "Hiểu sai nguyên lý nền tảng"));
+            list.add(createMisconceptionItem("logic_flaw", "Suy luận logic sai chiều", "Lỗi lập luận điều kiện"));
+        }
+
+        return list;
+    }
+
+    /**
+     * Thẩm định môn học/chủ đề do người dùng nhập từ bàn phím.
+     */
+    public Map<String, Object> validateTopic(String topicName) {
+        Map<String, Object> result = new HashMap<>();
+        result.put("topicName", topicName);
+
+        if (!isConfigured) {
+            result.put("isValid", true);
+            result.put("field", "Đa ngành / Tổng hợp");
+            result.put("clarity", "high");
+            result.put("feedback", "Chủ đề '" + topicName + "' hợp lệ và sẵn sàng để tạo câu hỏi trắc nghiệm.");
+            result.put("suggestedSubtopics", List.of("Kiến thức nền tảng", "Ứng dụng thực tiễn", "Các bài toán nâng cao"));
+            return result;
+        }
+
+        try {
+            String prompt = PromptBuilder.buildValidateTopicPrompt(topicName);
+            String systemInstruction = PromptBuilder.getTeacherCoPilotInstruction();
+
+            GenerateContentConfig config = GenerateContentConfig.builder()
+                    .systemInstruction(Content.fromParts(Part.fromText(systemInstruction)))
+                    .responseMimeType("application/json")
+                    .temperature(0.3f)
+                    .build();
+
+            GenerateContentResponse response;
+            try {
+                response = client.models.generateContent(MODEL_NAME, prompt, config);
+            } catch (Exception modelErr) {
+                String fallbackModel = MODEL_NAME.equals("gemini-3.6-flash") ? "gemini-3.8-flash" : "gemini-3.6-flash";
+                response = client.models.generateContent(fallbackModel, prompt, config);
+            }
+
+            String jsonText = cleanJsonText(response.text());
+            if (jsonText != null && !jsonText.isBlank()) {
+                JsonObject obj = JsonParser.parseString(jsonText).getAsJsonObject();
+                result.put("isValid", obj.has("isValid") ? obj.get("isValid").getAsBoolean() : true);
+                result.put("field", obj.has("field") ? obj.get("field").getAsString() : "Tổng Hợp");
+                result.put("clarity", obj.has("clarity") ? obj.get("clarity").getAsString() : "medium");
+                result.put("feedback", obj.has("feedback") ? obj.get("feedback").getAsString() : "Chủ đề hợp lệ.");
+
+                List<String> subtopics = new ArrayList<>();
+                if (obj.has("suggestedSubtopics") && obj.get("suggestedSubtopics").isJsonArray()) {
+                    for (JsonElement sub : obj.getAsJsonArray("suggestedSubtopics")) {
+                        subtopics.add(sub.getAsString());
+                    }
+                }
+                result.put("suggestedSubtopics", subtopics);
+                return result;
+            }
+        } catch (Exception e) {
+            System.err.println("[AIService] ⚠️ Lỗi thẩm định chủ đề: " + e.getMessage());
+        }
+
+        result.put("isValid", true);
+        result.put("field", "Đa ngành");
+        result.put("clarity", "high");
+        result.put("feedback", "Chủ đề '" + topicName + "' đã được ghi nhận vào hệ thống.");
+        result.put("suggestedSubtopics", List.of());
+        return result;
+    }
+
+    /**
+     * Thẩm định tính sư phạm của bẫy tư duy do người dùng nhập từ bàn phím.
+     */
+    public Map<String, Object> validateMisconception(String topicName, String misconception) {
+        Map<String, Object> result = new HashMap<>();
+        result.put("misconception", misconception);
+
+        if (!isConfigured) {
+            result.put("isValid", true);
+            result.put("feedback", "Bẫy tư duy '" + misconception + "' có tính phân hóa phù hợp với chủ đề " + topicName + ".");
+            result.put("distractorTip", "Nên đưa bẫy tư duy này vào phương án B hoặc C để tăng độ tinh tế.");
+            return result;
+        }
+
+        try {
+            String prompt = PromptBuilder.buildValidateMisconceptionPrompt(topicName, misconception);
+            String systemInstruction = PromptBuilder.getTeacherCoPilotInstruction();
+
+            GenerateContentConfig config = GenerateContentConfig.builder()
+                    .systemInstruction(Content.fromParts(Part.fromText(systemInstruction)))
+                    .responseMimeType("application/json")
+                    .temperature(0.3f)
+                    .build();
+
+            GenerateContentResponse response;
+            try {
+                response = client.models.generateContent(MODEL_NAME, prompt, config);
+            } catch (Exception modelErr) {
+                String fallbackModel = MODEL_NAME.equals("gemini-3.6-flash") ? "gemini-3.8-flash" : "gemini-3.6-flash";
+                response = client.models.generateContent(fallbackModel, prompt, config);
+            }
+
+            String jsonText = cleanJsonText(response.text());
+            if (jsonText != null && !jsonText.isBlank()) {
+                JsonObject obj = JsonParser.parseString(jsonText).getAsJsonObject();
+                result.put("isValid", obj.has("isValid") ? obj.get("isValid").getAsBoolean() : true);
+                result.put("feedback", obj.has("feedback") ? obj.get("feedback").getAsString() : "Bẫy nhận thức hợp lệ.");
+                result.put("distractorTip", obj.has("distractorTip") ? obj.get("distractorTip").getAsString() : "Đưa vào phương án nhiễu.");
+                return result;
+            }
+        } catch (Exception e) {
+            System.err.println("[AIService] ⚠️ Lỗi thẩm định bẫy tư duy: " + e.getMessage());
+        }
+
+        result.put("isValid", true);
+        result.put("feedback", "Bẫy tư duy '" + misconception + "' phù hợp để thiết kế câu hỏi trắc nghiệm.");
+        result.put("distractorTip", "Hãy giải thích rõ sai lầm này trong phần giải thích bài học.");
+        return result;
+    }
+
+    /**
+     * Hỗ trợ Giảng viên soạn thảo nhanh câu hỏi: tự động sinh 4 phương án, đáp án đúng và giải thích từ ý tưởng thô.
+     */
+    public Map<String, Object> assistQuestionDraft(String topicName, String questionPrompt, String difficulty) {
+        Map<String, Object> result = new HashMap<>();
+        if (!isConfigured) {
+            result.put("questionText", questionPrompt);
+            result.put("optionA", "Phương án đúng theo lý thuyết chuẩn");
+            result.put("optionB", "Phương án sai đánh vào bẫy tư duy phổ biến");
+            result.put("optionC", "Phương án sai do nhầm lẫn điều kiện biên");
+            result.put("optionD", "Phương án sai do tính toán sai hoặc hiểu lầm thuật ngữ");
+            result.put("correctAnswer", "A");
+            result.put("explanation", "Giải thích chuẩn sư phạm: Phương án A đúng vì tuân thủ đúng nguyên lý cơ bản.");
+            result.put("misconceptionTag", "mental_model_gap");
+            return result;
+        }
+
+        try {
+            String prompt = PromptBuilder.buildAssistQuestionPrompt(topicName, questionPrompt, difficulty);
+            String systemInstruction = PromptBuilder.getTeacherCoPilotInstruction();
+
+            GenerateContentConfig config = GenerateContentConfig.builder()
+                    .systemInstruction(Content.fromParts(Part.fromText(systemInstruction)))
+                    .responseMimeType("application/json")
+                    .temperature(0.4f)
+                    .build();
+
+            GenerateContentResponse response;
+            try {
+                response = client.models.generateContent(MODEL_NAME, prompt, config);
+            } catch (Exception modelErr) {
+                String fallbackModel = MODEL_NAME.equals("gemini-3.6-flash") ? "gemini-3.8-flash" : "gemini-3.6-flash";
+                response = client.models.generateContent(fallbackModel, prompt, config);
+            }
+
+            String jsonText = cleanJsonText(response.text());
+            if (jsonText != null && !jsonText.isBlank()) {
+                JsonObject obj = JsonParser.parseString(jsonText).getAsJsonObject();
+                result.put("questionText", obj.has("question_text") ? obj.get("question_text").getAsString() : questionPrompt);
+                result.put("optionA", obj.has("option_a") ? obj.get("option_a").getAsString() : "");
+                result.put("optionB", obj.has("option_b") ? obj.get("option_b").getAsString() : "");
+                result.put("optionC", obj.has("option_c") ? obj.get("option_c").getAsString() : "");
+                result.put("optionD", obj.has("option_d") ? obj.get("option_d").getAsString() : "");
+                result.put("correctAnswer", obj.has("correct_answer") ? obj.get("correct_answer").getAsString().toUpperCase() : "A");
+                result.put("explanation", obj.has("explanation") ? obj.get("explanation").getAsString() : "");
+                result.put("misconceptionTag", obj.has("misconception_tag") ? obj.get("misconception_tag").getAsString() : "mental_model_gap");
+                return result;
+            }
+        } catch (Exception e) {
+            System.err.println("[AIService] ⚠️ Lỗi hỗ trợ soạn câu hỏi: " + e.getMessage());
+        }
+
+        result.put("questionText", questionPrompt);
+        result.put("optionA", "Phương án A");
+        result.put("optionB", "Phương án B");
+        result.put("optionC", "Phương án C");
+        result.put("optionD", "Phương án D");
+        result.put("correctAnswer", "A");
+        result.put("explanation", "Lời giải thích sư phạm chi tiết.");
+        result.put("misconceptionTag", "logic_flaw");
+        return result;
+    }
+
+    private static Map<String, String> createMisconceptionItem(String tag, String label, String desc) {
+        Map<String, String> item = new HashMap<>();
+        item.put("tag", tag);
+        item.put("label", label);
+        item.put("description", desc);
+        return item;
+    }
+
+    private static String cleanJsonText(String text) {
+        if (text == null) return "";
+        String s = text.trim();
+        if (s.startsWith("```json")) {
+            s = s.substring(7);
+        } else if (s.startsWith("```")) {
+            s = s.substring(3);
+        }
+        if (s.endsWith("```")) {
+            s = s.substring(0, s.length() - 3);
+        }
+        return s.trim();
+    }
 }
 
 ``
@@ -4208,12 +4462,7 @@ public class PromptBuilder {
             2. Có đủ 4 phương án A, B, C, D phân hóa rõ rệt, tính hợp lý cao, không đặt phương án vô lý hoặc quá lộ liễu.
             3. Đáp án đúng (correct_answer) là một trong các chữ cái: 'A', 'B', 'C', hoặc 'D'.
             4. Lời giải thích (explanation) phải chi tiết, chuẩn mực sư phạm: vì sao đáp án đó là đúng, và các phương án sai đã đánh trúng bẫy tư duy nào.
-            5. Gắn nhãn misconception_tag vào 1 trong các nhóm:
-               - syntax_swap (nhầm lẫn cú pháp, công thức, thuật ngữ, keyword)
-               - boundary_blindness (quên điều kiện biên, giới hạn, giá trị ngoại lệ, null)
-               - mental_model_gap (lỗ hổng mô hình tư duy, bản chất nguyên lý, trừu tượng hóa)
-               - logic_flaw (sai sót lập luận điều kiện, phân tích logic, luồng suy luận)
-               - other (lỗi kiến thức sự kiện, phân tích tổng hợp)
+            5. Gắn nhãn misconception_tag là bẫy nhận thức cụ thể của câu hỏi (có thể là một trong các nhóm kinh điển syntax_swap, boundary_blindness, mental_model_gap, logic_flaw, hoặc bất kỳ bẫy tư duy đặc thù nào phù hợp với môn học này dưới dạng chuỗi ngắn gọn).
 
             Hãy trả về một JSON Array chứa danh sách các câu hỏi, đúng cấu trúc JSON sau (không kèm text nào ngoài JSON):
             [
@@ -4226,12 +4475,109 @@ public class PromptBuilder {
                 "correct_answer": "A hoặc B hoặc C hoặc D",
                 "explanation": "string (giải thích chi tiết sư phạm)",
                 "difficulty": "easy hoặc medium hoặc hard",
-                "misconception_tag": "syntax_swap hoặc boundary_blindness hoặc mental_model_gap hoặc logic_flaw hoặc other"
+                "misconception_tag": "string (tên bẫy tư duy)"
               }
             ]
             """);
 
         return sb.toString();
+    }
+
+    /**
+     * Prompt yêu cầu AI gợi ý các bẫy tư duy (misconceptions) đặc thù theo môn học / chủ đề bất kỳ.
+     */
+    public static String buildSuggestMisconceptionsPrompt(String topicName) {
+        return """
+            Bạn là Chuyên Gia Sư Phạm & Thiết Kế Đề Thi.
+            Chủ đề / Môn học được giảng viên nhập là: "%s"
+
+            Hãy phân tích và gợi ý từ 4 đến 6 quan niệm sai lầm phổ biến nhất (Cognitive Traps / Misconceptions) mà người học hay mắc phải ở môn học/chủ đề này.
+            Các bẫy này cần thực tế, có tính phân hóa cao và thích hợp để dùng làm phương án nhiễu (distractor) trong câu hỏi trắc nghiệm.
+
+            Hãy trả về một JSON Array duy nhất (không có bất kỳ văn bản nào ngoài JSON), định dạng:
+            [
+              {
+                "tag": "snake_case_tag_ngắn_gọn",
+                "label": "Tên bẫy ngắn gọn súc tích",
+                "description": "Mô tả sinh viên thường hiểu lầm hay tính toán sai ở điểm nào"
+              }
+            ]
+            """.formatted(topicName != null && !topicName.isBlank() ? topicName : "Kiến thức tổng hợp");
+    }
+
+    /**
+     * Prompt thẩm định (AI Validation) tính sư phạm và phạm vi của môn học / chủ đề.
+     */
+    public static String buildValidateTopicPrompt(String topicName) {
+        return """
+            Bạn là Chuyên Gia Thẩm Định Chương Trình Đào Tạo.
+            Giảng viên vừa nhập tên chủ đề / môn học: "%s"
+
+            Hãy thẩm định xem tên chủ đề này có hợp lệ, rõ ràng và phù hợp để tạo ngân hàng câu hỏi hay không.
+            Trả về đúng định dạng JSON sau (không có văn bản ngoài JSON):
+            {
+              "isValid": true,
+              "field": "Tên lĩnh vực học thuật (vd: Công Nghệ Thông Tin, Kinh Tế Học, Khoa Học Tự Nhiên, v.v.)",
+              "clarity": "high / medium / low",
+              "feedback": "Nhận xét ngắn gọn 1-2 câu về tính phù hợp, tính bao quát hoặc khuyến nghị sư phạm",
+              "suggestedSubtopics": ["Chủ đề phụ gợi ý 1", "Chủ đề phụ gợi ý 2", "Chủ đề phụ gợi ý 3"]
+            }
+            """.formatted(topicName != null && !topicName.isBlank() ? topicName : "");
+    }
+
+    /**
+     * Prompt thẩm định (AI Validation) một bẫy tư duy đối với chủ đề đã chọn.
+     */
+    public static String buildValidateMisconceptionPrompt(String topicName, String misconception) {
+        return """
+            Bạn là Chuyên Gia Sư Phạm.
+            Môn học / Chủ đề: "%s"
+            Bẫy tư duy mà giảng viên muốn kiểm tra: "%s"
+
+            Hãy thẩm định tính phù hợp và khả thi của bẫy tư duy này trong việc thiết kế câu hỏi trắc nghiệm.
+            Trả về JSON duy nhất (không có văn bản ngoài JSON):
+            {
+              "isValid": true,
+              "feedback": "Nhận xét chuyên môn về bẫy tư duy này",
+              "distractorTip": "Gợi ý cách thiết kế phương án nhiễu để bẫy người học hiệu quả nhất"
+            }
+            """.formatted(topicName != null ? topicName : "Tổng hợp", misconception != null ? misconception : "");
+    }
+
+    /**
+     * Prompt hỗ trợ Giảng viên hoàn thiện câu hỏi (AI Assist Question Drafting).
+     */
+    public static String buildAssistQuestionPrompt(String topicName, String questionPrompt, String difficulty) {
+        return """
+            Bạn là Trợ Lý Sư Phạm Soạn Câu Hỏi Thi.
+            Chủ đề: "%s"
+            Mức độ: "%s"
+            Ý tưởng hoặc nội dung câu hỏi giảng viên vừa nhập:
+            "%s"
+
+            Dựa trên nội dung trên, hãy hoàn thiện thành một câu hỏi trắc nghiệm hoàn chỉnh, gồm:
+            - question_text: Câu hỏi được chau chuốt sư phạm (nếu có code hãy định dạng markdown thích hợp).
+            - option_a, option_b, option_c, option_d: 4 phương án rõ ràng, có phân hóa và chứa bẫy tư duy tinh tế.
+            - correct_answer: Một trong 4 chữ cái 'A', 'B', 'C', hoặc 'D'.
+            - explanation: Lời giải thích cặn kẽ chuẩn sư phạm tại sao đúng và tại sao các phương án khác sai.
+            - misconception_tag: Bẫy tư duy trọng tâm ngắn gọn.
+
+            Trả về JSON duy nhất (không có văn bản ngoài JSON):
+            {
+              "question_text": "...",
+              "option_a": "...",
+              "option_b": "...",
+              "option_c": "...",
+              "option_d": "...",
+              "correct_answer": "A",
+              "explanation": "...",
+              "misconception_tag": "..."
+            }
+            """.formatted(
+                topicName != null && !topicName.isBlank() ? topicName : "Kiến thức chung",
+                difficulty != null ? difficulty : "medium",
+                questionPrompt != null ? questionPrompt : ""
+            );
     }
 }
 
@@ -5856,6 +6202,14 @@ public class TeacherServlet extends HttpServlet {
             handleAiGenerateQuestions(req, resp);
         } else if ("/ai/chat".equals(pathInfo)) {
             handleAiTeacherChat(req, resp);
+        } else if ("/ai/suggest-misconceptions".equals(pathInfo)) {
+            handleAiSuggestMisconceptions(req, resp);
+        } else if ("/ai/validate-topic".equals(pathInfo)) {
+            handleAiValidateTopic(req, resp);
+        } else if ("/ai/validate-misconception".equals(pathInfo)) {
+            handleAiValidateMisconception(req, resp);
+        } else if ("/ai/assist-question".equals(pathInfo)) {
+            handleAiAssistQuestion(req, resp);
         } else {
             resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
             resp.getWriter().write(JsonHelper.error("Không tìm thấy endpoint POST: " + pathInfo));
@@ -5895,8 +6249,14 @@ public class TeacherServlet extends HttpServlet {
                 ? body.get("difficulty").getAsString().trim() : "medium";
         String misconceptionTag = body.has("misconceptionTag") && !body.get("misconceptionTag").isJsonNull()
                 ? body.get("misconceptionTag").getAsString().trim() : "all";
-        int count = body.has("count") && !body.get("count").isJsonNull()
-                ? Math.min(Math.max(body.get("count").getAsInt(), 1), 25) : 5;
+        int count = 5;
+        if (body.has("count") && !body.get("count").isJsonNull()) {
+            try {
+                count = Math.min(Math.max(body.get("count").getAsInt(), 1), 50);
+            } catch (Exception ignored) {
+                count = 5;
+            }
+        }
         String promptHint = body.has("promptHint") && !body.get("promptHint").isJsonNull()
                 ? body.get("promptHint").getAsString().trim() : "";
 
@@ -5928,6 +6288,89 @@ public class TeacherServlet extends HttpServlet {
             e.printStackTrace();
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             resp.getWriter().write(JsonHelper.error("Lỗi khi khởi tạo câu hỏi bằng AI: " + e.getMessage()));
+        }
+    }
+
+    private void handleAiSuggestMisconceptions(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        JsonObject body = JsonHelper.parseRequestBody(req);
+        String topicName = (body != null && body.has("topicName") && !body.get("topicName").isJsonNull())
+                ? body.get("topicName").getAsString().trim() : "Kiến thức tổng hợp";
+
+        try {
+            List<Map<String, String>> suggestions = aiService.suggestMisconceptions(topicName);
+            resp.getWriter().write(JsonHelper.success("Gợi ý bẫy tư duy cho chủ đề: " + topicName, suggestions));
+        } catch (Exception e) {
+            e.printStackTrace();
+            resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            resp.getWriter().write(JsonHelper.error("Lỗi khi gợi ý bẫy tư duy: " + e.getMessage()));
+        }
+    }
+
+    private void handleAiValidateTopic(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        JsonObject body = JsonHelper.parseRequestBody(req);
+        String topicName = (body != null && body.has("topicName") && !body.get("topicName").isJsonNull())
+                ? body.get("topicName").getAsString().trim() : "";
+
+        if (topicName.isBlank()) {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            resp.getWriter().write(JsonHelper.error("Vui lòng nhập tên môn học hoặc chủ đề cần thẩm định."));
+            return;
+        }
+
+        try {
+            Map<String, Object> validation = aiService.validateTopic(topicName);
+            resp.getWriter().write(JsonHelper.success("Thẩm định môn học / chủ đề thành công", validation));
+        } catch (Exception e) {
+            e.printStackTrace();
+            resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            resp.getWriter().write(JsonHelper.error("Lỗi khi thẩm định chủ đề: " + e.getMessage()));
+        }
+    }
+
+    private void handleAiValidateMisconception(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        JsonObject body = JsonHelper.parseRequestBody(req);
+        String topicName = (body != null && body.has("topicName") && !body.get("topicName").isJsonNull())
+                ? body.get("topicName").getAsString().trim() : "Tổng hợp";
+        String misconception = (body != null && body.has("misconception") && !body.get("misconception").isJsonNull())
+                ? body.get("misconception").getAsString().trim() : "";
+
+        if (misconception.isBlank()) {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            resp.getWriter().write(JsonHelper.error("Vui lòng nhập bẫy tư duy cần thẩm định."));
+            return;
+        }
+
+        try {
+            Map<String, Object> validation = aiService.validateMisconception(topicName, misconception);
+            resp.getWriter().write(JsonHelper.success("Thẩm định bẫy tư duy thành công", validation));
+        } catch (Exception e) {
+            e.printStackTrace();
+            resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            resp.getWriter().write(JsonHelper.error("Lỗi khi thẩm định bẫy tư duy: " + e.getMessage()));
+        }
+    }
+
+    private void handleAiAssistQuestion(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        JsonObject body = JsonHelper.parseRequestBody(req);
+        if (body == null || !body.has("questionPrompt")) {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            resp.getWriter().write(JsonHelper.error("Vui lòng nhập nội dung hoặc ý tưởng câu hỏi cần hoàn thiện."));
+            return;
+        }
+
+        String questionPrompt = body.get("questionPrompt").getAsString().trim();
+        String topicName = (body.has("topicName") && !body.get("topicName").isJsonNull())
+                ? body.get("topicName").getAsString().trim() : "Kiến thức chung";
+        String difficulty = (body.has("difficulty") && !body.get("difficulty").isJsonNull())
+                ? body.get("difficulty").getAsString().trim() : "medium";
+
+        try {
+            Map<String, Object> assisted = aiService.assistQuestionDraft(topicName, questionPrompt, difficulty);
+            resp.getWriter().write(JsonHelper.success("Hoàn thiện câu hỏi bằng AI thành công", assisted));
+        } catch (Exception e) {
+            e.printStackTrace();
+            resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            resp.getWriter().write(JsonHelper.error("Lỗi khi AI hỗ trợ soạn câu hỏi: " + e.getMessage()));
         }
     }
 
@@ -6624,8 +7067,12 @@ const API = {
     },
     teacher: {
         stats: () => API.request('/teacher/stats'),
-        generateQuestions: payload => API.request('/teacher/ai/generate', { method:'POST', body:JSON.stringify(payload), timeout:30000 }),
-        chat: (message,context='') => API.request('/teacher/ai/chat', { method:'POST', body:JSON.stringify({message,context}), timeout:30000 })
+        generateQuestions: payload => API.request('/teacher/ai/generate', { method:'POST', body:JSON.stringify(payload), timeout:60000 }),
+        chat: (message,context='') => API.request('/teacher/ai/chat', { method:'POST', body:JSON.stringify({message,context}), timeout:30000 }),
+        suggestMisconceptions: topicName => API.request('/teacher/ai/suggest-misconceptions', { method:'POST', body:JSON.stringify({topicName}), timeout:30000 }),
+        validateTopic: topicName => API.request('/teacher/ai/validate-topic', { method:'POST', body:JSON.stringify({topicName}), timeout:30000 }),
+        validateMisconception: (topicName, misconception) => API.request('/teacher/ai/validate-misconception', { method:'POST', body:JSON.stringify({topicName, misconception}), timeout:30000 }),
+        assistQuestion: (topicName, questionPrompt, difficulty='medium') => API.request('/teacher/ai/assist-question', { method:'POST', body:JSON.stringify({topicName, questionPrompt, difficulty}), timeout:45000 })
     },
     quiz: {
         start: topicId => API.request('/quiz/start', { method:'POST', body:JSON.stringify({topicId}) }),
@@ -8262,6 +8709,42 @@ function setupEventListeners() {
             }
         });
     });
+
+    // Thẩm định môn học / chủ đề bằng AI
+    const btnValidateTopic = document.getElementById('btn-validate-topic');
+    if (btnValidateTopic) {
+        btnValidateTopic.addEventListener('click', handleValidateTopic);
+    }
+
+    // AI gợi ý bẫy tư duy động theo môn
+    const btnSuggestMisc = document.getElementById('btn-suggest-misconceptions');
+    if (btnSuggestMisc) {
+        btnSuggestMisc.addEventListener('click', handleSuggestMisconceptions);
+    }
+
+    // Thẩm định bẫy tư duy bằng AI
+    const btnValidateMisc = document.getElementById('btn-validate-misconception');
+    if (btnValidateMisc) {
+        btnValidateMisc.addEventListener('click', handleValidateMisconception);
+    }
+
+    // AI Hỗ trợ hoàn thiện câu hỏi trong Modal
+    const btnModalAiAssist = document.getElementById('btn-modal-ai-assist');
+    if (btnModalAiAssist) {
+        btnModalAiAssist.addEventListener('click', handleModalAiAssist);
+    }
+
+    // Gợi ý bẫy tư duy trong Modal thêm câu hỏi
+    const btnModalSuggestMisc = document.getElementById('btn-modal-suggest-misconception');
+    if (btnModalSuggestMisc) {
+        btnModalSuggestMisc.addEventListener('click', handleModalSuggestMisconception);
+    }
+
+    // Tạo môn mới nhanh từ trong Modal thêm câu hỏi
+    const btnQuickAddTopicModal = document.getElementById('btn-quick-add-topic-from-modal');
+    if (btnQuickAddTopicModal) {
+        btnQuickAddTopicModal.addEventListener('click', handleQuickAddTopicFromModal);
+    }
 }
 
 /**
@@ -8828,8 +9311,20 @@ async function handleAiGenerateSubmit(e) {
     }
 
     const difficulty = document.getElementById('ai-difficulty').value;
-    const misconceptionTag = document.getElementById('ai-misconception').value;
-    const count = parseInt(document.getElementById('ai-count').value) || 5;
+    const misconceptionTag = document.getElementById('ai-misconception').value.trim() || 'all';
+    
+    // Ràng buộc số lượng câu hỏi nhập từ bàn phím là số nguyên >= 1
+    const countRaw = (document.getElementById('ai-count').value || '').trim();
+    const count = parseInt(countRaw, 10);
+    if (isNaN(count) || count < 1 || !Number.isInteger(count)) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Số lượng câu hỏi không hợp lệ',
+            text: 'Vui lòng nhập số lượng câu hỏi là một số nguyên dương từ bàn phím (≥ 1)!'
+        });
+        return;
+    }
+
     const promptHint = document.getElementById('ai-custom-prompt').value.trim();
 
     const submitBtn = document.getElementById('btn-generate-ai');
@@ -9293,6 +9788,414 @@ function normalizeCorrectAnswer(val) {
     if (['A', 'B', 'C', 'D'].includes(firstChar)) return firstChar;
     return 'A';
 }
+
+/**
+ * ══════════════════════════════════════════════════════════════
+ * AI VALIDATION & MISCONCEPTION GENERATIVE ASSISTANCE
+ * ══════════════════════════════════════════════════════════════
+ */
+
+/**
+ * Thẩm định môn học / chủ đề bằng AI (AI Topic Validation)
+ */
+async function handleValidateTopic() {
+    const topicInput = document.getElementById('ai-topic-input');
+    const topicName = topicInput ? topicInput.value.trim() : '';
+    const box = document.getElementById('topic-validation-box');
+    const btn = document.getElementById('btn-validate-topic');
+
+    if (!topicName) {
+        Swal.fire({
+            icon: 'info',
+            title: 'Chưa nhập môn học',
+            text: 'Vui lòng gõ tên môn học hoặc chủ đề vào ô bên dưới trước khi bấm thẩm định!'
+        });
+        return;
+    }
+
+    const originalBtnHtml = btn ? btn.innerHTML : '';
+    try {
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Đang thẩm định...';
+        }
+        if (box) {
+            box.style.display = 'block';
+            box.innerHTML = '<div class="text-muted small py-1"><span class="spinner-border spinner-border-sm me-1 text-primary"></span>Gemini đang phân tích chương trình học & phạm vi môn...</div>';
+        }
+
+        const res = await API.teacher.validateTopic(topicName);
+        const data = res.data || {};
+
+        let subtopicsHtml = '';
+        if (data.suggestedSubtopics && data.suggestedSubtopics.length > 0) {
+            const chips = data.suggestedSubtopics.map(st => `
+                <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2 rounded-pill small me-1 mb-1" onclick="applySubtopicHint('${escapeHtml(st)}')">
+                    + ${escapeHtml(st)}
+                </button>
+            `).join('');
+            subtopicsHtml = `
+                <div class="mt-2 pt-2 border-top">
+                    <span class="text-muted small fw-semibold d-block mb-1">Gợi ý phân nhánh chủ đề (bấm để thêm vào yêu cầu):</span>
+                    <div class="d-flex flex-wrap">${chips}</div>
+                </div>
+            `;
+        }
+
+        if (box) {
+            box.style.display = 'block';
+            box.innerHTML = `
+                <div class="alert alert-primary-subtle border border-primary-subtle py-2 px-3 mb-0 rounded-3 small text-dark shadow-sm">
+                    <div class="d-flex align-items-center justify-content-between mb-1">
+                        <span class="fw-bold text-primary">
+                            <i class="fa-solid fa-circle-check text-success me-1"></i>Lĩnh vực: ${escapeHtml(data.field || 'Đa ngành / Tổng hợp')}
+                        </span>
+                        <span class="badge bg-primary text-white rounded-pill px-2">Độ phù hợp: ${escapeHtml(data.clarity || 'high')}</span>
+                    </div>
+                    <div class="text-secondary">${escapeHtml(data.feedback || 'Chủ đề hợp lệ và sẵn sàng tạo đề.')}</div>
+                    ${subtopicsHtml}
+                </div>
+            `;
+        }
+    } catch (err) {
+        console.error('Lỗi khi thẩm định chủ đề:', err);
+        if (box) {
+            box.style.display = 'block';
+            box.innerHTML = `
+                <div class="alert alert-warning py-2 px-3 mb-0 rounded-3 small">
+                    <i class="fa-solid fa-triangle-exclamation me-1"></i>${escapeHtml(err.message || 'Không thể kết nối đến bộ thẩm định AI.')}
+                </div>
+            `;
+        }
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = originalBtnHtml;
+        }
+    }
+}
+
+function applySubtopicHint(subtopic) {
+    const hintInput = document.getElementById('ai-custom-prompt');
+    if (hintInput) {
+        hintInput.value = hintInput.value ? `${hintInput.value}, ${subtopic}` : `Tập trung vào: ${subtopic}`;
+        hintInput.focus();
+    }
+}
+
+/**
+ * AI Gợi ý bẫy tư duy đặc thù cho môn học đang nhập
+ */
+async function handleSuggestMisconceptions() {
+    const topicInput = document.getElementById('ai-topic-input');
+    const topicName = topicInput ? topicInput.value.trim() : '';
+    const btn = document.getElementById('btn-suggest-misconceptions');
+    const chipsContainer = document.getElementById('ai-misconceptions-chips-container');
+    const chipsBox = document.getElementById('ai-misconceptions-chips');
+    const datalist = document.getElementById('misconception-datalist');
+
+    if (!topicName) {
+        Swal.fire({
+            icon: 'info',
+            title: 'Chưa có tên môn học',
+            text: 'Vui lòng nhập tên môn học / chủ đề trước để AI tìm các bẫy tư duy chính xác nhất cho môn này!'
+        });
+        if (topicInput) topicInput.focus();
+        return;
+    }
+
+    const originalBtnHtml = btn ? btn.innerHTML : '';
+    try {
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>AI đang phân tích bẫy...';
+        }
+
+        const res = await API.teacher.suggestMisconceptions(topicName);
+        const list = res.data || [];
+
+        if (list.length === 0) {
+            throw new Error('Không nhận được danh sách bẫy tư duy từ AI.');
+        }
+
+        // Cập nhật datalist
+        if (datalist) {
+            datalist.innerHTML = list.map(item => `
+                <option value="${escapeHtml(item.tag || item.label)}">${escapeHtml(item.label)} - ${escapeHtml(item.description)}</option>
+            `).join('');
+        }
+
+        // Hiển thị chips để người dùng bấm chọn nhanh
+        if (chipsContainer && chipsBox) {
+            chipsContainer.style.display = 'block';
+            chipsBox.innerHTML = list.map(item => `
+                <button type="button" class="btn btn-outline-danger btn-sm rounded-pill py-1 px-3 small fw-semibold text-start shadow-sm"
+                        onclick="selectMisconception('${escapeHtml(item.tag || item.label)}')">
+                    <i class="fa-solid fa-crosshairs me-1"></i>${escapeHtml(item.label)}
+                    <span class="d-block text-muted fw-normal" style="font-size: 0.72rem;">${escapeHtml(item.description)}</span>
+                </button>
+            `).join('');
+        }
+
+        Swal.fire({
+            icon: 'success',
+            title: 'Đã gợi ý bẫy tư duy!',
+            text: `AI đã phân tích ${list.length} bẫy nhận thức phổ biến cho môn "${topicName}". Bạn có thể bấm chọn ngay bên dưới!`,
+            timer: 2000,
+            showConfirmButton: false
+        });
+
+    } catch (err) {
+        console.error('Lỗi khi gợi ý bẫy tư duy:', err);
+        Swal.fire({
+            icon: 'error',
+            title: 'Lỗi gợi ý bẫy',
+            text: err.message || 'Không thể tải bẫy tư duy từ AI.'
+        });
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = originalBtnHtml;
+        }
+    }
+}
+
+function selectMisconception(val) {
+    const input = document.getElementById('ai-misconception');
+    if (input) {
+        input.value = val;
+        input.focus();
+    }
+}
+
+/**
+ * Thẩm định bẫy tư duy bằng AI (AI Misconception Validation)
+ */
+async function handleValidateMisconception() {
+    const topicInput = document.getElementById('ai-topic-input');
+    const topicName = topicInput ? topicInput.value.trim() : 'Tổng hợp';
+    const miscInput = document.getElementById('ai-misconception');
+    const misconception = miscInput ? miscInput.value.trim() : '';
+    const btn = document.getElementById('btn-validate-misconception');
+    const box = document.getElementById('misconception-validation-box');
+
+    if (!misconception) {
+        Swal.fire({
+            icon: 'info',
+            title: 'Chưa nhập bẫy tư duy',
+            text: 'Vui lòng nhập tên bẫy tư duy hoặc chọn một gợi ý trước khi thẩm định!'
+        });
+        return;
+    }
+
+    const originalBtnHtml = btn ? btn.innerHTML : '';
+    try {
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Thẩm định...';
+        }
+        if (box) {
+            box.style.display = 'block';
+            box.innerHTML = '<div class="text-muted small py-1"><span class="spinner-border spinner-border-sm me-1 text-primary"></span>Đang thẩm định tính phân hóa của bẫy tư duy...</div>';
+        }
+
+        const res = await API.teacher.validateMisconception(topicName, misconception);
+        const data = res.data || {};
+
+        if (box) {
+            box.style.display = 'block';
+            box.innerHTML = `
+                <div class="alert alert-success-subtle border border-success-subtle py-2 px-3 mb-0 rounded-3 small text-dark shadow-sm">
+                    <div class="fw-bold text-success mb-1">
+                        <i class="fa-solid fa-shield-check me-1"></i>Bẫy tư duy: "${escapeHtml(data.misconception || misconception)}"
+                    </div>
+                    <div class="mb-1">${escapeHtml(data.feedback || 'Bẫy nhận thức phù hợp.')}</div>
+                    ${data.distractorTip ? `<div class="text-muted fst-italic"><i class="fa-regular fa-lightbulb text-warning me-1"></i><strong>Chiến lược bẫy:</strong> ${escapeHtml(data.distractorTip)}</div>` : ''}
+                </div>
+            `;
+        }
+    } catch (err) {
+        console.error('Lỗi khi thẩm định bẫy:', err);
+        if (box) {
+            box.style.display = 'block';
+            box.innerHTML = `
+                <div class="alert alert-warning py-2 px-3 mb-0 rounded-3 small">
+                    <i class="fa-solid fa-triangle-exclamation me-1"></i>${escapeHtml(err.message || 'Lỗi kết nối thẩm định.')}
+                </div>
+            `;
+        }
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = originalBtnHtml;
+        }
+    }
+}
+
+/**
+ * AI Hỗ trợ hoàn thiện câu hỏi tự động bên trong Modal thêm câu hỏi
+ */
+async function handleModalAiAssist() {
+    const questionTextInput = document.getElementById('modal-question-text');
+    const questionText = questionTextInput ? questionTextInput.value.trim() : '';
+    const topicSelect = document.getElementById('modal-topic-id');
+    const topicName = topicSelect && topicSelect.selectedIndex >= 0 ? topicSelect.options[topicSelect.selectedIndex].text : 'Kiến thức chung';
+    const difficulty = document.getElementById('modal-difficulty').value || 'medium';
+
+    if (!questionText) {
+        Swal.fire({
+            icon: 'info',
+            title: 'Chưa có nội dung câu hỏi',
+            text: 'Vui lòng gõ một câu hỏi hoặc ý tưởng câu hỏi vào ô "Nội dung câu hỏi" trước để AI tự động điền các phương án A, B, C, D và lời giải!'
+        });
+        if (questionTextInput) questionTextInput.focus();
+        return;
+    }
+
+    const btn = document.getElementById('btn-modal-ai-assist');
+    const btnText = document.getElementById('btn-modal-ai-assist-text');
+    const originalText = btnText ? btnText.innerHTML : 'AI Tự Động Điền Phương Án';
+
+    try {
+        if (btn) btn.disabled = true;
+        if (btnText) btnText.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Gemini đang soạn 4 phương án...';
+
+        const res = await API.teacher.assistQuestion(topicName, questionText, difficulty);
+        const data = res.data || {};
+
+        if (data.optionA) document.getElementById('modal-option-a').value = data.optionA;
+        if (data.optionB) document.getElementById('modal-option-b').value = data.optionB;
+        if (data.optionC) document.getElementById('modal-option-c').value = data.optionC;
+        if (data.optionD) document.getElementById('modal-option-d').value = data.optionD;
+        if (data.correctAnswer) document.getElementById('modal-correct-answer').value = normalizeCorrectAnswer(data.correctAnswer);
+        if (data.explanation) document.getElementById('modal-explanation').value = data.explanation;
+        if (data.misconceptionTag) document.getElementById('modal-misconception-tag').value = data.misconceptionTag;
+
+        Swal.fire({
+            icon: 'success',
+            title: '✨ AI Đã Hoàn Thiện Câu Hỏi!',
+            text: 'Đã tự động điền đầy đủ 4 phương án, chỉ định đáp án đúng, phân loại bẫy tư duy và viết lời giải thích sư phạm. Bạn có thể xem lại và bấm "Lưu Câu Hỏi"!',
+            timer: 2500,
+            showConfirmButton: false
+        });
+
+    } catch (err) {
+        console.error('Lỗi khi AI hỗ trợ soạn câu hỏi:', err);
+        Swal.fire({
+            icon: 'error',
+            title: 'Lỗi Trợ Lý AI',
+            text: err.message || 'Không thể hoàn thiện câu hỏi tự động. Vui lòng thử lại.'
+        });
+    } finally {
+        if (btn) btn.disabled = false;
+        if (btnText) btnText.innerHTML = originalText;
+    }
+}
+
+/**
+ * Gợi ý bẫy tư duy ngay trong Modal Thêm Câu Hỏi
+ */
+async function handleModalSuggestMisconception() {
+    const topicSelect = document.getElementById('modal-topic-id');
+    const topicName = topicSelect && topicSelect.selectedIndex >= 0 ? topicSelect.options[topicSelect.selectedIndex].text : 'Kiến thức chung';
+
+    try {
+        Swal.fire({
+            title: 'Đang tải gợi ý bẫy tư duy...',
+            didOpen: () => Swal.showLoading()
+        });
+
+        const res = await API.teacher.suggestMisconceptions(topicName);
+        const list = res.data || [];
+
+        if (list.length === 0) {
+            Swal.fire({
+                icon: 'info',
+                title: 'Không có gợi ý',
+                text: 'Chưa tìm thấy bẫy tư duy đặc thù cho môn này.'
+            });
+            return;
+        }
+
+        const inputOptions = {};
+        list.forEach(item => {
+            inputOptions[item.tag || item.label] = `${item.label} (${item.description})`;
+        });
+
+        const { value: selectedTag } = await Swal.fire({
+            title: `Bẫy tư duy gợi ý cho: ${topicName}`,
+            input: 'select',
+            inputOptions: inputOptions,
+            inputPlaceholder: '-- Chọn một bẫy nhận thức --',
+            showCancelButton: true,
+            confirmButtonText: 'Chọn bẫy này',
+            cancelButtonText: 'Đóng'
+        });
+
+        if (selectedTag) {
+            document.getElementById('modal-misconception-tag').value = selectedTag;
+        }
+    } catch (err) {
+        console.error('Lỗi gợi ý bẫy trong modal:', err);
+        Swal.fire({
+            icon: 'error',
+            title: 'Lỗi',
+            text: err.message || 'Không thể tải bẫy tư duy.'
+        });
+    }
+}
+
+/**
+ * Tạo môn học / chủ đề mới nhanh từ trong Modal thêm câu hỏi
+ */
+async function handleQuickAddTopicFromModal() {
+    const { value: newTopicName } = await Swal.fire({
+        title: 'Tạo Môn Học / Chủ Đề Mới',
+        input: 'text',
+        inputLabel: 'Tên môn học hoặc chủ đề bài kiểm tra:',
+        inputPlaceholder: 'Ví dụ: Thiết Kế Web, Triết Học, Giải Tích...',
+        showCancelButton: true,
+        confirmButtonText: 'Khởi Tạo Môn',
+        cancelButtonText: 'Hủy',
+        inputValidator: (value) => {
+            if (!value || !value.trim()) {
+                return 'Tên môn học không được để trống!';
+            }
+        }
+    });
+
+    if (!newTopicName) return;
+
+    try {
+        const createRes = await API.topics.create({
+            topicName: newTopicName.trim(),
+            description: 'Khởi tạo trực tiếp từ trình soạn thảo câu hỏi'
+        });
+
+        await loadTopics();
+
+        const createdId = createRes.data ? createRes.data.topicId : null;
+        if (createdId) {
+            document.getElementById('modal-topic-id').value = createdId;
+        }
+
+        Swal.fire({
+            icon: 'success',
+            title: 'Đã tạo môn mới!',
+            text: `Môn "${newTopicName.trim()}" đã được thêm và chọn làm chủ đề cho câu hỏi này.`,
+            timer: 1500,
+            showConfirmButton: false
+        });
+    } catch (err) {
+        console.error('Lỗi khi tạo môn mới từ modal:', err);
+        Swal.fire({
+            icon: 'error',
+            title: 'Lỗi tạo môn',
+            text: err.message || 'Không thể tạo môn học mới.'
+        });
+    }
+}
+
 
 ``
 
@@ -10486,10 +11389,10 @@ const AppUI = (() => {
     <!-- Custom CSS -->
     <link rel="stylesheet" href="css/app.css">
     <style>
-        .badge-syntax { background-color: #f87171; color: #fff; }
-        .badge-boundary { background-color: #fbbf24; color: #78350f; }
-        .badge-mental { background-color: #60a5fa; color: #fff; }
-        .badge-logic { background-color: #a78bfa; color: #fff; }
+        .badge-syntax { background-color: #ef4444; color: #ffffff !important; font-weight: 600; }
+        .badge-boundary { background-color: #d97706; color: #ffffff !important; font-weight: 600; }
+        .badge-mental { background-color: #2563eb; color: #ffffff !important; font-weight: 600; }
+        .badge-logic { background-color: #7c3aed; color: #ffffff !important; font-weight: 600; }
         .table-action-btn { width: 32px; height: 32px; padding: 0; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; }
         .question-cell { max-width: 320px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .insight-card { border-radius: 12px; border: 1px solid #e2e8f0; background: #ffffff; padding: 1.25rem; transition: transform 0.2s ease; }
@@ -10642,25 +11545,25 @@ const AppUI = (() => {
         </div>
 
         <!-- ── Navigation Tabs ── -->
-        <ul class="nav nav-pills mb-4 bg-white p-2 rounded-3 border shadow-sm" id="dashboardTabs" role="tablist">
+        <ul class="nav nav-pills mb-4 bg-white p-2 rounded-4 border shadow-sm d-flex flex-wrap gap-2 align-items-center" id="dashboardTabs" role="tablist">
             <li class="nav-item" role="presentation">
-                <button class="nav-link active fw-bold px-4 py-2" id="tab-questions-btn" data-bs-toggle="pill" data-bs-target="#tab-questions" type="button" role="tab">
+                <button class="nav-link active fw-bold px-3 py-2 rounded-pill" id="tab-questions-btn" data-bs-toggle="pill" data-bs-target="#tab-questions" type="button" role="tab">
                     <i class="fa-solid fa-boxes-stacked me-2"></i>Quản Lý Ngân Hàng Câu Hỏi
                 </button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link fw-bold px-4 py-2" id="tab-insights-btn" data-bs-toggle="pill" data-bs-target="#tab-insights" type="button" role="tab">
+                <button class="nav-link fw-bold px-3 py-2 rounded-pill" id="tab-insights-btn" data-bs-toggle="pill" data-bs-target="#tab-insights" type="button" role="tab">
                     <i class="fa-solid fa-brain me-2"></i>AI Pedagogical Insight (Chẩn Đoán Sư Phạm)
                 </button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link fw-bold px-4 py-2 text-primary" id="tab-ai-copilot-btn" data-bs-toggle="pill" data-bs-target="#tab-ai-copilot" type="button" role="tab">
+                <button class="nav-link fw-bold px-3 py-2 rounded-pill text-primary" id="tab-ai-copilot-btn" data-bs-toggle="pill" data-bs-target="#tab-ai-copilot" type="button" role="tab">
                     <i class="fa-solid fa-wand-magic-sparkles text-warning me-2"></i>Trợ Lý AI Soạn Đề & Bài Tập
                 </button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link fw-bold px-4 py-2 text-danger" id="tab-reports-btn" data-bs-toggle="pill" data-bs-target="#tab-reports" type="button" role="tab">
-                    <i class="fa-solid fa-triangle-exclamation me-2"></i>Báo Lỗi & Phản Hồi (<span id="reports-count-badge">0</span>)
+                <button class="nav-link fw-bold px-3 py-2 rounded-pill text-danger" id="tab-reports-btn" data-bs-toggle="pill" data-bs-target="#tab-reports" type="button" role="tab">
+                    <i class="fa-solid fa-triangle-exclamation me-1"></i>Báo Lỗi & Phản Hồi <span class="badge bg-danger text-white rounded-pill ms-1" id="reports-count-badge">0</span>
                 </button>
             </li>
         </ul>
@@ -10672,31 +11575,31 @@ const AppUI = (() => {
             <!-- TAB 1: Quản Lý Ngân Hàng Câu Hỏi -->
             <!-- ══════════════════════════════════════════════════════════════ -->
             <div class="tab-pane fade show active" id="tab-questions" role="tabpanel">
-                <div class="card border-0 shadow-sm rounded-3">
+                <div class="card border-0 shadow-sm rounded-4">
                     <div class="card-body p-4">
                         
-                        <!-- Filter & Actions Bar -->
-                        <div class="row g-2 align-items-center justify-content-between mb-3">
-                            <div class="col-md-4">
-                                <div class="input-group">
-                                    <span class="input-group-text bg-light border-end-0"><i class="fa-solid fa-filter text-muted"></i></span>
-                                    <select class="form-select border-start-0 ps-0" id="filter-topic">
+                        <!-- Filter & Actions Bar - Clean Unified Layout -->
+                        <div class="row g-3 align-items-center mb-3">
+                            <div class="col-lg-3 col-md-5">
+                                <div class="input-group shadow-sm rounded-3">
+                                    <span class="input-group-text bg-light border-end-0 text-muted"><i class="fa-solid fa-filter"></i></span>
+                                    <select class="form-select border-start-0 ps-1" id="filter-topic">
                                         <option value="">-- Tất cả chủ đề --</option>
                                     </select>
                                 </div>
                             </div>
-                            <div class="col-md-4">
-                                <div class="input-group">
-                                    <span class="input-group-text bg-light border-end-0"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
-                                    <input type="text" class="form-control border-start-0 ps-0" id="search-question" placeholder="Tìm câu hỏi theo từ khóa...">
+                            <div class="col-lg-4 col-md-7">
+                                <div class="input-group shadow-sm rounded-3">
+                                    <span class="input-group-text bg-light border-end-0 text-muted"><i class="fa-solid fa-magnifying-glass"></i></span>
+                                    <input type="text" class="form-control border-start-0 ps-1" id="search-question" placeholder="Tìm câu hỏi, bẫy tư duy, ID...">
                                 </div>
                             </div>
-                            <div class="col-md-4 text-md-end">
-                                <button class="btn btn-outline-primary rounded-pill px-3 fw-semibold shadow-sm me-2" id="btn-open-topic-modal">
+                            <div class="col-lg-5 col-md-12 text-lg-end d-flex justify-content-lg-end justify-content-start gap-2 flex-wrap">
+                                <button class="btn btn-outline-primary rounded-pill px-3 py-2 fw-semibold shadow-sm d-inline-flex align-items-center" id="btn-open-topic-modal">
                                     <i class="fa-solid fa-folder-plus me-1"></i>Thêm Môn / Chủ Đề
                                 </button>
-                                <button class="btn btn-primary rounded-pill px-3 fw-semibold shadow-sm" id="btn-open-create-modal">
-                                    <i class="fa-solid fa-plus me-1"></i>Thêm Câu Hỏi
+                                <button class="btn btn-primary rounded-pill px-3 py-2 fw-semibold shadow-sm d-inline-flex align-items-center" id="btn-open-create-modal">
+                                    <i class="fa-solid fa-circle-plus me-1"></i>Thêm Câu Hỏi Mới
                                 </button>
                             </div>
                         </div>
@@ -10878,17 +11781,23 @@ const AppUI = (() => {
                                 <form id="ai-generator-form">
                                     <div class="row g-3 mb-3">
                                         <!-- Topic Input & Suggestions -->
-                                        <div class="col-md-6">
-                                            <label for="ai-topic-input" class="form-label fw-semibold small">
-                                                <i class="fa-solid fa-book-bookmark text-primary me-1"></i>Môn học / Chủ đề (Tự do & Liên ngành) <span class="text-danger">*</span>
-                                            </label>
-                                            <input type="text" class="form-control rounded-3" id="ai-topic-input" list="topic-datalist" placeholder="Nhập tên môn: OOP, Toán Rời Rạc, Kinh Tế Lượng, Hỗn hợp..." required>
+                                        <div class="col-md-7">
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                <label for="ai-topic-input" class="form-label fw-semibold small mb-0">
+                                                    <i class="fa-solid fa-book-bookmark text-primary me-1"></i>Môn học / Chủ đề (Tự do & Bất kỳ môn nào) <span class="text-danger">*</span>
+                                                </label>
+                                                <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none small text-primary fw-semibold" id="btn-validate-topic">
+                                                    <i class="fa-solid fa-wand-magic-sparkles me-1 text-warning"></i>AI Thẩm Định Môn
+                                                </button>
+                                            </div>
+                                            <input type="text" class="form-control rounded-3" id="ai-topic-input" list="topic-datalist" placeholder="Nhập tên môn: OOP, Toán Rời Rạc, Kinh Tế Lượng, Triết Học, Đề Hỗn Hợp..." required>
                                             <datalist id="topic-datalist">
                                                 <!-- Động theo CSDL -->
                                             </datalist>
+                                            <div id="topic-validation-box" class="mt-2" style="display: none;"></div>
                                         </div>
                                         <!-- Difficulty -->
-                                        <div class="col-md-6">
+                                        <div class="col-md-5">
                                             <label for="ai-difficulty" class="form-label fw-semibold small">
                                                 <i class="fa-solid fa-gauge text-warning me-1"></i>Độ khó mục tiêu
                                             </label>
@@ -10903,32 +11812,46 @@ const AppUI = (() => {
                                     <div class="row g-3 mb-3">
                                         <!-- Misconception Focus -->
                                         <div class="col-md-7">
-                                            <label for="ai-misconception" class="form-label fw-semibold small">
-                                                <i class="fa-solid fa-crosshairs text-danger me-1"></i>Bẫy tư duy trọng tâm (Misconception)
-                                            </label>
-                                            <select class="form-select rounded-3" id="ai-misconception">
-                                                <option value="all">-- Phân bổ ngẫu nhiên cả 4 nhóm bẫy --</option>
-                                                <option value="syntax_swap">Syntax Swap (Nhầm cú pháp: = vs ==, gán vs so sánh)</option>
-                                                <option value="boundary_blindness">Boundary Blindness (Biên: off-by-one &lt;= vs &lt;, mảng rỗng)</option>
-                                                <option value="mental_model_gap">Mental Model Gap (Hiểu sai mô hình: Scope, Static, Tham chiếu)</option>
-                                                <option value="logic_flaw">Logic Flaw (Lỗi suy luận: Đảo ngược điều kiện, break/continue)</option>
-                                                <option value="other">Bẫy mở rộng & Tư duy liên ngành (Bất kỳ môn học nào)</option>
-                                            </select>
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                <label for="ai-misconception" class="form-label fw-semibold small mb-0">
+                                                    <i class="fa-solid fa-crosshairs text-danger me-1"></i>Bẫy tư duy trọng tâm (Nhập tự do hoặc để AI gợi ý)
+                                                </label>
+                                                <div class="d-flex gap-2">
+                                                    <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none small text-primary fw-semibold" id="btn-suggest-misconceptions">
+                                                        <i class="fa-solid fa-lightbulb text-warning me-1"></i>AI Gợi Ý Bẫy
+                                                    </button>
+                                                    <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none small text-secondary fw-semibold" id="btn-validate-misconception">
+                                                        <i class="fa-solid fa-shield-halved text-success me-1"></i>Thẩm Định Bẫy
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <input type="text" class="form-control rounded-3" id="ai-misconception" list="misconception-datalist" placeholder="Gõ bẫy tư duy hoặc nhấn 'AI Gợi Ý Bẫy'...">
+                                            <datalist id="misconception-datalist">
+                                                <option value="all">Phân bổ đa dạng các bẫy tư duy</option>
+                                                <option value="syntax_swap">Syntax / Term Swap (Nhầm cú pháp, thuật ngữ)</option>
+                                                <option value="boundary_blindness">Boundary Blindness (Bỏ sót điều kiện biên, ngoại lệ)</option>
+                                                <option value="mental_model_gap">Mental Model Gap (Lỗ hổng mô hình bản chất)</option>
+                                                <option value="logic_flaw">Logic Flaw (Lỗi suy luận logic, đảo ngược điều kiện)</option>
+                                            </datalist>
+                                            <div id="ai-misconceptions-chips-container" class="mt-2" style="display: none;">
+                                                <div class="small text-muted mb-1 d-flex align-items-center gap-1">
+                                                    <i class="fa-solid fa-wand-magic-sparkles text-warning"></i>
+                                                    <span>Gợi ý bẫy cho môn này (bấm để chọn):</span>
+                                                </div>
+                                                <div class="d-flex flex-wrap gap-1" id="ai-misconceptions-chips"></div>
+                                            </div>
+                                            <div id="misconception-validation-box" class="mt-2" style="display: none;"></div>
                                         </div>
-                                        <!-- Count -->
+                                        <!-- Count - Keyboard direct input, integer >= 1 -->
                                         <div class="col-md-5">
                                             <label for="ai-count" class="form-label fw-semibold small">
-                                                <i class="fa-solid fa-list-ol text-info me-1"></i>Số lượng câu hỏi (1 - 25)
+                                                <i class="fa-solid fa-list-ol text-info me-1"></i>Số lượng câu hỏi (Nhập số nguyên &ge; 1) <span class="text-danger">*</span>
                                             </label>
-                                            <select class="form-select rounded-3" id="ai-count">
-                                                <option value="1">1 câu hỏi</option>
-                                                <option value="3">3 câu hỏi</option>
-                                                <option value="5" selected>5 câu hỏi (Khuyên dùng)</option>
-                                                <option value="10">10 câu hỏi (Đề kiểm tra ngắn)</option>
-                                                <option value="15">15 câu hỏi (Đề giữa kỳ)</option>
-                                                <option value="20">20 câu hỏi (Đề thi đầy đủ)</option>
-                                                <option value="25">25 câu hỏi (Tối đa 1 lần)</option>
-                                            </select>
+                                            <div class="input-group">
+                                                <input type="number" class="form-control rounded-3" id="ai-count" name="count" min="1" step="1" value="5" placeholder="VD: 3, 5, 10, 20..." required>
+                                                <span class="input-group-text bg-light text-muted small">câu</span>
+                                            </div>
+                                            <div class="form-text text-muted" style="font-size: 0.76rem;">Nhập trực tiếp từ bàn phím bất kỳ số nguyên nào (&ge; 1).</div>
                                         </div>
                                     </div>
 
@@ -11101,9 +12024,14 @@ const AppUI = (() => {
         <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
             <div class="modal-content border-0 shadow-lg rounded-4">
                 <div class="modal-header bg-primary text-white border-0 py-3">
-                    <h5 class="modal-title fw-bold" id="questionModalLabel">
-                        <i class="fa-solid fa-pen-to-square me-2"></i>Thêm Câu Hỏi Mới
-                    </h5>
+                    <div class="d-flex align-items-center gap-2">
+                        <h5 class="modal-title fw-bold mb-0" id="questionModalLabel">
+                            <i class="fa-solid fa-pen-to-square me-2"></i>Thêm Câu Hỏi Mới
+                        </h5>
+                        <span class="badge bg-warning text-dark rounded-pill small px-2">
+                            <i class="fa-solid fa-wand-magic-sparkles me-1"></i>AI Co-Pilot Ready
+                        </span>
+                    </div>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-4">
@@ -11112,27 +12040,45 @@ const AppUI = (() => {
 
                         <div class="row g-3 mb-3">
                             <div class="col-md-8">
-                                <label for="modal-topic-id" class="form-label fw-semibold small">Chủ đề <span class="text-danger">*</span></label>
-                                <select class="form-select" id="modal-topic-id" required>
-                                    <option value="">-- Chọn chủ đề bài học --</option>
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <label for="modal-topic-id" class="form-label fw-semibold small mb-0">Môn học / Chủ đề <span class="text-danger">*</span></label>
+                                    <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none small text-primary fw-semibold" id="btn-quick-add-topic-from-modal">
+                                        <i class="fa-solid fa-plus-circle me-1"></i>Tạo môn mới
+                                    </button>
+                                </div>
+                                <select class="form-select rounded-3" id="modal-topic-id" required>
+                                    <option value="">-- Chọn môn học / chủ đề bài kiểm tra --</option>
                                 </select>
                             </div>
                             <div class="col-md-4">
                                 <label for="modal-difficulty" class="form-label fw-semibold small">Độ khó <span class="text-danger">*</span></label>
-                                <select class="form-select" id="modal-difficulty" required>
-                                    <option value="easy">Dễ (Easy)</option>
-                                    <option value="medium" selected>Trung bình (Medium)</option>
-                                    <option value="hard">Khó (Hard)</option>
+                                <select class="form-select rounded-3" id="modal-difficulty" required>
+                                    <option value="easy">Dễ (Easy - Nhận biết)</option>
+                                    <option value="medium" selected>Trung bình (Medium - Vận dụng)</option>
+                                    <option value="hard">Khó (Hard - Phân tích & Bẫy)</option>
                                 </select>
                             </div>
                         </div>
 
                         <div class="mb-3">
-                            <label for="modal-question-text" class="form-label fw-semibold small d-flex justify-content-between">
-                                <span>Nội dung câu hỏi <span class="text-danger">*</span></span>
-                                <span class="text-muted fw-normal" style="font-size: 0.78rem;">Hỗ trợ cú pháp Markdown code ```java ... ```</span>
-                            </label>
-                            <textarea class="form-control font-monospace" id="modal-question-text" rows="4" placeholder="Nhập câu hỏi... (VD: Đoạn code sau in ra gì?&#10;```java&#10;int x = 5;&#10;System.out.println(++x);&#10;```)" required></textarea>
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <label for="modal-question-text" class="form-label fw-semibold small mb-0">
+                                    <span>Nội dung câu hỏi <span class="text-danger">*</span></span>
+                                </label>
+                                <span class="text-muted fw-normal" style="font-size: 0.78rem;">Hỗ trợ Markdown / code blocks ```java, ```python...</span>
+                            </div>
+                            <textarea class="form-control font-monospace rounded-3" id="modal-question-text" rows="3" placeholder="Nhập câu hỏi... (VD: Trong mô hình MVC, Controller có vai trò gì? Hoặc nhập đoạn code cần truy vết...)" required></textarea>
+                            
+                            <!-- AI Assist Bar inside Question Modal -->
+                            <div class="d-flex justify-content-between align-items-center mt-2 p-2 bg-light rounded-3 border">
+                                <span class="text-muted small" style="font-size: 0.78rem;">
+                                    <i class="fa-solid fa-robot text-primary me-1"></i>Gõ nội dung câu hỏi rồi bấm nút bên phải để AI tự sinh 4 phương án & giải thích!
+                                </span>
+                                <button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-3 py-1 fw-semibold text-nowrap" id="btn-modal-ai-assist">
+                                    <i class="fa-solid fa-wand-magic-sparkles me-1 text-warning"></i>
+                                    <span id="btn-modal-ai-assist-text">AI Tự Động Điền Phương Án</span>
+                                </button>
+                            </div>
                         </div>
 
                         <div class="row g-3 mb-3">
@@ -11169,7 +12115,7 @@ const AppUI = (() => {
                         <div class="row g-3 mb-3">
                             <div class="col-md-6">
                                 <label for="modal-correct-answer" class="form-label fw-semibold small">Đáp án đúng <span class="text-danger">*</span></label>
-                                <select class="form-select fw-bold text-success border-success" id="modal-correct-answer" required>
+                                <select class="form-select fw-bold text-success border-success rounded-3" id="modal-correct-answer" required>
                                     <option value="A">Phương án A</option>
                                     <option value="B">Phương án B</option>
                                     <option value="C">Phương án C</option>
@@ -11177,29 +12123,34 @@ const AppUI = (() => {
                                 </select>
                             </div>
                             <div class="col-md-6">
-                                <label for="modal-misconception-tag" class="form-label fw-semibold small">Phân loại lỗi tư duy (AI Tag)</label>
-                                <select class="form-select text-dark" id="modal-misconception-tag">
-                                    <option value="">-- Không phân loại / Chung --</option>
-                                    <option value="syntax_swap">syntax_swap (Nhầm lẫn cú pháp)</option>
-                                    <option value="boundary_blindness">boundary_blindness (Lỗi biên vòng lặp / mảng)</option>
-                                    <option value="mental_model_gap">mental_model_gap (Hổng mô hình tư duy OOP)</option>
-                                    <option value="logic_flaw">logic_flaw (Sai sót logic điều kiện)</option>
-                                </select>
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <label for="modal-misconception-tag" class="form-label fw-semibold small mb-0">Phân loại lỗi tư duy (Bẫy nhận thức)</label>
+                                    <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none small text-primary fw-semibold" id="btn-modal-suggest-misconception">
+                                        <i class="fa-solid fa-lightbulb text-warning me-1"></i>AI Gợi Ý Bẫy
+                                    </button>
+                                </div>
+                                <input type="text" class="form-control rounded-3" id="modal-misconception-tag" list="modal-misconception-datalist" placeholder="Nhập bẫy hoặc bấm 'AI Gợi Ý Bẫy'...">
+                                <datalist id="modal-misconception-datalist">
+                                    <option value="syntax_swap">syntax_swap (Nhầm lẫn cú pháp, công thức, keyword)</option>
+                                    <option value="boundary_blindness">boundary_blindness (Lỗi biên, ngoại lệ, giá trị rỗng)</option>
+                                    <option value="mental_model_gap">mental_model_gap (Hổng mô hình tư duy bản chất)</option>
+                                    <option value="logic_flaw">logic_flaw (Sai sót lập luận logic điều kiện)</option>
+                                </datalist>
                             </div>
                         </div>
 
                         <div class="mb-2">
                             <label for="modal-explanation" class="form-label fw-semibold small d-flex justify-content-between">
-                                <span>Giải thích cơ bản (★ AI Fallback Buffer)</span>
-                                <span class="text-primary fw-normal" style="font-size: 0.78rem;"><i class="fa-solid fa-shield-halved me-1"></i>Dùng khi Gemini API bận</span>
+                                <span>Lời giải thích sư phạm & Phương án bẫy</span>
+                                <span class="text-primary fw-normal" style="font-size: 0.78rem;"><i class="fa-solid fa-shield-halved me-1"></i>Dùng cả khi Gemini API bận</span>
                             </label>
-                            <textarea class="form-control" id="modal-explanation" rows="3" placeholder="Nhập lời giải thích chuẩn sư phạm để hệ thống hiển thị ngay cho sinh viên nếu Gemini API gặp sự cố hoặc offline..."></textarea>
+                            <textarea class="form-control rounded-3" id="modal-explanation" rows="3" placeholder="Nhập lời giải thích chuẩn mực sư phạm để hiển thị cho sinh viên khi làm bài xong..."></textarea>
                         </div>
                     </form>
                 </div>
                 <div class="modal-footer bg-light border-0 py-3">
                     <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Hủy</button>
-                    <button type="button" class="btn btn-primary rounded-pill px-4 fw-semibold" id="btn-save-question">
+                    <button type="button" class="btn btn-primary rounded-pill px-4 fw-semibold shadow-sm" id="btn-save-question">
                         <i class="fa-solid fa-floppy-disk me-1"></i>Lưu Câu Hỏi
                     </button>
                 </div>

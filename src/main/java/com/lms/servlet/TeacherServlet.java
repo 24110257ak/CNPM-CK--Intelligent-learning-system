@@ -55,6 +55,14 @@ public class TeacherServlet extends HttpServlet {
             handleAiGenerateQuestions(req, resp);
         } else if ("/ai/chat".equals(pathInfo)) {
             handleAiTeacherChat(req, resp);
+        } else if ("/ai/suggest-misconceptions".equals(pathInfo)) {
+            handleAiSuggestMisconceptions(req, resp);
+        } else if ("/ai/validate-topic".equals(pathInfo)) {
+            handleAiValidateTopic(req, resp);
+        } else if ("/ai/validate-misconception".equals(pathInfo)) {
+            handleAiValidateMisconception(req, resp);
+        } else if ("/ai/assist-question".equals(pathInfo)) {
+            handleAiAssistQuestion(req, resp);
         } else {
             resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
             resp.getWriter().write(JsonHelper.error("Không tìm thấy endpoint POST: " + pathInfo));
@@ -94,8 +102,14 @@ public class TeacherServlet extends HttpServlet {
                 ? body.get("difficulty").getAsString().trim() : "medium";
         String misconceptionTag = body.has("misconceptionTag") && !body.get("misconceptionTag").isJsonNull()
                 ? body.get("misconceptionTag").getAsString().trim() : "all";
-        int count = body.has("count") && !body.get("count").isJsonNull()
-                ? Math.min(Math.max(body.get("count").getAsInt(), 1), 25) : 5;
+        int count = 5;
+        if (body.has("count") && !body.get("count").isJsonNull()) {
+            try {
+                count = Math.min(Math.max(body.get("count").getAsInt(), 1), 50);
+            } catch (Exception ignored) {
+                count = 5;
+            }
+        }
         String promptHint = body.has("promptHint") && !body.get("promptHint").isJsonNull()
                 ? body.get("promptHint").getAsString().trim() : "";
 
@@ -127,6 +141,89 @@ public class TeacherServlet extends HttpServlet {
             e.printStackTrace();
             resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             resp.getWriter().write(JsonHelper.error("Lỗi khi khởi tạo câu hỏi bằng AI: " + e.getMessage()));
+        }
+    }
+
+    private void handleAiSuggestMisconceptions(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        JsonObject body = JsonHelper.parseRequestBody(req);
+        String topicName = (body != null && body.has("topicName") && !body.get("topicName").isJsonNull())
+                ? body.get("topicName").getAsString().trim() : "Kiến thức tổng hợp";
+
+        try {
+            List<Map<String, String>> suggestions = aiService.suggestMisconceptions(topicName);
+            resp.getWriter().write(JsonHelper.success("Gợi ý bẫy tư duy cho chủ đề: " + topicName, suggestions));
+        } catch (Exception e) {
+            e.printStackTrace();
+            resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            resp.getWriter().write(JsonHelper.error("Lỗi khi gợi ý bẫy tư duy: " + e.getMessage()));
+        }
+    }
+
+    private void handleAiValidateTopic(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        JsonObject body = JsonHelper.parseRequestBody(req);
+        String topicName = (body != null && body.has("topicName") && !body.get("topicName").isJsonNull())
+                ? body.get("topicName").getAsString().trim() : "";
+
+        if (topicName.isBlank()) {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            resp.getWriter().write(JsonHelper.error("Vui lòng nhập tên môn học hoặc chủ đề cần thẩm định."));
+            return;
+        }
+
+        try {
+            Map<String, Object> validation = aiService.validateTopic(topicName);
+            resp.getWriter().write(JsonHelper.success("Thẩm định môn học / chủ đề thành công", validation));
+        } catch (Exception e) {
+            e.printStackTrace();
+            resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            resp.getWriter().write(JsonHelper.error("Lỗi khi thẩm định chủ đề: " + e.getMessage()));
+        }
+    }
+
+    private void handleAiValidateMisconception(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        JsonObject body = JsonHelper.parseRequestBody(req);
+        String topicName = (body != null && body.has("topicName") && !body.get("topicName").isJsonNull())
+                ? body.get("topicName").getAsString().trim() : "Tổng hợp";
+        String misconception = (body != null && body.has("misconception") && !body.get("misconception").isJsonNull())
+                ? body.get("misconception").getAsString().trim() : "";
+
+        if (misconception.isBlank()) {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            resp.getWriter().write(JsonHelper.error("Vui lòng nhập bẫy tư duy cần thẩm định."));
+            return;
+        }
+
+        try {
+            Map<String, Object> validation = aiService.validateMisconception(topicName, misconception);
+            resp.getWriter().write(JsonHelper.success("Thẩm định bẫy tư duy thành công", validation));
+        } catch (Exception e) {
+            e.printStackTrace();
+            resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            resp.getWriter().write(JsonHelper.error("Lỗi khi thẩm định bẫy tư duy: " + e.getMessage()));
+        }
+    }
+
+    private void handleAiAssistQuestion(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        JsonObject body = JsonHelper.parseRequestBody(req);
+        if (body == null || !body.has("questionPrompt")) {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            resp.getWriter().write(JsonHelper.error("Vui lòng nhập nội dung hoặc ý tưởng câu hỏi cần hoàn thiện."));
+            return;
+        }
+
+        String questionPrompt = body.get("questionPrompt").getAsString().trim();
+        String topicName = (body.has("topicName") && !body.get("topicName").isJsonNull())
+                ? body.get("topicName").getAsString().trim() : "Kiến thức chung";
+        String difficulty = (body.has("difficulty") && !body.get("difficulty").isJsonNull())
+                ? body.get("difficulty").getAsString().trim() : "medium";
+
+        try {
+            Map<String, Object> assisted = aiService.assistQuestionDraft(topicName, questionPrompt, difficulty);
+            resp.getWriter().write(JsonHelper.success("Hoàn thiện câu hỏi bằng AI thành công", assisted));
+        } catch (Exception e) {
+            e.printStackTrace();
+            resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            resp.getWriter().write(JsonHelper.error("Lỗi khi AI hỗ trợ soạn câu hỏi: " + e.getMessage()));
         }
     }
 

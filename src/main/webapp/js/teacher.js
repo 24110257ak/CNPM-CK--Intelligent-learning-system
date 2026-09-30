@@ -178,6 +178,42 @@ function setupEventListeners() {
             }
         });
     });
+
+    // Thẩm định môn học / chủ đề bằng AI
+    const btnValidateTopic = document.getElementById('btn-validate-topic');
+    if (btnValidateTopic) {
+        btnValidateTopic.addEventListener('click', handleValidateTopic);
+    }
+
+    // AI gợi ý bẫy tư duy động theo môn
+    const btnSuggestMisc = document.getElementById('btn-suggest-misconceptions');
+    if (btnSuggestMisc) {
+        btnSuggestMisc.addEventListener('click', handleSuggestMisconceptions);
+    }
+
+    // Thẩm định bẫy tư duy bằng AI
+    const btnValidateMisc = document.getElementById('btn-validate-misconception');
+    if (btnValidateMisc) {
+        btnValidateMisc.addEventListener('click', handleValidateMisconception);
+    }
+
+    // AI Hỗ trợ hoàn thiện câu hỏi trong Modal
+    const btnModalAiAssist = document.getElementById('btn-modal-ai-assist');
+    if (btnModalAiAssist) {
+        btnModalAiAssist.addEventListener('click', handleModalAiAssist);
+    }
+
+    // Gợi ý bẫy tư duy trong Modal thêm câu hỏi
+    const btnModalSuggestMisc = document.getElementById('btn-modal-suggest-misconception');
+    if (btnModalSuggestMisc) {
+        btnModalSuggestMisc.addEventListener('click', handleModalSuggestMisconception);
+    }
+
+    // Tạo môn mới nhanh từ trong Modal thêm câu hỏi
+    const btnQuickAddTopicModal = document.getElementById('btn-quick-add-topic-from-modal');
+    if (btnQuickAddTopicModal) {
+        btnQuickAddTopicModal.addEventListener('click', handleQuickAddTopicFromModal);
+    }
 }
 
 /**
@@ -744,8 +780,20 @@ async function handleAiGenerateSubmit(e) {
     }
 
     const difficulty = document.getElementById('ai-difficulty').value;
-    const misconceptionTag = document.getElementById('ai-misconception').value;
-    const count = parseInt(document.getElementById('ai-count').value) || 5;
+    const misconceptionTag = document.getElementById('ai-misconception').value.trim() || 'all';
+    
+    // Ràng buộc số lượng câu hỏi nhập từ bàn phím là số nguyên >= 1
+    const countRaw = (document.getElementById('ai-count').value || '').trim();
+    const count = parseInt(countRaw, 10);
+    if (isNaN(count) || count < 1 || !Number.isInteger(count)) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Số lượng câu hỏi không hợp lệ',
+            text: 'Vui lòng nhập số lượng câu hỏi là một số nguyên dương từ bàn phím (≥ 1)!'
+        });
+        return;
+    }
+
     const promptHint = document.getElementById('ai-custom-prompt').value.trim();
 
     const submitBtn = document.getElementById('btn-generate-ai');
@@ -1209,3 +1257,411 @@ function normalizeCorrectAnswer(val) {
     if (['A', 'B', 'C', 'D'].includes(firstChar)) return firstChar;
     return 'A';
 }
+
+/**
+ * ══════════════════════════════════════════════════════════════
+ * AI VALIDATION & MISCONCEPTION GENERATIVE ASSISTANCE
+ * ══════════════════════════════════════════════════════════════
+ */
+
+/**
+ * Thẩm định môn học / chủ đề bằng AI (AI Topic Validation)
+ */
+async function handleValidateTopic() {
+    const topicInput = document.getElementById('ai-topic-input');
+    const topicName = topicInput ? topicInput.value.trim() : '';
+    const box = document.getElementById('topic-validation-box');
+    const btn = document.getElementById('btn-validate-topic');
+
+    if (!topicName) {
+        Swal.fire({
+            icon: 'info',
+            title: 'Chưa nhập môn học',
+            text: 'Vui lòng gõ tên môn học hoặc chủ đề vào ô bên dưới trước khi bấm thẩm định!'
+        });
+        return;
+    }
+
+    const originalBtnHtml = btn ? btn.innerHTML : '';
+    try {
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Đang thẩm định...';
+        }
+        if (box) {
+            box.style.display = 'block';
+            box.innerHTML = '<div class="text-muted small py-1"><span class="spinner-border spinner-border-sm me-1 text-primary"></span>Gemini đang phân tích chương trình học & phạm vi môn...</div>';
+        }
+
+        const res = await API.teacher.validateTopic(topicName);
+        const data = res.data || {};
+
+        let subtopicsHtml = '';
+        if (data.suggestedSubtopics && data.suggestedSubtopics.length > 0) {
+            const chips = data.suggestedSubtopics.map(st => `
+                <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2 rounded-pill small me-1 mb-1" onclick="applySubtopicHint('${escapeHtml(st)}')">
+                    + ${escapeHtml(st)}
+                </button>
+            `).join('');
+            subtopicsHtml = `
+                <div class="mt-2 pt-2 border-top">
+                    <span class="text-muted small fw-semibold d-block mb-1">Gợi ý phân nhánh chủ đề (bấm để thêm vào yêu cầu):</span>
+                    <div class="d-flex flex-wrap">${chips}</div>
+                </div>
+            `;
+        }
+
+        if (box) {
+            box.style.display = 'block';
+            box.innerHTML = `
+                <div class="alert alert-primary-subtle border border-primary-subtle py-2 px-3 mb-0 rounded-3 small text-dark shadow-sm">
+                    <div class="d-flex align-items-center justify-content-between mb-1">
+                        <span class="fw-bold text-primary">
+                            <i class="fa-solid fa-circle-check text-success me-1"></i>Lĩnh vực: ${escapeHtml(data.field || 'Đa ngành / Tổng hợp')}
+                        </span>
+                        <span class="badge bg-primary text-white rounded-pill px-2">Độ phù hợp: ${escapeHtml(data.clarity || 'high')}</span>
+                    </div>
+                    <div class="text-secondary">${escapeHtml(data.feedback || 'Chủ đề hợp lệ và sẵn sàng tạo đề.')}</div>
+                    ${subtopicsHtml}
+                </div>
+            `;
+        }
+    } catch (err) {
+        console.error('Lỗi khi thẩm định chủ đề:', err);
+        if (box) {
+            box.style.display = 'block';
+            box.innerHTML = `
+                <div class="alert alert-warning py-2 px-3 mb-0 rounded-3 small">
+                    <i class="fa-solid fa-triangle-exclamation me-1"></i>${escapeHtml(err.message || 'Không thể kết nối đến bộ thẩm định AI.')}
+                </div>
+            `;
+        }
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = originalBtnHtml;
+        }
+    }
+}
+
+function applySubtopicHint(subtopic) {
+    const hintInput = document.getElementById('ai-custom-prompt');
+    if (hintInput) {
+        hintInput.value = hintInput.value ? `${hintInput.value}, ${subtopic}` : `Tập trung vào: ${subtopic}`;
+        hintInput.focus();
+    }
+}
+
+/**
+ * AI Gợi ý bẫy tư duy đặc thù cho môn học đang nhập
+ */
+async function handleSuggestMisconceptions() {
+    const topicInput = document.getElementById('ai-topic-input');
+    const topicName = topicInput ? topicInput.value.trim() : '';
+    const btn = document.getElementById('btn-suggest-misconceptions');
+    const chipsContainer = document.getElementById('ai-misconceptions-chips-container');
+    const chipsBox = document.getElementById('ai-misconceptions-chips');
+    const datalist = document.getElementById('misconception-datalist');
+
+    if (!topicName) {
+        Swal.fire({
+            icon: 'info',
+            title: 'Chưa có tên môn học',
+            text: 'Vui lòng nhập tên môn học / chủ đề trước để AI tìm các bẫy tư duy chính xác nhất cho môn này!'
+        });
+        if (topicInput) topicInput.focus();
+        return;
+    }
+
+    const originalBtnHtml = btn ? btn.innerHTML : '';
+    try {
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>AI đang phân tích bẫy...';
+        }
+
+        const res = await API.teacher.suggestMisconceptions(topicName);
+        const list = res.data || [];
+
+        if (list.length === 0) {
+            throw new Error('Không nhận được danh sách bẫy tư duy từ AI.');
+        }
+
+        // Cập nhật datalist
+        if (datalist) {
+            datalist.innerHTML = list.map(item => `
+                <option value="${escapeHtml(item.tag || item.label)}">${escapeHtml(item.label)} - ${escapeHtml(item.description)}</option>
+            `).join('');
+        }
+
+        // Hiển thị chips để người dùng bấm chọn nhanh
+        if (chipsContainer && chipsBox) {
+            chipsContainer.style.display = 'block';
+            chipsBox.innerHTML = list.map(item => `
+                <button type="button" class="btn btn-outline-danger btn-sm rounded-pill py-1 px-3 small fw-semibold text-start shadow-sm"
+                        onclick="selectMisconception('${escapeHtml(item.tag || item.label)}')">
+                    <i class="fa-solid fa-crosshairs me-1"></i>${escapeHtml(item.label)}
+                    <span class="d-block text-muted fw-normal" style="font-size: 0.72rem;">${escapeHtml(item.description)}</span>
+                </button>
+            `).join('');
+        }
+
+        Swal.fire({
+            icon: 'success',
+            title: 'Đã gợi ý bẫy tư duy!',
+            text: `AI đã phân tích ${list.length} bẫy nhận thức phổ biến cho môn "${topicName}". Bạn có thể bấm chọn ngay bên dưới!`,
+            timer: 2000,
+            showConfirmButton: false
+        });
+
+    } catch (err) {
+        console.error('Lỗi khi gợi ý bẫy tư duy:', err);
+        Swal.fire({
+            icon: 'error',
+            title: 'Lỗi gợi ý bẫy',
+            text: err.message || 'Không thể tải bẫy tư duy từ AI.'
+        });
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = originalBtnHtml;
+        }
+    }
+}
+
+function selectMisconception(val) {
+    const input = document.getElementById('ai-misconception');
+    if (input) {
+        input.value = val;
+        input.focus();
+    }
+}
+
+/**
+ * Thẩm định bẫy tư duy bằng AI (AI Misconception Validation)
+ */
+async function handleValidateMisconception() {
+    const topicInput = document.getElementById('ai-topic-input');
+    const topicName = topicInput ? topicInput.value.trim() : 'Tổng hợp';
+    const miscInput = document.getElementById('ai-misconception');
+    const misconception = miscInput ? miscInput.value.trim() : '';
+    const btn = document.getElementById('btn-validate-misconception');
+    const box = document.getElementById('misconception-validation-box');
+
+    if (!misconception) {
+        Swal.fire({
+            icon: 'info',
+            title: 'Chưa nhập bẫy tư duy',
+            text: 'Vui lòng nhập tên bẫy tư duy hoặc chọn một gợi ý trước khi thẩm định!'
+        });
+        return;
+    }
+
+    const originalBtnHtml = btn ? btn.innerHTML : '';
+    try {
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Thẩm định...';
+        }
+        if (box) {
+            box.style.display = 'block';
+            box.innerHTML = '<div class="text-muted small py-1"><span class="spinner-border spinner-border-sm me-1 text-primary"></span>Đang thẩm định tính phân hóa của bẫy tư duy...</div>';
+        }
+
+        const res = await API.teacher.validateMisconception(topicName, misconception);
+        const data = res.data || {};
+
+        if (box) {
+            box.style.display = 'block';
+            box.innerHTML = `
+                <div class="alert alert-success-subtle border border-success-subtle py-2 px-3 mb-0 rounded-3 small text-dark shadow-sm">
+                    <div class="fw-bold text-success mb-1">
+                        <i class="fa-solid fa-shield-check me-1"></i>Bẫy tư duy: "${escapeHtml(data.misconception || misconception)}"
+                    </div>
+                    <div class="mb-1">${escapeHtml(data.feedback || 'Bẫy nhận thức phù hợp.')}</div>
+                    ${data.distractorTip ? `<div class="text-muted fst-italic"><i class="fa-regular fa-lightbulb text-warning me-1"></i><strong>Chiến lược bẫy:</strong> ${escapeHtml(data.distractorTip)}</div>` : ''}
+                </div>
+            `;
+        }
+    } catch (err) {
+        console.error('Lỗi khi thẩm định bẫy:', err);
+        if (box) {
+            box.style.display = 'block';
+            box.innerHTML = `
+                <div class="alert alert-warning py-2 px-3 mb-0 rounded-3 small">
+                    <i class="fa-solid fa-triangle-exclamation me-1"></i>${escapeHtml(err.message || 'Lỗi kết nối thẩm định.')}
+                </div>
+            `;
+        }
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = originalBtnHtml;
+        }
+    }
+}
+
+/**
+ * AI Hỗ trợ hoàn thiện câu hỏi tự động bên trong Modal thêm câu hỏi
+ */
+async function handleModalAiAssist() {
+    const questionTextInput = document.getElementById('modal-question-text');
+    const questionText = questionTextInput ? questionTextInput.value.trim() : '';
+    const topicSelect = document.getElementById('modal-topic-id');
+    const topicName = topicSelect && topicSelect.selectedIndex >= 0 ? topicSelect.options[topicSelect.selectedIndex].text : 'Kiến thức chung';
+    const difficulty = document.getElementById('modal-difficulty').value || 'medium';
+
+    if (!questionText) {
+        Swal.fire({
+            icon: 'info',
+            title: 'Chưa có nội dung câu hỏi',
+            text: 'Vui lòng gõ một câu hỏi hoặc ý tưởng câu hỏi vào ô "Nội dung câu hỏi" trước để AI tự động điền các phương án A, B, C, D và lời giải!'
+        });
+        if (questionTextInput) questionTextInput.focus();
+        return;
+    }
+
+    const btn = document.getElementById('btn-modal-ai-assist');
+    const btnText = document.getElementById('btn-modal-ai-assist-text');
+    const originalText = btnText ? btnText.innerHTML : 'AI Tự Động Điền Phương Án';
+
+    try {
+        if (btn) btn.disabled = true;
+        if (btnText) btnText.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Gemini đang soạn 4 phương án...';
+
+        const res = await API.teacher.assistQuestion(topicName, questionText, difficulty);
+        const data = res.data || {};
+
+        if (data.optionA) document.getElementById('modal-option-a').value = data.optionA;
+        if (data.optionB) document.getElementById('modal-option-b').value = data.optionB;
+        if (data.optionC) document.getElementById('modal-option-c').value = data.optionC;
+        if (data.optionD) document.getElementById('modal-option-d').value = data.optionD;
+        if (data.correctAnswer) document.getElementById('modal-correct-answer').value = normalizeCorrectAnswer(data.correctAnswer);
+        if (data.explanation) document.getElementById('modal-explanation').value = data.explanation;
+        if (data.misconceptionTag) document.getElementById('modal-misconception-tag').value = data.misconceptionTag;
+
+        Swal.fire({
+            icon: 'success',
+            title: '✨ AI Đã Hoàn Thiện Câu Hỏi!',
+            text: 'Đã tự động điền đầy đủ 4 phương án, chỉ định đáp án đúng, phân loại bẫy tư duy và viết lời giải thích sư phạm. Bạn có thể xem lại và bấm "Lưu Câu Hỏi"!',
+            timer: 2500,
+            showConfirmButton: false
+        });
+
+    } catch (err) {
+        console.error('Lỗi khi AI hỗ trợ soạn câu hỏi:', err);
+        Swal.fire({
+            icon: 'error',
+            title: 'Lỗi Trợ Lý AI',
+            text: err.message || 'Không thể hoàn thiện câu hỏi tự động. Vui lòng thử lại.'
+        });
+    } finally {
+        if (btn) btn.disabled = false;
+        if (btnText) btnText.innerHTML = originalText;
+    }
+}
+
+/**
+ * Gợi ý bẫy tư duy ngay trong Modal Thêm Câu Hỏi
+ */
+async function handleModalSuggestMisconception() {
+    const topicSelect = document.getElementById('modal-topic-id');
+    const topicName = topicSelect && topicSelect.selectedIndex >= 0 ? topicSelect.options[topicSelect.selectedIndex].text : 'Kiến thức chung';
+
+    try {
+        Swal.fire({
+            title: 'Đang tải gợi ý bẫy tư duy...',
+            didOpen: () => Swal.showLoading()
+        });
+
+        const res = await API.teacher.suggestMisconceptions(topicName);
+        const list = res.data || [];
+
+        if (list.length === 0) {
+            Swal.fire({
+                icon: 'info',
+                title: 'Không có gợi ý',
+                text: 'Chưa tìm thấy bẫy tư duy đặc thù cho môn này.'
+            });
+            return;
+        }
+
+        const inputOptions = {};
+        list.forEach(item => {
+            inputOptions[item.tag || item.label] = `${item.label} (${item.description})`;
+        });
+
+        const { value: selectedTag } = await Swal.fire({
+            title: `Bẫy tư duy gợi ý cho: ${topicName}`,
+            input: 'select',
+            inputOptions: inputOptions,
+            inputPlaceholder: '-- Chọn một bẫy nhận thức --',
+            showCancelButton: true,
+            confirmButtonText: 'Chọn bẫy này',
+            cancelButtonText: 'Đóng'
+        });
+
+        if (selectedTag) {
+            document.getElementById('modal-misconception-tag').value = selectedTag;
+        }
+    } catch (err) {
+        console.error('Lỗi gợi ý bẫy trong modal:', err);
+        Swal.fire({
+            icon: 'error',
+            title: 'Lỗi',
+            text: err.message || 'Không thể tải bẫy tư duy.'
+        });
+    }
+}
+
+/**
+ * Tạo môn học / chủ đề mới nhanh từ trong Modal thêm câu hỏi
+ */
+async function handleQuickAddTopicFromModal() {
+    const { value: newTopicName } = await Swal.fire({
+        title: 'Tạo Môn Học / Chủ Đề Mới',
+        input: 'text',
+        inputLabel: 'Tên môn học hoặc chủ đề bài kiểm tra:',
+        inputPlaceholder: 'Ví dụ: Thiết Kế Web, Triết Học, Giải Tích...',
+        showCancelButton: true,
+        confirmButtonText: 'Khởi Tạo Môn',
+        cancelButtonText: 'Hủy',
+        inputValidator: (value) => {
+            if (!value || !value.trim()) {
+                return 'Tên môn học không được để trống!';
+            }
+        }
+    });
+
+    if (!newTopicName) return;
+
+    try {
+        const createRes = await API.topics.create({
+            topicName: newTopicName.trim(),
+            description: 'Khởi tạo trực tiếp từ trình soạn thảo câu hỏi'
+        });
+
+        await loadTopics();
+
+        const createdId = createRes.data ? createRes.data.topicId : null;
+        if (createdId) {
+            document.getElementById('modal-topic-id').value = createdId;
+        }
+
+        Swal.fire({
+            icon: 'success',
+            title: 'Đã tạo môn mới!',
+            text: `Môn "${newTopicName.trim()}" đã được thêm và chọn làm chủ đề cho câu hỏi này.`,
+            timer: 1500,
+            showConfirmButton: false
+        });
+    } catch (err) {
+        console.error('Lỗi khi tạo môn mới từ modal:', err);
+        Swal.fire({
+            icon: 'error',
+            title: 'Lỗi tạo môn',
+            text: err.message || 'Không thể tạo môn học mới.'
+        });
+    }
+}
+

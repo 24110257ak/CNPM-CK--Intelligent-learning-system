@@ -133,12 +133,7 @@ public class PromptBuilder {
             2. Có đủ 4 phương án A, B, C, D phân hóa rõ rệt, tính hợp lý cao, không đặt phương án vô lý hoặc quá lộ liễu.
             3. Đáp án đúng (correct_answer) là một trong các chữ cái: 'A', 'B', 'C', hoặc 'D'.
             4. Lời giải thích (explanation) phải chi tiết, chuẩn mực sư phạm: vì sao đáp án đó là đúng, và các phương án sai đã đánh trúng bẫy tư duy nào.
-            5. Gắn nhãn misconception_tag vào 1 trong các nhóm:
-               - syntax_swap (nhầm lẫn cú pháp, công thức, thuật ngữ, keyword)
-               - boundary_blindness (quên điều kiện biên, giới hạn, giá trị ngoại lệ, null)
-               - mental_model_gap (lỗ hổng mô hình tư duy, bản chất nguyên lý, trừu tượng hóa)
-               - logic_flaw (sai sót lập luận điều kiện, phân tích logic, luồng suy luận)
-               - other (lỗi kiến thức sự kiện, phân tích tổng hợp)
+            5. Gắn nhãn misconception_tag là bẫy nhận thức cụ thể của câu hỏi (có thể là một trong các nhóm kinh điển syntax_swap, boundary_blindness, mental_model_gap, logic_flaw, hoặc bất kỳ bẫy tư duy đặc thù nào phù hợp với môn học này dưới dạng chuỗi ngắn gọn).
 
             Hãy trả về một JSON Array chứa danh sách các câu hỏi, đúng cấu trúc JSON sau (không kèm text nào ngoài JSON):
             [
@@ -151,11 +146,108 @@ public class PromptBuilder {
                 "correct_answer": "A hoặc B hoặc C hoặc D",
                 "explanation": "string (giải thích chi tiết sư phạm)",
                 "difficulty": "easy hoặc medium hoặc hard",
-                "misconception_tag": "syntax_swap hoặc boundary_blindness hoặc mental_model_gap hoặc logic_flaw hoặc other"
+                "misconception_tag": "string (tên bẫy tư duy)"
               }
             ]
             """);
 
         return sb.toString();
+    }
+
+    /**
+     * Prompt yêu cầu AI gợi ý các bẫy tư duy (misconceptions) đặc thù theo môn học / chủ đề bất kỳ.
+     */
+    public static String buildSuggestMisconceptionsPrompt(String topicName) {
+        return """
+            Bạn là Chuyên Gia Sư Phạm & Thiết Kế Đề Thi.
+            Chủ đề / Môn học được giảng viên nhập là: "%s"
+
+            Hãy phân tích và gợi ý từ 4 đến 6 quan niệm sai lầm phổ biến nhất (Cognitive Traps / Misconceptions) mà người học hay mắc phải ở môn học/chủ đề này.
+            Các bẫy này cần thực tế, có tính phân hóa cao và thích hợp để dùng làm phương án nhiễu (distractor) trong câu hỏi trắc nghiệm.
+
+            Hãy trả về một JSON Array duy nhất (không có bất kỳ văn bản nào ngoài JSON), định dạng:
+            [
+              {
+                "tag": "snake_case_tag_ngắn_gọn",
+                "label": "Tên bẫy ngắn gọn súc tích",
+                "description": "Mô tả sinh viên thường hiểu lầm hay tính toán sai ở điểm nào"
+              }
+            ]
+            """.formatted(topicName != null && !topicName.isBlank() ? topicName : "Kiến thức tổng hợp");
+    }
+
+    /**
+     * Prompt thẩm định (AI Validation) tính sư phạm và phạm vi của môn học / chủ đề.
+     */
+    public static String buildValidateTopicPrompt(String topicName) {
+        return """
+            Bạn là Chuyên Gia Thẩm Định Chương Trình Đào Tạo.
+            Giảng viên vừa nhập tên chủ đề / môn học: "%s"
+
+            Hãy thẩm định xem tên chủ đề này có hợp lệ, rõ ràng và phù hợp để tạo ngân hàng câu hỏi hay không.
+            Trả về đúng định dạng JSON sau (không có văn bản ngoài JSON):
+            {
+              "isValid": true,
+              "field": "Tên lĩnh vực học thuật (vd: Công Nghệ Thông Tin, Kinh Tế Học, Khoa Học Tự Nhiên, v.v.)",
+              "clarity": "high / medium / low",
+              "feedback": "Nhận xét ngắn gọn 1-2 câu về tính phù hợp, tính bao quát hoặc khuyến nghị sư phạm",
+              "suggestedSubtopics": ["Chủ đề phụ gợi ý 1", "Chủ đề phụ gợi ý 2", "Chủ đề phụ gợi ý 3"]
+            }
+            """.formatted(topicName != null && !topicName.isBlank() ? topicName : "");
+    }
+
+    /**
+     * Prompt thẩm định (AI Validation) một bẫy tư duy đối với chủ đề đã chọn.
+     */
+    public static String buildValidateMisconceptionPrompt(String topicName, String misconception) {
+        return """
+            Bạn là Chuyên Gia Sư Phạm.
+            Môn học / Chủ đề: "%s"
+            Bẫy tư duy mà giảng viên muốn kiểm tra: "%s"
+
+            Hãy thẩm định tính phù hợp và khả thi của bẫy tư duy này trong việc thiết kế câu hỏi trắc nghiệm.
+            Trả về JSON duy nhất (không có văn bản ngoài JSON):
+            {
+              "isValid": true,
+              "feedback": "Nhận xét chuyên môn về bẫy tư duy này",
+              "distractorTip": "Gợi ý cách thiết kế phương án nhiễu để bẫy người học hiệu quả nhất"
+            }
+            """.formatted(topicName != null ? topicName : "Tổng hợp", misconception != null ? misconception : "");
+    }
+
+    /**
+     * Prompt hỗ trợ Giảng viên hoàn thiện câu hỏi (AI Assist Question Drafting).
+     */
+    public static String buildAssistQuestionPrompt(String topicName, String questionPrompt, String difficulty) {
+        return """
+            Bạn là Trợ Lý Sư Phạm Soạn Câu Hỏi Thi.
+            Chủ đề: "%s"
+            Mức độ: "%s"
+            Ý tưởng hoặc nội dung câu hỏi giảng viên vừa nhập:
+            "%s"
+
+            Dựa trên nội dung trên, hãy hoàn thiện thành một câu hỏi trắc nghiệm hoàn chỉnh, gồm:
+            - question_text: Câu hỏi được chau chuốt sư phạm (nếu có code hãy định dạng markdown thích hợp).
+            - option_a, option_b, option_c, option_d: 4 phương án rõ ràng, có phân hóa và chứa bẫy tư duy tinh tế.
+            - correct_answer: Một trong 4 chữ cái 'A', 'B', 'C', hoặc 'D'.
+            - explanation: Lời giải thích cặn kẽ chuẩn sư phạm tại sao đúng và tại sao các phương án khác sai.
+            - misconception_tag: Bẫy tư duy trọng tâm ngắn gọn.
+
+            Trả về JSON duy nhất (không có văn bản ngoài JSON):
+            {
+              "question_text": "...",
+              "option_a": "...",
+              "option_b": "...",
+              "option_c": "...",
+              "option_d": "...",
+              "correct_answer": "A",
+              "explanation": "...",
+              "misconception_tag": "..."
+            }
+            """.formatted(
+                topicName != null && !topicName.isBlank() ? topicName : "Kiến thức chung",
+                difficulty != null ? difficulty : "medium",
+                questionPrompt != null ? questionPrompt : ""
+            );
     }
 }

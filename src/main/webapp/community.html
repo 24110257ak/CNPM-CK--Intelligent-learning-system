@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>Diễn Đàn & Cộng Đồng Học Tập — LMS Thông Minh</title>
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -15,7 +18,7 @@
     <!-- SweetAlert2 -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="css/app.css?v=3.1">
+    <link rel="stylesheet" href="css/app.css?v=4.0">
     <style>
         body.community-dark-theme {
             background-color: #0b0d14 !important;
@@ -202,69 +205,124 @@
         }
     </style>
 </head>
-<body class="community-dark-theme position-relative">
+<body>
+    <div class="workspace-layout">
+        <!-- Ambient Top Background Glow -->
+        <div class="workspace-ambient-glow"></div>
 
-    <!-- Ambient Glow Drops -->
-    <div class="ambient-glow-community"></div>
-
-    <!-- ── Navbar ── -->
-    <nav class="navbar navbar-expand-lg community-topbar py-2">
-        <div class="container">
-            <a class="navbar-brand d-flex align-items-center gap-2" href="index.html">
-                <div class="rounded-3 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; background: linear-gradient(135deg, #6366f1, #a855f7); color: #fff;">
+        <!-- ── UNIFIED SIDEBAR NAVIGATION ── -->
+        <aside class="ws-sidebar" id="ws-sidebar">
+            <!-- Brand Logo -->
+            <div class="ws-sidebar-brand">
+                <div class="ws-brand-logo">
                     <i class="fa-solid fa-graduation-cap"></i>
                 </div>
-                <span class="text-white fw-bold">LMS Thông Minh</span>
-            </a>
-            <button class="navbar-toggler border-0 text-white" type="button" data-bs-toggle="collapse" data-bs-target="#navContent">
-                <i class="fa-solid fa-bars"></i>
-            </button>
-            <div class="collapse navbar-collapse" id="navContent">
-                <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-3">
-                    <li class="nav-item">
-                        <a class="nav-link text-secondary fw-semibold" href="index.html"><i class="fa-solid fa-book-open me-1"></i>Chủ Đề Ôn Tập</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-white fw-bold" href="community.html">
-                            <i class="fa-solid fa-comments me-1"></i>Diễn Đàn Cộng Đồng
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-secondary fw-semibold" href="history.html"><i class="fa-solid fa-chart-line me-1"></i>Lịch Sử & Tiến Độ</a>
-                    </li>
-                    <li class="nav-item d-none" id="nav-teacher-link">
-                        <a class="nav-link fw-bold" href="teacher-dashboard.html" style="color: #a5b4fc;"><i class="fa-solid fa-chalkboard-user me-1"></i>Trang Giảng Viên</a>
-                    </li>
-                </ul>
-                <div class="d-flex align-items-center gap-3">
-                    <div class="dropdown">
-                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle d-flex align-items-center gap-2 rounded-pill px-3 py-1.5" type="button" data-bs-toggle="dropdown" style="border-color: rgba(255, 255, 255, 0.15); color: #f1f5f9; background: rgba(255, 255, 255, 0.04);">
-                            <i class="fa-solid fa-user-circle text-primary"></i>
-                            <span id="nav-username" class="fw-semibold small">Sinh Viên</span>
-                        </button>
-                        <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-3" style="background: #141722; border: 1px solid rgba(255,255,255,0.1) !important;">
-                            <li><h6 class="dropdown-header text-secondary" id="nav-fullname">Họ và Tên</h6></li>
-                            <li class="d-none" id="dropdown-teacher-item">
-                                <a class="dropdown-item text-primary fw-semibold d-flex align-items-center gap-2" href="teacher-dashboard.html">
-                                    <i class="fa-solid fa-chalkboard-user"></i>Trang Giảng Viên
-                                </a>
-                            </li>
-                            <li><hr class="dropdown-divider" style="border-color: rgba(255,255,255,0.08);"></li>
-                            <li>
-                                <a class="dropdown-item text-danger d-flex align-items-center gap-2" href="#" id="logout-btn">
-                                    <i class="fa-solid fa-right-from-bracket"></i>Đăng xuất
-                                </a>
-                            </li>
-                        </ul>
+                <div class="flex-grow-1 overflow-hidden">
+                    <div class="ws-brand-name">LMS Thông Minh</div>
+                    <div class="d-flex align-items-center gap-1 mt-1">
+                        <span class="ws-mode-badge">Học Tập</span>
                     </div>
                 </div>
             </div>
-        </div>
-    </nav>
 
-    <!-- ── Main Community Layout (Discord / Facebook Style 3-Column Layout) ── -->
-    <main class="container my-4 flex-grow-1 position-relative" style="z-index: 1;">
-        <div class="row g-4">
+            <!-- Scrollable Nav Groups -->
+            <div class="ws-sidebar-scroll">
+                <div class="ws-nav-group-title">Danh mục học tập</div>
+                
+                <a href="index.html" class="ws-nav-item">
+                    <i class="fa-solid fa-chart-pie"></i>
+                    <span>Tổng quan học tập</span>
+                </a>
+                <a href="index.html#topics-section" class="ws-nav-item">
+                    <i class="fa-solid fa-book-open"></i>
+                    <span>Khám phá chủ đề</span>
+                </a>
+                <a href="history.html" class="ws-nav-item">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                    <span>Lịch sử & Tiến độ</span>
+                </a>
+                <a href="community.html" class="ws-nav-item active">
+                    <i class="fa-solid fa-comments"></i>
+                    <span>Diễn đàn cộng đồng</span>
+                </a>
+
+                <div class="ws-nav-group-title mt-3">Công cụ & Trợ Giúp</div>
+                <a href="index.html" class="ws-nav-item">
+                    <i class="fa-solid fa-bolt text-warning"></i>
+                    <span>Luyện tập nhanh AI</span>
+                </a>
+                <a href="#" class="ws-nav-item" id="sidebar-ai-ask" onclick="openChatWidget(); return false;">
+                    <i class="fa-solid fa-wand-magic-sparkles text-info"></i>
+                    <span>Hỏi trợ giảng AI</span>
+                </a>
+
+                <!-- Teacher Link (Nếu là Giảng viên / Admin) -->
+                <div class="d-none" id="sidebar-teacher-group">
+                    <div class="ws-nav-group-title mt-3 text-warning">Trang Giảng Viên</div>
+                    <a href="teacher-dashboard.html" class="ws-nav-item" style="color: #a5b4fc;">
+                        <i class="fa-solid fa-chalkboard-user text-primary"></i>
+                        <span>Bảng Giảng Viên</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Sidebar Footer: Profile Card & Logout -->
+            <div class="ws-sidebar-footer">
+                <div class="ws-user-card">
+                    <div class="ws-user-avatar" id="ws-avatar">SV</div>
+                    <div class="flex-grow-1 overflow-hidden">
+                        <div class="ws-user-name" id="nav-fullname">Đang tải...</div>
+                        <div class="ws-user-role" id="nav-role-badge">STUDENT • LEARNER</div>
+                    </div>
+                </div>
+                <button type="button" class="ws-btn-logout" id="logout-btn">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                    <span>Đăng xuất</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- ── MAIN CONTENT AREA ── -->
+        <main class="ws-main">
+            <!-- Topbar (Mobile trigger, breadcrumb, status) -->
+            <div class="ws-topbar">
+                <div class="d-flex align-items-center gap-3">
+                    <button type="button" class="ws-mobile-toggle" id="ws-toggle-btn" aria-label="Toggle Navigation">
+                        <i class="fa-solid fa-bars"></i>
+                    </button>
+                    <div class="d-none d-sm-flex align-items-center gap-2 text-muted small">
+                        <span>Hệ thống LMS</span>
+                        <i class="fa-solid fa-chevron-right" style="font-size: 0.65rem;"></i>
+                        <span class="text-white fw-semibold">Diễn Đàn Cộng Đồng</span>
+                    </div>
+                </div>
+
+                <div class="d-flex align-items-center gap-2">
+                    <button class="btn btn-sm btn-primary rounded-pill px-3" onclick="document.getElementById('btn-open-create-post').click()">
+                        <i class="fa-solid fa-plus me-1"></i>Đăng Bài Mới
+                    </button>
+                </div>
+            </div>
+
+            <!-- Main Canvas -->
+            <div class="ws-container">
+                <!-- Header (Editorial Style) -->
+                <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-3">
+                    <div>
+                        <h1 class="font-editorial fw-bold text-white mb-2" style="font-size: 2.35rem;">
+                            Diễn đàn cộng đồng học thuật
+                        </h1>
+                        <p class="text-muted small mb-0" style="max-width: 700px;">
+                            Không gian mở trao đổi kiến thức, giải mã bẫy tư duy và chia sẻ góc nhìn học tập giữa sinh viên và giảng viên.
+                        </p>
+                    </div>
+                    <span class="badge rounded-pill px-3 py-2 border" style="background: rgba(99, 102, 241, 0.12); border-color: rgba(99, 102, 241, 0.3) !important; color: #818cf8; font-size: 0.76rem;">
+                        <i class="fa-solid fa-comments me-1"></i>Cộng Đồng Trực Tuyến
+                    </span>
+                </div>
+
+                <!-- 3-Column Community Feed Grid -->
+                <div class="row g-4">
 
             <!-- ── Cột Trái: Kênh Thảo Luận (Discord Channels Sidebar) ── -->
             <div class="col-lg-3">
@@ -477,11 +535,9 @@
                         <i class="fa-solid fa-play me-1"></i>Vào Danh Mục Đề Thi
                     </a>
                 </div>
-
             </div>
-
-        </div>
-    </main>
+        </main>
+    </div>
 
     <!-- ── Modal Tạo Bài Viết Mới (Create Post Modal) ── -->
     <div class="modal fade" id="createPostModal" tabindex="-1" aria-labelledby="createPostModalLabel" aria-hidden="true">
@@ -616,9 +672,19 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script src="js/ui.js?v=3.1"></script>
-    <script src="js/api.js?v=3.1"></script>
-    <script src="js/chat-widget.js?v=3.1"></script>
-    <script src="js/community.js?v=3.1"></script>
+    <script src="js/ui.js?v=4.0"></script>
+    <script src="js/api.js?v=4.0"></script>
+    <script src="js/chat-widget.js?v=4.0"></script>
+    <script src="js/community.js?v=4.0"></script>
+    <script>
+        function openChatWidget() {
+            const chatToggle = document.getElementById('lms-chat-toggle-btn');
+            if (chatToggle) {
+                chatToggle.click();
+            } else {
+                Swal.fire('Trợ giảng AI', 'Hộp thoại trợ giảng ảo đang được kích hoạt ở góc phải màn hình!', 'info');
+            }
+        }
+    </script>
 </body>
 </html>

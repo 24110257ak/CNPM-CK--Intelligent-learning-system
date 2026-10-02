@@ -156,9 +156,20 @@ function setupNavbar() {
     const usernameEl = document.getElementById('nav-username');
     const fullnameEl = document.getElementById('nav-fullname');
     const avatarEl = document.getElementById('user-composer-avatar');
+    const wsAvatarEl = document.getElementById('ws-avatar');
+    const roleBadgeEl = document.getElementById('nav-role-badge');
 
     if (usernameEl) usernameEl.textContent = currentUser.username;
     if (fullnameEl) fullnameEl.textContent = currentUser.fullName || currentUser.username;
+
+    if (wsAvatarEl) {
+        const nameStr = currentUser.fullName || currentUser.username || 'SV';
+        wsAvatarEl.textContent = nameStr.substring(0, 2).toUpperCase();
+    }
+    if (roleBadgeEl) {
+        const roleStr = (currentUser.role || 'STUDENT').toUpperCase();
+        roleBadgeEl.textContent = roleStr === 'TEACHER' ? 'TEACHER • INSTRUCTOR' : (roleStr === 'ADMIN' ? 'SUPER • ADMIN' : 'STUDENT • LEARNER');
+    }
 
     if (avatarEl) {
         const initial = (currentUser.fullName || currentUser.username || 'U').charAt(0).toUpperCase();
@@ -171,12 +182,28 @@ function setupNavbar() {
     if (API.auth.isTeacher()) {
         const teacherLink = document.getElementById('nav-teacher-link');
         if (teacherLink) teacherLink.classList.remove('d-none');
+        const sidebarTeacherGroup = document.getElementById('sidebar-teacher-group');
+        if (sidebarTeacherGroup) sidebarTeacherGroup.classList.remove('d-none');
         const dropdownTeacherItem = document.getElementById('dropdown-teacher-item');
         if (dropdownTeacherItem) dropdownTeacherItem.classList.remove('d-none');
     }
 }
 
 function setupEventListeners() {
+    // Mobile Sidebar Toggle
+    const toggleBtn = document.getElementById('ws-toggle-btn');
+    const sidebar = document.getElementById('ws-sidebar');
+    if (toggleBtn && sidebar) {
+        toggleBtn.addEventListener('click', () => {
+            sidebar.classList.toggle('open');
+        });
+        document.addEventListener('click', (e) => {
+            if (window.innerWidth <= 991 && sidebar.classList.contains('open') && !sidebar.contains(e.target) && !toggleBtn.contains(e.target)) {
+                sidebar.classList.remove('open');
+            }
+        });
+    }
+
     // Đăng xuất
     const logoutBtn = document.getElementById('logout-btn');
     if (logoutBtn) {

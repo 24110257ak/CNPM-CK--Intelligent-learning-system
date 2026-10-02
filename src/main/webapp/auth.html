@@ -245,32 +245,6 @@
             color: #ffffff;
         }
 
-        /* Quick Demo Buttons */
-        .demo-bar {
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px dashed rgba(255, 255, 255, 0.08);
-            border-radius: 12px;
-            padding: 0.85rem;
-            margin-top: 1.5rem;
-        }
-
-        .demo-pill-btn {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            color: #cbd5e1;
-            font-size: 0.76rem;
-            font-weight: 600;
-            padding: 0.35rem 0.75rem;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.18s ease;
-        }
-        .demo-pill-btn:hover {
-            background: rgba(99, 102, 241, 0.2);
-            border-color: rgba(99, 102, 241, 0.4);
-            color: #ffffff;
-            transform: translateY(-1px);
-        }
 
         /* Role Picker Radio Cards */
         .role-radio-card {
@@ -332,14 +306,14 @@
                     <div class="brand-badge-icon">
                         <i class="fa-solid fa-graduation-cap"></i>
                     </div>
-                    <span>Intelligent LMS • Workspace</span>
+                    <span>LMS Thông Minh</span>
                 </div>
             </div>
 
             <!-- Title & Subtitle -->
             <h1 class="auth-title" id="auth-main-title">Đăng nhập</h1>
             <p class="auth-subtitle" id="auth-main-subtitle">
-                Workspace thông minh phân tách vai trò người học, giảng viên và quản trị hệ thống tích hợp chuẩn đoán AI.
+                Nền tảng kiểm tra trực tuyến tích hợp chẩn đoán bẫy nhận thức và cá nhân hóa bài học củng cố bằng AI.
             </p>
 
             <!-- Pill Tabs -->
@@ -359,7 +333,7 @@
                     <form id="login-form">
                         <label class="auth-label">Tên đăng nhập hoặc Email</label>
                         <div class="auth-input-wrapper">
-                            <input type="text" id="login-username" class="auth-input" placeholder="Nhập username (vd: student, teacher)" required autocomplete="username">
+                            <input type="text" id="login-username" class="auth-input" placeholder="Nhập tên đăng nhập hoặc email" required autocomplete="username">
                             <i class="fa-solid fa-user auth-input-icon"></i>
                         </div>
 
@@ -381,28 +355,9 @@
                         </div>
 
                         <button type="submit" id="login-submit-btn" class="btn-auth-submit">
-                            <i class="fa-solid fa-arrow-right-to-bracket me-2"></i>Đăng Nhập Vào Workspace
+                            <i class="fa-solid fa-arrow-right-to-bracket me-2"></i>Đăng Nhập Ngay
                         </button>
                     </form>
-
-                    <!-- Quick 1-Click Demo Section -->
-                    <div class="demo-bar">
-                        <div class="d-flex align-items-center justify-content-between mb-2">
-                            <span class="text-muted" style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">Đăng nhập nhanh (Tài khoản mẫu)</span>
-                            <i class="fa-solid fa-bolt text-warning small"></i>
-                        </div>
-                        <div class="d-flex flex-wrap gap-2">
-                            <button type="button" class="demo-pill-btn" onclick="fillQuickLogin('student', 'password123')">
-                                <i class="fa-solid fa-user-graduate me-1 text-primary"></i>Học viên (student)
-                            </button>
-                            <button type="button" class="demo-pill-btn" onclick="fillQuickLogin('teacher', 'password123')">
-                                <i class="fa-solid fa-chalkboard-user me-1 text-success"></i>Giảng viên (teacher)
-                            </button>
-                            <button type="button" class="demo-pill-btn" onclick="fillQuickLogin('admin', 'password123')">
-                                <i class="fa-solid fa-shield-halved me-1 text-danger"></i>Quản trị (admin)
-                            </button>
-                        </div>
-                    </div>
                 </div>
 
                 <!-- ── TAB 2: ĐĂNG KÝ ── -->
@@ -477,7 +432,7 @@
         </div>
 
         <div class="text-center mt-3 text-muted small" style="font-size: 0.78rem;">
-            &copy; 2026 Đồ Án CNPM — Intelligent AI LMS Studio Workspace
+            &copy; 2026 Đồ Án CNPM — Hệ Thống Học Tập Thông Minh
         </div>
     </div>
 
@@ -501,21 +456,12 @@
         // Tự động cập nhật tiêu đề khi đổi tab
         document.getElementById('login-tab').addEventListener('shown.bs.tab', () => {
             document.getElementById('auth-main-title').textContent = 'Đăng nhập';
-            document.getElementById('auth-main-subtitle').textContent = 'Workspace thông minh phân tách vai trò người học, giảng viên và quản trị hệ thống tích hợp chuẩn đoán AI.';
+            document.getElementById('auth-main-subtitle').textContent = 'Nền tảng kiểm tra trực tuyến tích hợp chẩn đoán bẫy nhận thức và cá nhân hóa bài học củng cố bằng AI.';
         });
         document.getElementById('register-tab').addEventListener('shown.bs.tab', () => {
             document.getElementById('auth-main-title').textContent = 'Tạo tài khoản';
             document.getElementById('auth-main-subtitle').textContent = 'Khởi tạo tài khoản người học hoặc giảng viên để bắt đầu hành trình học tập cá nhân hóa.';
         });
-
-        // Điền nhanh tài khoản demo
-        function fillQuickLogin(user, pass) {
-            document.getElementById('login-username').value = user;
-            document.getElementById('login-password').value = pass;
-            // Kích hoạt animation nhẹ
-            const btn = document.getElementById('login-submit-btn');
-            btn.focus();
-        }
 
         // Xử lý Login
         document.getElementById('login-form').addEventListener('submit', async (e) => {
@@ -545,7 +491,7 @@
                 Swal.fire('Lỗi đăng nhập', err.message || 'Tài khoản hoặc mật khẩu không đúng.', 'error');
             } finally {
                 btn.disabled = false;
-                btn.innerHTML = '<i class="fa-solid fa-arrow-right-to-bracket me-2"></i>Đăng Nhập Vào Workspace';
+                btn.innerHTML = '<i class="fa-solid fa-arrow-right-to-bracket me-2"></i>Đăng Nhập Ngay';
             }
         });
 

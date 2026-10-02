@@ -1,6 +1,6 @@
 ﻿# TOAN BO MA NGUON DU AN - HE THONG HOC TAP THONG MINH (INTELLIGENT LMS)
 
-> **Thoi gian tao file:** 2026-10-02 23:14:41
+> **Thoi gian tao file:** 2026-10-02 23:37:54
 > **Tong so file:** 58
 > **Muc dich:** Gom toan bo source code thanh 1 file duy nhat de gui cho ben thu ba xem xet, danh gia va gop y.
 
@@ -13741,32 +13741,6 @@ const AppUI = (() => {
             color: #ffffff;
         }
 
-        /* Quick Demo Buttons */
-        .demo-bar {
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px dashed rgba(255, 255, 255, 0.08);
-            border-radius: 12px;
-            padding: 0.85rem;
-            margin-top: 1.5rem;
-        }
-
-        .demo-pill-btn {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            color: #cbd5e1;
-            font-size: 0.76rem;
-            font-weight: 600;
-            padding: 0.35rem 0.75rem;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.18s ease;
-        }
-        .demo-pill-btn:hover {
-            background: rgba(99, 102, 241, 0.2);
-            border-color: rgba(99, 102, 241, 0.4);
-            color: #ffffff;
-            transform: translateY(-1px);
-        }
 
         /* Role Picker Radio Cards */
         .role-radio-card {
@@ -13828,14 +13802,14 @@ const AppUI = (() => {
                     <div class="brand-badge-icon">
                         <i class="fa-solid fa-graduation-cap"></i>
                     </div>
-                    <span>Intelligent LMS • Workspace</span>
+                    <span>LMS Thông Minh</span>
                 </div>
             </div>
 
             <!-- Title & Subtitle -->
             <h1 class="auth-title" id="auth-main-title">Đăng nhập</h1>
             <p class="auth-subtitle" id="auth-main-subtitle">
-                Workspace thông minh phân tách vai trò người học, giảng viên và quản trị hệ thống tích hợp chuẩn đoán AI.
+                Nền tảng kiểm tra trực tuyến tích hợp chẩn đoán bẫy nhận thức và cá nhân hóa bài học củng cố bằng AI.
             </p>
 
             <!-- Pill Tabs -->
@@ -13855,7 +13829,7 @@ const AppUI = (() => {
                     <form id="login-form">
                         <label class="auth-label">Tên đăng nhập hoặc Email</label>
                         <div class="auth-input-wrapper">
-                            <input type="text" id="login-username" class="auth-input" placeholder="Nhập username (vd: student, teacher)" required autocomplete="username">
+                            <input type="text" id="login-username" class="auth-input" placeholder="Nhập tên đăng nhập hoặc email" required autocomplete="username">
                             <i class="fa-solid fa-user auth-input-icon"></i>
                         </div>
 
@@ -13877,28 +13851,9 @@ const AppUI = (() => {
                         </div>
 
                         <button type="submit" id="login-submit-btn" class="btn-auth-submit">
-                            <i class="fa-solid fa-arrow-right-to-bracket me-2"></i>Đăng Nhập Vào Workspace
+                            <i class="fa-solid fa-arrow-right-to-bracket me-2"></i>Đăng Nhập Ngay
                         </button>
                     </form>
-
-                    <!-- Quick 1-Click Demo Section -->
-                    <div class="demo-bar">
-                        <div class="d-flex align-items-center justify-content-between mb-2">
-                            <span class="text-muted" style="font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">Đăng nhập nhanh (Tài khoản mẫu)</span>
-                            <i class="fa-solid fa-bolt text-warning small"></i>
-                        </div>
-                        <div class="d-flex flex-wrap gap-2">
-                            <button type="button" class="demo-pill-btn" onclick="fillQuickLogin('student', 'password123')">
-                                <i class="fa-solid fa-user-graduate me-1 text-primary"></i>Học viên (student)
-                            </button>
-                            <button type="button" class="demo-pill-btn" onclick="fillQuickLogin('teacher', 'password123')">
-                                <i class="fa-solid fa-chalkboard-user me-1 text-success"></i>Giảng viên (teacher)
-                            </button>
-                            <button type="button" class="demo-pill-btn" onclick="fillQuickLogin('admin', 'password123')">
-                                <i class="fa-solid fa-shield-halved me-1 text-danger"></i>Quản trị (admin)
-                            </button>
-                        </div>
-                    </div>
                 </div>
 
                 <!-- ── TAB 2: ĐĂNG KÝ ── -->
@@ -13973,7 +13928,7 @@ const AppUI = (() => {
         </div>
 
         <div class="text-center mt-3 text-muted small" style="font-size: 0.78rem;">
-            &copy; 2026 Đồ Án CNPM — Intelligent AI LMS Studio Workspace
+            &copy; 2026 Đồ Án CNPM — Hệ Thống Học Tập Thông Minh
         </div>
     </div>
 
@@ -13997,21 +13952,12 @@ const AppUI = (() => {
         // Tự động cập nhật tiêu đề khi đổi tab
         document.getElementById('login-tab').addEventListener('shown.bs.tab', () => {
             document.getElementById('auth-main-title').textContent = 'Đăng nhập';
-            document.getElementById('auth-main-subtitle').textContent = 'Workspace thông minh phân tách vai trò người học, giảng viên và quản trị hệ thống tích hợp chuẩn đoán AI.';
+            document.getElementById('auth-main-subtitle').textContent = 'Nền tảng kiểm tra trực tuyến tích hợp chẩn đoán bẫy nhận thức và cá nhân hóa bài học củng cố bằng AI.';
         });
         document.getElementById('register-tab').addEventListener('shown.bs.tab', () => {
             document.getElementById('auth-main-title').textContent = 'Tạo tài khoản';
             document.getElementById('auth-main-subtitle').textContent = 'Khởi tạo tài khoản người học hoặc giảng viên để bắt đầu hành trình học tập cá nhân hóa.';
         });
-
-        // Điền nhanh tài khoản demo
-        function fillQuickLogin(user, pass) {
-            document.getElementById('login-username').value = user;
-            document.getElementById('login-password').value = pass;
-            // Kích hoạt animation nhẹ
-            const btn = document.getElementById('login-submit-btn');
-            btn.focus();
-        }
 
         // Xử lý Login
         document.getElementById('login-form').addEventListener('submit', async (e) => {
@@ -14041,7 +13987,7 @@ const AppUI = (() => {
                 Swal.fire('Lỗi đăng nhập', err.message || 'Tài khoản hoặc mật khẩu không đúng.', 'error');
             } finally {
                 btn.disabled = false;
-                btn.innerHTML = '<i class="fa-solid fa-arrow-right-to-bracket me-2"></i>Đăng Nhập Vào Workspace';
+                btn.innerHTML = '<i class="fa-solid fa-arrow-right-to-bracket me-2"></i>Đăng Nhập Ngay';
             }
         });
 
@@ -14120,6 +14066,10 @@ const AppUI = (() => {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Diễn Đàn & Cộng Đồng Học Tập — LMS Thông Minh</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- FontAwesome 6 -->
@@ -14127,16 +14077,54 @@ const AppUI = (() => {
     <!-- SweetAlert2 -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="css/app.css?v=2.2">
+    <link rel="stylesheet" href="css/app.css?v=3.1">
     <style>
-        /* Discord / Facebook Inspired Community Styling */
+        body.community-dark-theme {
+            background-color: #0b0d14 !important;
+            color: #f1f5f9;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .ambient-glow-community {
+            position: fixed;
+            top: -120px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 750px;
+            height: 420px;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.12) 0%, rgba(139, 92, 246, 0.04) 50%, transparent 75%);
+            filter: blur(80px);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .community-topbar {
+            background: rgba(14, 16, 21, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            position: sticky;
+            top: 0;
+            z-index: 1020;
+        }
+
+        .community-card {
+            background: #121624 !important;
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            border-radius: 18px !important;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+        }
+
+        /* Discord / Channels Styling */
         .channel-btn {
             display: flex;
             align-items: center;
             gap: 0.6rem;
             padding: 0.65rem 0.9rem;
             border-radius: 10px;
-            color: #475569;
+            color: #94a3b8;
             font-weight: 600;
             text-decoration: none;
             transition: all 0.15s ease;
@@ -14144,28 +14132,31 @@ const AppUI = (() => {
             border: 1px solid transparent;
         }
         .channel-btn:hover {
-            background-color: #f1f5f9;
-            color: #0f172a;
+            background-color: rgba(255, 255, 255, 0.05);
+            color: #ffffff;
             transform: translateX(2px);
         }
         .channel-btn.active {
-            background: linear-gradient(135deg, #4361ee 0%, #3a56d4 100%);
-            color: #ffffff !important;
-            box-shadow: 0 4px 12px rgba(67, 97, 238, 0.25);
+            background: rgba(99, 102, 241, 0.18);
+            border-color: rgba(99, 102, 241, 0.4);
+            color: #818cf8 !important;
+            box-shadow: 0 4px 14px rgba(99, 102, 241, 0.25);
         }
         .channel-btn.active i {
-            color: #ffffff !important;
+            color: #818cf8 !important;
         }
 
         .post-card {
-            border: 1px solid #e2e8f0;
-            border-radius: 16px;
-            background: #ffffff;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 18px;
+            background: #121624;
+            color: #f1f5f9;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
         }
         .post-card:hover {
-            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
-            border-color: #cbd5e1;
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.4);
+            border-color: rgba(99, 102, 241, 0.3);
+            transform: translateY(-2px);
         }
 
         .post-action-btn {
@@ -14173,7 +14164,7 @@ const AppUI = (() => {
             border: none;
             padding: 0.45rem 0.9rem;
             border-radius: 8px;
-            color: #64748b;
+            color: #94a3b8;
             font-weight: 600;
             font-size: 0.88rem;
             transition: all 0.15s ease;
@@ -14182,22 +14173,23 @@ const AppUI = (() => {
             gap: 0.4rem;
         }
         .post-action-btn:hover {
-            background-color: #f1f5f9;
-            color: #0f172a;
+            background-color: rgba(255, 255, 255, 0.05);
+            color: #ffffff;
         }
         .post-action-btn.liked {
-            color: #e11d48 !important;
-            background-color: rgba(225, 29, 72, 0.08);
+            color: #f43f5e !important;
+            background-color: rgba(244, 63, 94, 0.12);
         }
         .post-action-btn.liked i {
-            color: #e11d48 !important;
+            color: #f43f5e !important;
         }
 
         .comment-bubble {
-            background-color: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 12px;
+            background-color: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            border-radius: 14px;
             padding: 0.75rem 1rem;
+            color: #e2e8f0;
         }
 
         .author-avatar {
@@ -14221,62 +14213,105 @@ const AppUI = (() => {
         }
 
         .composer-trigger {
-            background: #ffffff;
-            border: 1px solid #e2e8f0;
-            border-radius: 16px;
+            background: #121624;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 18px;
             padding: 1.1rem;
             cursor: pointer;
             transition: all 0.2s ease;
         }
         .composer-trigger:hover {
             border-color: #6366f1;
-            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.08);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.15);
+        }
+
+        /* Dark form controls */
+        .form-select.dark-input, .form-control.dark-input {
+            background-color: #161a29;
+            border-color: rgba(255, 255, 255, 0.1);
+            color: #f1f5f9;
+        }
+        .form-select.dark-input:focus, .form-control.dark-input:focus {
+            background-color: #1a1e30;
+            border-color: #6366f1;
+            color: #ffffff;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+        }
+
+        /* Modal Dark Overrides */
+        .modal-content.dark-modal {
+            background: #121624;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: #f1f5f9;
+        }
+        .modal-content.dark-modal .modal-header {
+            background: rgba(255, 255, 255, 0.03);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .modal-content.dark-modal .modal-footer {
+            background: rgba(255, 255, 255, 0.03);
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        /* Skeleton shimmer in dark mode */
+        .skeleton-card {
+            background: #121624 !important;
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        }
+        .skeleton-shimmer {
+            background: linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.03) 75%) !important;
+            background-size: 200% 100% !important;
         }
     </style>
 </head>
-<body class="bg-light">
+<body class="community-dark-theme position-relative">
+
+    <!-- Ambient Glow Drops -->
+    <div class="ambient-glow-community"></div>
 
     <!-- ── Navbar ── -->
-    <nav class="navbar navbar-expand-lg navbar-custom sticky-top">
+    <nav class="navbar navbar-expand-lg community-topbar py-2">
         <div class="container">
             <a class="navbar-brand d-flex align-items-center gap-2" href="index.html">
-                <i class="fa-solid fa-graduation-cap fa-lg text-primary"></i>
-                <span>LMS Thông Minh</span>
+                <div class="rounded-3 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; background: linear-gradient(135deg, #6366f1, #a855f7); color: #fff;">
+                    <i class="fa-solid fa-graduation-cap"></i>
+                </div>
+                <span class="text-white fw-bold">LMS Thông Minh</span>
             </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navContent">
-                <span class="navbar-toggler-icon"></span>
+            <button class="navbar-toggler border-0 text-white" type="button" data-bs-toggle="collapse" data-bs-target="#navContent">
+                <i class="fa-solid fa-bars"></i>
             </button>
             <div class="collapse navbar-collapse" id="navContent">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-3">
                     <li class="nav-item">
-                        <a class="nav-link fw-semibold" href="index.html"><i class="fa-solid fa-book-open me-1"></i>Chủ Đề Ôn Tập</a>
+                        <a class="nav-link text-secondary fw-semibold" href="index.html"><i class="fa-solid fa-book-open me-1"></i>Chủ Đề Ôn Tập</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link active fw-bold text-primary" href="community.html">
+                        <a class="nav-link text-white fw-bold" href="community.html">
                             <i class="fa-solid fa-comments me-1"></i>Diễn Đàn Cộng Đồng
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link fw-semibold" href="history.html"><i class="fa-solid fa-chart-line me-1"></i>Lịch Sử & Tiến Độ</a>
+                        <a class="nav-link text-secondary fw-semibold" href="history.html"><i class="fa-solid fa-chart-line me-1"></i>Lịch Sử & Tiến Độ</a>
                     </li>
                     <li class="nav-item d-none" id="nav-teacher-link">
-                        <a class="nav-link fw-bold text-indigo" href="teacher-dashboard.html" style="color: #6366f1;"><i class="fa-solid fa-chalkboard-user me-1"></i>Trang Giảng Viên</a>
+                        <a class="nav-link fw-bold" href="teacher-dashboard.html" style="color: #a5b4fc;"><i class="fa-solid fa-chalkboard-user me-1"></i>Trang Giảng Viên</a>
                     </li>
                 </ul>
                 <div class="d-flex align-items-center gap-3">
                     <div class="dropdown">
-                        <button class="btn btn-outline-secondary dropdown-toggle d-flex align-items-center gap-2 rounded-pill px-3 py-1" type="button" data-bs-toggle="dropdown">
-                            <i class="fa-solid fa-user-circle fa-lg text-primary"></i>
+                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle d-flex align-items-center gap-2 rounded-pill px-3 py-1.5" type="button" data-bs-toggle="dropdown" style="border-color: rgba(255, 255, 255, 0.15); color: #f1f5f9; background: rgba(255, 255, 255, 0.04);">
+                            <i class="fa-solid fa-user-circle text-primary"></i>
                             <span id="nav-username" class="fw-semibold small">Sinh Viên</span>
                         </button>
-                        <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3">
-                            <li><h6 class="dropdown-header" id="nav-fullname">Họ và Tên</h6></li>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-3" style="background: #141722; border: 1px solid rgba(255,255,255,0.1) !important;">
+                            <li><h6 class="dropdown-header text-secondary" id="nav-fullname">Họ và Tên</h6></li>
                             <li class="d-none" id="dropdown-teacher-item">
                                 <a class="dropdown-item text-primary fw-semibold d-flex align-items-center gap-2" href="teacher-dashboard.html">
-                                    <i class="fa-solid fa-chalkboard-user"></i>Bảng Quản Trị Giảng Viên
+                                    <i class="fa-solid fa-chalkboard-user"></i>Trang Giảng Viên
                                 </a>
                             </li>
-                            <li><hr class="dropdown-divider"></li>
+                            <li><hr class="dropdown-divider" style="border-color: rgba(255,255,255,0.08);"></li>
                             <li>
                                 <a class="dropdown-item text-danger d-flex align-items-center gap-2" href="#" id="logout-btn">
                                     <i class="fa-solid fa-right-from-bracket"></i>Đăng xuất
@@ -14290,25 +14325,25 @@ const AppUI = (() => {
     </nav>
 
     <!-- ── Main Community Layout (Discord / Facebook Style 3-Column Layout) ── -->
-    <main class="container my-4 flex-grow-1">
+    <main class="container my-4 flex-grow-1 position-relative" style="z-index: 1;">
         <div class="row g-4">
 
             <!-- ── Cột Trái: Kênh Thảo Luận (Discord Channels Sidebar) ── -->
             <div class="col-lg-3">
-                <div class="card border-0 shadow-sm rounded-4 p-3 bg-white sticky-top" style="top: 80px; z-index: 10;">
+                <div class="card border-0 shadow-sm rounded-4 p-3 community-card sticky-top" style="top: 80px; z-index: 10;">
                     <!-- Community Server Header -->
-                    <div class="d-flex align-items-center gap-2 mb-3 pb-2 border-bottom">
-                        <div class="rounded-3 bg-primary text-white p-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                    <div class="d-flex align-items-center gap-2 mb-3 pb-2 border-bottom" style="border-color: rgba(255, 255, 255, 0.08) !important;">
+                        <div class="rounded-3 text-white p-2 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; background: linear-gradient(135deg, #6366f1, #a855f7);">
                             <i class="fa-solid fa-fire fa-lg"></i>
                         </div>
                         <div>
-                            <h6 class="fw-bold mb-0 text-dark">LMS Study Lounge</h6>
-                            <small class="text-muted" style="font-size: 0.75rem;">Không gian trao đổi đa ngành</small>
+                            <h6 class="fw-bold mb-0 text-white">LMS Study Lounge</h6>
+                            <small class="text-secondary" style="font-size: 0.75rem;">Không gian trao đổi đa ngành</small>
                         </div>
                     </div>
 
                     <!-- Kênh Phân Loại (Discord Channels) -->
-                    <div class="text-uppercase text-muted fw-bold small px-2 mb-2" style="font-size: 0.72rem; letter-spacing: 0.5px;">
+                    <div class="text-uppercase text-secondary fw-bold small px-2 mb-2" style="font-size: 0.72rem; letter-spacing: 0.5px;">
                         Kênh Thảo Luận
                     </div>
                     <nav class="nav flex-column mb-3">
@@ -14335,28 +14370,28 @@ const AppUI = (() => {
                     </nav>
 
                     <!-- Lọc theo môn học -->
-                    <div class="text-uppercase text-muted fw-bold small px-2 mb-2 pt-2 border-top" style="font-size: 0.72rem; letter-spacing: 0.5px;">
+                    <div class="text-uppercase text-secondary fw-bold small px-2 mb-2 pt-2 border-top" style="font-size: 0.72rem; letter-spacing: 0.5px; border-color: rgba(255, 255, 255, 0.08) !important;">
                         Lọc Theo Môn Học
                     </div>
-                    <select class="form-select form-select-sm rounded-3 py-2 mb-3" id="filter-topic-select">
+                    <select class="form-select form-select-sm rounded-3 py-2 mb-3 dark-input" id="filter-topic-select">
                         <option value="">-- Mọi môn học & đề thi --</option>
                         <!-- Injected dynamically -->
                     </select>
 
                     <!-- Chỉ số cộng đồng (Live Community Stats) -->
-                    <div class="p-3 bg-light rounded-3 border">
-                        <div class="fw-bold small text-dark mb-2 d-flex align-items-center gap-1">
+                    <div class="p-3 rounded-3 border" style="background: rgba(255, 255, 255, 0.025); border-color: rgba(255, 255, 255, 0.08) !important;">
+                        <div class="fw-bold small text-white mb-2 d-flex align-items-center gap-1">
                             <i class="fa-solid fa-chart-simple text-primary"></i>Hoạt Động Cộng Đồng
                         </div>
-                        <div class="d-flex justify-content-between small text-muted mb-1">
+                        <div class="d-flex justify-content-between small text-secondary mb-1">
                             <span>Bài thảo luận:</span>
-                            <span class="fw-bold text-dark" id="stat-posts-count">--</span>
+                            <span class="fw-bold text-white" id="stat-posts-count">--</span>
                         </div>
-                        <div class="d-flex justify-content-between small text-muted mb-1">
+                        <div class="d-flex justify-content-between small text-secondary mb-1">
                             <span>Lượt bình luận:</span>
-                            <span class="fw-bold text-dark" id="stat-comments-count">--</span>
+                            <span class="fw-bold text-white" id="stat-comments-count">--</span>
                         </div>
-                        <div class="d-flex justify-content-between small text-muted">
+                        <div class="d-flex justify-content-between small text-secondary">
                             <span>Người tham gia:</span>
                             <span class="fw-bold text-success" id="stat-creators-count">--</span>
                         </div>
@@ -14373,10 +14408,10 @@ const AppUI = (() => {
                         <div class="author-avatar avatar-student" id="user-composer-avatar">
                             U
                         </div>
-                        <div class="flex-grow-1 bg-light rounded-pill py-2 px-3 text-muted small border">
+                        <div class="flex-grow-1 rounded-pill py-2 px-3 text-secondary small border" style="background: rgba(255, 255, 255, 0.035); border-color: rgba(255, 255, 255, 0.08) !important;">
                             <i class="fa-regular fa-pen-to-square me-1"></i>Bạn đang thắc mắc hay muốn chia sẻ điều gì về bài học hôm nay?
                         </div>
-                        <button class="btn btn-primary btn-sm rounded-pill px-3 fw-semibold text-nowrap flex-shrink-0">
+                        <button class="btn btn-primary btn-sm rounded-pill px-3 fw-semibold text-nowrap flex-shrink-0" style="background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); border: none;">
                             <i class="fa-solid fa-plus me-1"></i>Đăng bài
                         </button>
                     </div>
@@ -14385,24 +14420,24 @@ const AppUI = (() => {
                 <!-- Tiêu đề Kênh hiện tại & Bộ tìm kiếm -->
                 <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
                     <div>
-                        <h5 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2" id="current-channel-title">
+                        <h5 class="fw-bold text-white mb-0 d-flex align-items-center gap-2" id="current-channel-title">
                             <i class="fa-solid fa-hashtag text-primary"></i>Tất Cả Bài Viết
                         </h5>
-                        <small class="text-muted" id="current-channel-desc">Dòng thời gian các câu hỏi, mẹo học tập và bài thảo luận mới nhất</small>
+                        <small class="text-secondary" id="current-channel-desc">Dòng thời gian các câu hỏi, mẹo học tập và bài thảo luận mới nhất</small>
                     </div>
-                    <button class="btn btn-outline-secondary btn-sm rounded-pill px-3" id="btn-refresh-feed">
+                    <button class="btn btn-outline-secondary btn-sm rounded-pill px-3" id="btn-refresh-feed" style="border-color: rgba(255, 255, 255, 0.15); color: #cbd5e1;">
                         <i class="fa-solid fa-rotate-right me-1"></i>Làm mới
                     </button>
                 </div>
 
                 <!-- Dynamic Posts Loading (Facebook Style Skeleton Shimmer) -->
                 <div id="posts-loading" class="mb-3">
-                    <div class="d-flex align-items-center justify-content-center gap-2 py-2 mb-2 text-muted small">
+                    <div class="d-flex align-items-center justify-content-center gap-2 py-2 mb-2 text-secondary small">
                         <div class="lms-spinner lms-spinner-sm"></div>
                         <span class="fw-semibold">Đang cập nhật dòng thời gian thảo luận...</span>
                     </div>
                     <!-- Skeleton Post Card 1 -->
-                    <div class="skeleton-card shadow-sm rounded-4 p-4 bg-white mb-3">
+                    <div class="skeleton-card shadow-sm rounded-4 p-4 community-card mb-3">
                         <div class="d-flex align-items-center gap-3 mb-3">
                             <div class="skeleton-shimmer skeleton-avatar"></div>
                             <div class="flex-grow-1">
@@ -14414,13 +14449,13 @@ const AppUI = (() => {
                         <div class="skeleton-shimmer skeleton-line title mb-2"></div>
                         <div class="skeleton-shimmer skeleton-line w-100 mb-2"></div>
                         <div class="skeleton-shimmer skeleton-line w-80 mb-3"></div>
-                        <div class="d-flex justify-content-between pt-3 border-top">
+                        <div class="d-flex justify-content-between pt-3 border-top" style="border-color: rgba(255, 255, 255, 0.08) !important;">
                             <div class="skeleton-shimmer skeleton-line sm w-25"></div>
                             <div class="skeleton-shimmer skeleton-line sm w-25"></div>
                         </div>
                     </div>
                     <!-- Skeleton Post Card 2 -->
-                    <div class="skeleton-card shadow-sm rounded-4 p-4 bg-white">
+                    <div class="skeleton-card shadow-sm rounded-4 p-4 community-card">
                         <div class="d-flex align-items-center gap-3 mb-3">
                             <div class="skeleton-shimmer skeleton-avatar"></div>
                             <div class="flex-grow-1">
@@ -14432,7 +14467,7 @@ const AppUI = (() => {
                         <div class="skeleton-shimmer skeleton-line title mb-2"></div>
                         <div class="skeleton-shimmer skeleton-line w-100 mb-2"></div>
                         <div class="skeleton-shimmer skeleton-line w-60 mb-3"></div>
-                        <div class="d-flex justify-content-between pt-3 border-top">
+                        <div class="d-flex justify-content-between pt-3 border-top" style="border-color: rgba(255, 255, 255, 0.08) !important;">
                             <div class="skeleton-shimmer skeleton-line sm w-25"></div>
                             <div class="skeleton-shimmer skeleton-line sm w-25"></div>
                         </div>
@@ -14440,12 +14475,12 @@ const AppUI = (() => {
                 </div>
 
                 <!-- Empty State -->
-                <div id="posts-empty" class="card border-0 shadow-sm rounded-4 p-5 text-center bg-white" style="display: none;">
-                    <i class="fa-solid fa-comment-dots text-muted fs-1 mb-3 opacity-50"></i>
-                    <h6 class="fw-bold text-dark">Chưa có bài thảo luận nào trong kênh này</h6>
-                    <p class="text-muted small mb-3">Hãy là người đầu tiên đặt câu hỏi hoặc chia sẻ góc nhìn của bạn nhé!</p>
+                <div id="posts-empty" class="card border-0 shadow-sm rounded-4 p-5 text-center community-card" style="display: none;">
+                    <i class="fa-solid fa-comment-dots text-secondary fs-1 mb-3 opacity-50"></i>
+                    <h6 class="fw-bold text-white">Chưa có bài thảo luận nào trong kênh này</h6>
+                    <p class="text-secondary small mb-3">Hãy là người đầu tiên đặt câu hỏi hoặc chia sẻ góc nhìn của bạn nhé!</p>
                     <div>
-                        <button class="btn btn-primary rounded-pill px-4 fw-semibold" onclick="document.getElementById('btn-open-create-post').click()">
+                        <button class="btn btn-primary rounded-pill px-4 fw-semibold" onclick="document.getElementById('btn-open-create-post').click()" style="background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); border: none;">
                             <i class="fa-solid fa-pen me-1"></i>Tạo Bài Thảo Luận Đầu Tiên
                         </button>
                     </div>
@@ -14462,26 +14497,26 @@ const AppUI = (() => {
             <div class="col-lg-3">
                 
                 <!-- Card 1: Không Gian Kết Nối Bình Đẳng -->
-                <div class="card border-0 shadow-sm rounded-4 p-3 bg-white mb-4">
-                    <h6 class="fw-bold text-dark mb-2 d-flex align-items-center gap-2">
+                <div class="card border-0 shadow-sm rounded-4 p-4 community-card mb-4">
+                    <h6 class="fw-bold text-white mb-2 d-flex align-items-center gap-2">
                         <i class="fa-solid fa-handshake-angle text-indigo" style="color: #6366f1;"></i>Kết Nối Giảng Viên & Sinh Viên
                     </h6>
-                    <p class="text-muted small mb-3" style="line-height: 1.5;">
+                    <p class="text-secondary small mb-3" style="line-height: 1.5;">
                         Đây là không gian mở nơi người học và các chuyên gia học thuật cùng trao đổi, giải đáp các thắc mắc về bẫy tư duy, câu hỏi mơ hồ và phương pháp học tập hiệu quả.
                     </p>
                     <div class="d-flex gap-2 flex-wrap">
-                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-2 py-1 small">
+                        <span class="badge rounded-pill px-2.5 py-1 small border" style="background: rgba(99, 102, 241, 0.15); color: #a5b4fc; border-color: rgba(99, 102, 241, 0.3) !important;">
                             <i class="fa-solid fa-user-graduate me-1"></i>Hỏi Bài Tự Do
                         </span>
-                        <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-1 small">
+                        <span class="badge rounded-pill px-2.5 py-1 small border" style="background: rgba(16, 185, 129, 0.15); color: #34d399; border-color: rgba(16, 185, 129, 0.3) !important;">
                             <i class="fa-solid fa-check-double me-1"></i>Bình Luận Đa Chiều
                         </span>
                     </div>
                 </div>
 
                 <!-- Card 2: Quy Tắc Thảo Luận Văn Minh -->
-                <div class="card border-0 shadow-sm rounded-4 p-3 bg-white mb-4">
-                    <h6 class="fw-bold text-dark mb-2 d-flex align-items-center gap-2">
+                <div class="card border-0 shadow-sm rounded-4 p-4 community-card mb-4">
+                    <h6 class="fw-bold text-white mb-2 d-flex align-items-center gap-2">
                         <i class="fa-solid fa-scale-balanced text-warning"></i>Văn Hóa Cộng Đồng
                     </h6>
                     <ul class="text-secondary small ps-3 mb-0" style="line-height: 1.6;">
@@ -14492,7 +14527,7 @@ const AppUI = (() => {
                 </div>
 
                 <!-- Card 3: Khám Phá Đề Thi Nổi Bật -->
-                <div class="card border-0 shadow-sm rounded-4 p-3 text-white" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);">
+                <div class="card border-0 shadow-sm rounded-4 p-4 text-white community-card" style="background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%) !important;">
                     <div class="d-flex align-items-center gap-2 mb-2">
                         <i class="fa-solid fa-wand-magic-sparkles text-warning"></i>
                         <h6 class="fw-bold mb-0">Thử Thách Vượt Bẫy AI</h6>
@@ -14500,7 +14535,7 @@ const AppUI = (() => {
                     <p class="text-light opacity-75 small mb-3">
                         Thử sức với bộ câu hỏi do cộng đồng và AI biên soạn để kiểm tra mức độ vững vàng tư duy của bạn!
                     </p>
-                    <a href="index.html" class="btn btn-warning text-dark btn-sm rounded-pill fw-bold w-100 py-2">
+                    <a href="index.html" class="btn btn-warning text-dark btn-sm rounded-pill fw-bold w-100 py-2 shadow">
                         <i class="fa-solid fa-play me-1"></i>Vào Danh Mục Đề Thi
                     </a>
                 </div>
@@ -14511,46 +14546,45 @@ const AppUI = (() => {
     </main>
 
     <!-- ── Modal Tạo Bài Viết Mới (Create Post Modal) ── -->
-    <!-- ── Modal Tạo Bài Viết Mới (Facebook Style Composer Modal) ── -->
     <div class="modal fade" id="createPostModal" tabindex="-1" aria-labelledby="createPostModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered" style="max-width: 580px;">
-            <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
-                <!-- Modal Header (Facebook Centered Header) -->
-                <div class="modal-header border-bottom py-3 px-4 position-relative bg-white">
-                    <h5 class="modal-title fw-bold text-dark w-100 text-center mb-0" id="createPostModalLabel" style="font-size: 1.15rem;">
+            <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden dark-modal">
+                <!-- Modal Header -->
+                <div class="modal-header py-3 px-4 position-relative border-bottom" style="border-color: rgba(255, 255, 255, 0.08) !important;">
+                    <h5 class="modal-title fw-bold text-white w-100 text-center mb-0" id="createPostModalLabel" style="font-size: 1.15rem;">
                         Tạo bài viết
                     </h5>
-                    <button type="button" class="btn-close position-absolute end-0 me-3" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close btn-close-white position-absolute end-0 me-3" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
 
-                <div class="modal-body p-4 bg-white">
+                <div class="modal-body p-4">
                     <form id="create-post-form">
-                        <!-- User Info & Audience/Channel Selector (Facebook Style) -->
+                        <!-- User Info & Audience/Channel Selector -->
                         <div class="d-flex align-items-center gap-3 mb-3">
                             <div class="author-avatar avatar-student" id="modal-composer-avatar" style="width: 46px; height: 46px; font-size: 1.15rem;">
                                 U
                             </div>
                             <div>
-                                <div class="fw-bold text-dark mb-1" id="modal-composer-author-name">Người Dùng</div>
+                                <div class="fw-bold text-white mb-1" id="modal-composer-author-name">Người Dùng</div>
                                 <div class="d-flex align-items-center gap-2 flex-wrap">
                                     <!-- Kênh đăng (Channel Pill) -->
                                     <div class="dropdown">
-                                        <button class="btn btn-light btn-sm rounded-pill px-2.5 py-1 text-secondary fw-semibold border d-flex align-items-center gap-1" type="button" data-bs-toggle="dropdown" id="btn-select-channel-pill" style="font-size: 0.8rem;">
+                                        <button class="btn btn-sm rounded-pill px-2.5 py-1 text-secondary fw-semibold border d-flex align-items-center gap-1" type="button" data-bs-toggle="dropdown" id="btn-select-channel-pill" style="font-size: 0.8rem; background: rgba(255, 255, 255, 0.04); border-color: rgba(255, 255, 255, 0.1) !important; color: #cbd5e1 !important;">
                                             <i class="fa-solid fa-hashtag text-primary"></i>
                                             <span id="selected-channel-label">thảo-luận-chung</span>
                                             <i class="fa-solid fa-caret-down text-muted ms-1"></i>
                                         </button>
-                                        <ul class="dropdown-menu shadow-sm border-0 rounded-3 p-1" style="font-size: 0.85rem;">
-                                            <li><a class="dropdown-item channel-option py-1.5" href="#" data-channel="general"><i class="fa-solid fa-comments me-2 text-info"></i># thảo-luận-chung</a></li>
-                                            <li><a class="dropdown-item channel-option py-1.5" href="#" data-channel="qna"><i class="fa-solid fa-circle-question me-2 text-danger"></i># hỏi-đáp-bài-tập</a></li>
-                                            <li><a class="dropdown-item channel-option py-1.5" href="#" data-channel="tips"><i class="fa-solid fa-lightbulb me-2 text-warning"></i># mẹo-né-bẫy-tư-duy</a></li>
-                                            <li><a class="dropdown-item channel-option py-1.5" href="#" data-channel="showcase"><i class="fa-solid fa-star me-2 text-success"></i># đề-xuất-đề-hay</a></li>
+                                        <ul class="dropdown-menu shadow-lg border-0 rounded-3 p-1" style="font-size: 0.85rem; background: #161a29; border: 1px solid rgba(255, 255, 255, 0.1) !important;">
+                                            <li><a class="dropdown-item text-light channel-option py-1.5" href="#" data-channel="general"><i class="fa-solid fa-comments me-2 text-info"></i># thảo-luận-chung</a></li>
+                                            <li><a class="dropdown-item text-light channel-option py-1.5" href="#" data-channel="qna"><i class="fa-solid fa-circle-question me-2 text-danger"></i># hỏi-đáp-bài-tập</a></li>
+                                            <li><a class="dropdown-item text-light channel-option py-1.5" href="#" data-channel="tips"><i class="fa-solid fa-lightbulb me-2 text-warning"></i># mẹo-né-bẫy-tư-duy</a></li>
+                                            <li><a class="dropdown-item text-light channel-option py-1.5" href="#" data-channel="showcase"><i class="fa-solid fa-star me-2 text-success"></i># đề-xuất-đề-hay</a></li>
                                         </ul>
                                     </div>
                                     <input type="hidden" id="post-channel-select" value="general">
 
                                     <!-- Mood Tag Pill (Cảm xúc học tập) -->
-                                    <span class="badge bg-light text-secondary border rounded-pill px-2.5 py-1 fw-semibold d-none" id="selected-mood-badge" style="font-size: 0.78rem;">
+                                    <span class="badge border rounded-pill px-2.5 py-1 fw-semibold d-none" id="selected-mood-badge" style="font-size: 0.78rem; background: rgba(255, 255, 255, 0.05); color: #cbd5e1; border-color: rgba(255, 255, 255, 0.1) !important;">
                                         <span id="selected-mood-text">🚀 Hào hứng</span>
                                         <i class="fa-solid fa-xmark ms-1 text-danger cursor-pointer" onclick="removeSelectedMood()" title="Bỏ cảm xúc" style="cursor: pointer;"></i>
                                     </span>
@@ -14560,78 +14594,78 @@ const AppUI = (() => {
 
                         <!-- Tiêu đề tóm tắt -->
                         <div class="mb-3">
-                            <input type="text" class="form-control rounded-3 py-2 px-3 fw-bold" id="post-title-input" placeholder="Tiêu đề tóm tắt thắc mắc hoặc chủ đề thảo luận..." required maxlength="255" style="border: 1px solid #e2e8f0; font-size: 0.98rem;">
+                            <input type="text" class="form-control rounded-3 py-2 px-3 fw-bold dark-input" id="post-title-input" placeholder="Tiêu đề tóm tắt thắc mắc hoặc chủ đề thảo luận..." required maxlength="255" style="font-size: 0.98rem;">
                         </div>
 
-                        <!-- Textarea Nội Dung (Facebook Large Textarea) -->
+                        <!-- Textarea Nội Dung -->
                         <div class="mb-3">
-                            <textarea class="form-control border-0 px-1 py-2" id="post-content-input" rows="4" placeholder="Bạn đang thắc mắc hay muốn chia sẻ điều gì về bài học hôm nay?" required style="resize: none; font-size: 1.05rem; line-height: 1.6; outline: none; box-shadow: none;"></textarea>
+                            <textarea class="form-control dark-input px-3 py-2.5" id="post-content-input" rows="4" placeholder="Bạn đang thắc mắc hay muốn chia sẻ điều gì về bài học hôm nay?" required style="resize: none; font-size: 1rem; line-height: 1.6; border-radius: 12px;"></textarea>
                         </div>
 
-                        <!-- Khu vực Chọn Môn Học (Cải tiến như Teacher Dashboard: Input tự do + Datalist + Quick Chips) -->
-                        <div class="p-3 bg-light rounded-4 border mb-3" id="post-topic-wrapper">
+                        <!-- Khu vực Chọn Môn Học -->
+                        <div class="p-3 rounded-4 border mb-3" id="post-topic-wrapper" style="background: rgba(255, 255, 255, 0.025); border-color: rgba(255, 255, 255, 0.08) !important;">
                             <div class="d-flex justify-content-between align-items-center mb-1">
-                                <label for="post-topic-input" class="form-label fw-bold small text-dark mb-0">
+                                <label for="post-topic-input" class="form-label fw-bold small text-white mb-0">
                                     <i class="fa-solid fa-book-bookmark text-primary me-1"></i>Chủ đề / Môn học liên quan
                                 </label>
-                                <span class="badge bg-white text-muted border rounded-pill px-2 py-0.5" style="font-size: 0.7rem;">Tự do gõ hoặc chọn</span>
+                                <span class="badge rounded-pill px-2 py-0.5 border" style="font-size: 0.7rem; background: rgba(255, 255, 255, 0.05); color: #94a3b8; border-color: rgba(255, 255, 255, 0.1) !important;">Tự do gõ hoặc chọn</span>
                             </div>
-                            <input type="text" class="form-control bg-white rounded-3 py-2 small" id="post-topic-input" list="post-topic-datalist" placeholder="Nhập tên môn bất kỳ: OOP, CTDL, CSDL, Toán rời rạc, Kinh tế, Triết học..." autocomplete="off">
+                            <input type="text" class="form-control dark-input rounded-3 py-2 small" id="post-topic-input" list="post-topic-datalist" placeholder="Nhập tên môn bất kỳ: OOP, CTDL, CSDL, Toán rời rạc, Kinh tế, Triết học..." autocomplete="off">
                             <datalist id="post-topic-datalist">
                                 <!-- Động nạp từ DB -->
                             </datalist>
                             <!-- Gợi ý nhanh các môn phổ biến (1-click) -->
                             <div class="d-flex align-items-center flex-wrap gap-1 mt-2">
-                                <span class="text-muted small me-1" style="font-size: 0.74rem;"><i class="fa-regular fa-compass me-1"></i>Chọn nhanh:</span>
-                                <button type="button" class="btn btn-white btn-sm text-secondary bg-white border rounded-pill py-0 px-2 post-quick-topic-btn" style="font-size: 0.74rem;" data-topic="Lập Trình Hướng Đối Tượng Java">Java OOP</button>
-                                <button type="button" class="btn btn-white btn-sm text-secondary bg-white border rounded-pill py-0 px-2 post-quick-topic-btn" style="font-size: 0.74rem;" data-topic="Cấu Trúc Dữ Liệu & Giải Thuật">CTDL & Giải Thuật</button>
-                                <button type="button" class="btn btn-white btn-sm text-secondary bg-white border rounded-pill py-0 px-2 post-quick-topic-btn" style="font-size: 0.74rem;" data-topic="Toán Rời Rạc & Xác Suất">Toán Rời Rạc</button>
-                                <button type="button" class="btn btn-white btn-sm text-secondary bg-white border rounded-pill py-0 px-2 post-quick-topic-btn" style="font-size: 0.74rem;" data-topic="Cơ Sở Dữ Liệu Quan Hệ & SQL">CSDL & SQL</button>
-                                <button type="button" class="btn btn-white btn-sm text-secondary bg-white border rounded-pill py-0 px-2 post-quick-topic-btn" style="font-size: 0.74rem;" data-topic="Mạng Máy Tính & Viễn Thông">Mạng Máy Tính</button>
+                                <span class="text-secondary small me-1" style="font-size: 0.74rem;"><i class="fa-regular fa-compass me-1"></i>Chọn nhanh:</span>
+                                <button type="button" class="btn btn-sm text-secondary border rounded-pill py-0 px-2 post-quick-topic-btn" style="font-size: 0.74rem; background: rgba(255, 255, 255, 0.04); border-color: rgba(255, 255, 255, 0.1) !important;" data-topic="Lập Trình Hướng Đối Tượng Java">Java OOP</button>
+                                <button type="button" class="btn btn-sm text-secondary border rounded-pill py-0 px-2 post-quick-topic-btn" style="font-size: 0.74rem; background: rgba(255, 255, 255, 0.04); border-color: rgba(255, 255, 255, 0.1) !important;" data-topic="Cấu Trúc Dữ Liệu & Giải Thuật">CTDL & Giải Thuật</button>
+                                <button type="button" class="btn btn-sm text-secondary border rounded-pill py-0 px-2 post-quick-topic-btn" style="font-size: 0.74rem; background: rgba(255, 255, 255, 0.04); border-color: rgba(255, 255, 255, 0.1) !important;" data-topic="Toán Rời Rạc & Xác Suất">Toán Rời Rạc</button>
+                                <button type="button" class="btn btn-sm text-secondary border rounded-pill py-0 px-2 post-quick-topic-btn" style="font-size: 0.74rem; background: rgba(255, 255, 255, 0.04); border-color: rgba(255, 255, 255, 0.1) !important;" data-topic="Cơ Sở Dữ Liệu Quan Hệ & SQL">CSDL & SQL</button>
+                                <button type="button" class="btn btn-sm text-secondary border rounded-pill py-0 px-2 post-quick-topic-btn" style="font-size: 0.74rem; background: rgba(255, 255, 255, 0.04); border-color: rgba(255, 255, 255, 0.1) !important;" data-topic="Mạng Máy Tính & Viễn Thông">Mạng Máy Tính</button>
                             </div>
                         </div>
 
-                        <!-- Thanh công cụ "Thêm vào bài thảo luận học tập" (Facebook Style Academic Toolbar) -->
-                        <div class="border rounded-4 p-2.5 px-3 d-flex justify-content-between align-items-center mb-3 bg-white shadow-sm flex-wrap gap-2">
-                            <span class="fw-bold small text-dark" style="font-size: 0.88rem;">
+                        <!-- Thanh công cụ -->
+                        <div class="border rounded-4 p-2.5 px-3 d-flex justify-content-between align-items-center mb-3 shadow-sm flex-wrap gap-2" style="background: rgba(255, 255, 255, 0.025); border-color: rgba(255, 255, 255, 0.08) !important;">
+                            <span class="fw-bold small text-white" style="font-size: 0.88rem;">
                                 <i class="fa-solid fa-wand-magic-sparkles text-primary me-1"></i>Thêm vào bài học của bạn
                             </span>
                             <div class="d-flex align-items-center gap-1 flex-wrap">
                                 <!-- Chèn Khối Code -->
-                                <button type="button" class="btn btn-light btn-sm rounded-circle p-0 d-flex align-items-center justify-content-center text-primary" style="width: 36px; height: 36px;" title="Chèn khối code lập trình (Java/C++/Python/SQL)" onclick="insertCodeTemplate()">
+                                <button type="button" class="btn btn-sm rounded-circle p-0 d-flex align-items-center justify-content-center text-primary" style="width: 36px; height: 36px; background: rgba(99, 102, 241, 0.15);" title="Chèn khối code lập trình (Java/C++/Python/SQL)" onclick="insertCodeTemplate()">
                                     <i class="fa-solid fa-code fa-lg"></i>
                                 </button>
                                 <!-- Chèn Mẹo Né Bẫy Kiến Thức -->
-                                <button type="button" class="btn btn-light btn-sm rounded-circle p-0 d-flex align-items-center justify-content-center text-warning" style="width: 36px; height: 36px;" title="Chèn mẫu phân tích Bẫy tư duy / Lầm tưởng" onclick="insertTipTemplate()">
+                                <button type="button" class="btn btn-sm rounded-circle p-0 d-flex align-items-center justify-content-center text-warning" style="width: 36px; height: 36px; background: rgba(245, 158, 11, 0.15);" title="Chèn mẫu phân tích Bẫy tư duy / Lầm tưởng" onclick="insertTipTemplate()">
                                     <i class="fa-solid fa-lightbulb fa-lg"></i>
                                 </button>
                                 <!-- Chèn Câu hỏi trắc nghiệm mini -->
-                                <button type="button" class="btn btn-light btn-sm rounded-circle p-0 d-flex align-items-center justify-content-center text-success" style="width: 36px; height: 36px;" title="Chèn câu hỏi trắc nghiệm mini / bình chọn" onclick="insertQuizTemplate()">
+                                <button type="button" class="btn btn-sm rounded-circle p-0 d-flex align-items-center justify-content-center text-success" style="width: 36px; height: 36px; background: rgba(16, 185, 129, 0.15);" title="Chèn câu hỏi trắc nghiệm mini / bình chọn" onclick="insertQuizTemplate()">
                                     <i class="fa-solid fa-square-poll-vertical fa-lg"></i>
                                 </button>
                                 <!-- Chèn Trích dẫn Giáo trình / Slide -->
-                                <button type="button" class="btn btn-light btn-sm rounded-circle p-0 d-flex align-items-center justify-content-center text-info" style="width: 36px; height: 36px;" title="Chèn trích dẫn giáo trình / tài liệu ôn tập" onclick="insertCitationTemplate()">
+                                <button type="button" class="btn btn-sm rounded-circle p-0 d-flex align-items-center justify-content-center text-info" style="width: 36px; height: 36px; background: rgba(6, 182, 212, 0.15);" title="Chèn trích dẫn giáo trình / tài liệu ôn tập" onclick="insertCitationTemplate()">
                                     <i class="fa-solid fa-book-open fa-lg"></i>
                                 </button>
-                                <!-- Cảm xúc & Trạng thái học tập (Dropdown) -->
+                                <!-- Cảm xúc & Trạng thái học tập -->
                                 <div class="dropdown">
-                                    <button type="button" class="btn btn-light btn-sm rounded-circle p-0 d-flex align-items-center justify-content-center text-danger" style="width: 36px; height: 36px;" data-bs-toggle="dropdown" title="Trạng thái học tập / Cảm xúc">
+                                    <button type="button" class="btn btn-sm rounded-circle p-0 d-flex align-items-center justify-content-center text-danger" style="width: 36px; height: 36px; background: rgba(244, 63, 94, 0.15);" data-bs-toggle="dropdown" title="Trạng thái học tập / Cảm xúc">
                                         <i class="fa-regular fa-face-smile fa-lg"></i>
                                     </button>
-                                    <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-3 p-2" style="font-size: 0.85rem; min-width: 200px;">
-                                        <li><h6 class="dropdown-header small text-uppercase fw-bold text-muted" style="font-size: 0.7rem;">Trạng thái học tập:</h6></li>
-                                        <li><a class="dropdown-item mood-option py-1.5 rounded-2" href="#" data-mood="🚀 Hào hứng học tập"><i class="fa-solid fa-rocket text-primary me-2"></i>🚀 Hào hứng học tập</a></li>
-                                        <li><a class="dropdown-item mood-option py-1.5 rounded-2" href="#" data-mood="🆘 Cần trợ giúp bài tập"><i class="fa-solid fa-circle-exclamation text-danger me-2"></i>🆘 Cần trợ giúp bài tập</a></li>
-                                        <li><a class="dropdown-item mood-option py-1.5 rounded-2" href="#" data-mood="💡 Đã thông não bẫy đề"><i class="fa-solid fa-lightbulb text-warning me-2"></i>💡 Đã thông não bẫy đề</a></li>
-                                        <li><a class="dropdown-item mood-option py-1.5 rounded-2" href="#" data-mood="🤯 Đau đầu vì gặp bug"><i class="fa-solid fa-bug text-danger me-2"></i>🤯 Đau đầu vì gặp bug</a></li>
-                                        <li><a class="dropdown-item mood-option py-1.5 rounded-2" href="#" data-mood="☕ Cày đêm ôn thi"><i class="fa-solid fa-mug-hot text-secondary me-2"></i>☕ Cày đêm ôn thi</a></li>
+                                    <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-3 p-2" style="font-size: 0.85rem; min-width: 200px; background: #161a29; border: 1px solid rgba(255, 255, 255, 0.1) !important;">
+                                        <li><h6 class="dropdown-header small text-uppercase fw-bold text-secondary" style="font-size: 0.7rem;">Trạng thái học tập:</h6></li>
+                                        <li><a class="dropdown-item text-light mood-option py-1.5 rounded-2" href="#" data-mood="🚀 Hào hứng học tập"><i class="fa-solid fa-rocket text-primary me-2"></i>🚀 Hào hứng học tập</a></li>
+                                        <li><a class="dropdown-item text-light mood-option py-1.5 rounded-2" href="#" data-mood="🆘 Cần trợ giúp bài tập"><i class="fa-solid fa-circle-exclamation text-danger me-2"></i>🆘 Cần trợ giúp bài tập</a></li>
+                                        <li><a class="dropdown-item text-light mood-option py-1.5 rounded-2" href="#" data-mood="💡 Đã thông não bẫy đề"><i class="fa-solid fa-lightbulb text-warning me-2"></i>💡 Đã thông não bẫy đề</a></li>
+                                        <li><a class="dropdown-item text-light mood-option py-1.5 rounded-2" href="#" data-mood="🤯 Đau đầu vì gặp bug"><i class="fa-solid fa-bug text-danger me-2"></i>🤯 Đau đầu vì gặp bug</a></li>
+                                        <li><a class="dropdown-item text-light mood-option py-1.5 rounded-2" href="#" data-mood="☕ Cày đêm ôn thi"><i class="fa-solid fa-mug-hot text-secondary me-2"></i>☕ Cày đêm ôn thi</a></li>
                                     </ul>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Nút Đăng Bài (Facebook Full-width Style) -->
-                        <button type="submit" class="btn btn-primary w-100 py-2.5 rounded-3 fw-bold shadow-sm" id="btn-submit-post">
+                        <!-- Nút Đăng Bài -->
+                        <button type="submit" class="btn w-100 py-2.5 rounded-3 fw-bold shadow-sm text-white" id="btn-submit-post" style="background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); border: none;">
                             <i class="fa-solid fa-paper-plane me-1"></i>Đăng bài
                         </button>
                     </form>
@@ -14724,7 +14758,7 @@ const AppUI = (() => {
             </div>
 
             <div class="ws-sidebar-scroll">
-                <div class="ws-nav-group-title">Learner Workspace</div>
+                <div class="ws-nav-group-title">Danh mục học tập</div>
                 <a href="index.html" class="ws-nav-item">
                     <i class="fa-solid fa-chart-pie"></i>
                     <span>Tổng quan học tập</span>
@@ -14746,7 +14780,7 @@ const AppUI = (() => {
                 <div class="d-none" id="sidebar-teacher-group">
                     <a href="teacher-dashboard.html" class="ws-nav-item" style="color: #a5b4fc;">
                         <i class="fa-solid fa-chalkboard-user text-primary"></i>
-                        <span>Teacher Workspace</span>
+                        <span>Bảng Giảng Viên</span>
                     </a>
                 </div>
             </div>
@@ -14775,7 +14809,7 @@ const AppUI = (() => {
                         <i class="fa-solid fa-bars"></i>
                     </button>
                     <div class="d-none d-sm-flex align-items-center gap-2 text-muted small">
-                        <span>Workspace</span>
+                        <span>Hệ thống LMS</span>
                         <i class="fa-solid fa-chevron-right" style="font-size: 0.65rem;"></i>
                         <span class="text-white fw-semibold">Lịch Sử & Tiến Độ</span>
                     </div>
@@ -15010,7 +15044,7 @@ const AppUI = (() => {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Learner Workspace — Intelligent LMS Studio</title>
+    <title>Trang Học Tập — LMS Thông Minh</title>
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -15137,7 +15171,7 @@ const AppUI = (() => {
 
             <!-- Scrollable Nav Groups -->
             <div class="ws-sidebar-scroll">
-                <div class="ws-nav-group-title">Learner Workspace</div>
+                <div class="ws-nav-group-title">Danh mục học tập</div>
                 
                 <a href="index.html" class="ws-nav-item active">
                     <i class="fa-solid fa-chart-pie"></i>
@@ -15168,10 +15202,10 @@ const AppUI = (() => {
 
                 <!-- Teacher Link (Nếu là Giảng viên / Admin) -->
                 <div class="d-none" id="sidebar-teacher-group">
-                    <div class="ws-nav-group-title mt-3 text-warning">Chế độ Giảng Dạy</div>
+                    <div class="ws-nav-group-title mt-3 text-warning">Trang Giảng Viên</div>
                     <a href="teacher-dashboard.html" class="ws-nav-item" style="color: #a5b4fc;">
                         <i class="fa-solid fa-chalkboard-user text-primary"></i>
-                        <span>Teacher Workspace</span>
+                        <span>Bảng Giảng Viên</span>
                     </a>
                 </div>
             </div>
@@ -15201,9 +15235,9 @@ const AppUI = (() => {
                         <i class="fa-solid fa-bars"></i>
                     </button>
                     <div class="d-none d-sm-flex align-items-center gap-2 text-muted small">
-                        <span>Workspace</span>
+                        <span>Hệ thống LMS</span>
                         <i class="fa-solid fa-chevron-right" style="font-size: 0.65rem;"></i>
-                        <span class="text-white fw-semibold">Learner Hub</span>
+                        <span class="text-white fw-semibold">Tổng quan học tập</span>
                     </div>
                 </div>
 
@@ -15217,7 +15251,7 @@ const AppUI = (() => {
                 </div>
             </div>
 
-            <!-- Main Workspace Canvas -->
+            <!-- Main Canvas -->
             <div class="ws-container">
                 <!-- Header Title Section (Editorial Style) -->
                 <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-3">
@@ -15226,7 +15260,7 @@ const AppUI = (() => {
                             Tổng quan học tập
                         </h1>
                         <p class="text-muted small mb-0" id="welcome-subtext" style="max-width: 650px;">
-                            Chào bạn. Đây là Learner Workspace của bạn, được cá nhân hóa hoàn toàn nhằm chuẩn đoán lỗ hổng tư duy và thiết kế bài học củng cố bằng AI.
+                            Chào bạn. Hệ thống học tập thông minh tự động chẩn đoán lỗ hổng tư duy và thiết kế bài học củng cố bằng AI.
                         </p>
                     </div>
                     <div class="d-flex align-items-center gap-2">
@@ -15622,6 +15656,10 @@ const AppUI = (() => {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Làm Bài Kiểm Tra — Hệ Thống Học Tập Thông Minh</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- FontAwesome 6 -->
@@ -15631,8 +15669,155 @@ const AppUI = (() => {
     <!-- Highlight.js CSS for Code syntax -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="css/app.css?v=2.2">
+    <link rel="stylesheet" href="css/app.css?v=3.1">
     <style>
+        /* ── Dark Luxury Theme Setup ── */
+        body.quiz-dark-theme {
+            background-color: #0b0d14 !important;
+            color: #f1f5f9;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .ambient-glow-quiz {
+            position: fixed;
+            top: -120px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 700px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.12) 0%, rgba(139, 92, 246, 0.04) 50%, transparent 75%);
+            filter: blur(80px);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .quiz-topbar {
+            background: rgba(14, 16, 21, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            position: sticky;
+            top: 0;
+            z-index: 1020;
+        }
+
+        .quiz-card {
+            background: #121624 !important;
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            border-radius: 18px !important;
+            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.5);
+        }
+
+        .quiz-title {
+            font-family: 'Newsreader', serif;
+            font-size: 1.25rem;
+            color: #ffffff;
+            letter-spacing: -0.01em;
+        }
+
+        .timer-pill {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: #ffffff;
+            padding: 0.4rem 0.95rem;
+            border-radius: 99px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.88rem;
+        }
+
+        /* Options */
+        .option-label {
+            background: rgba(255, 255, 255, 0.025);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: #cbd5e1;
+            border-radius: 12px;
+            padding: 0.95rem 1.25rem;
+            transition: all 0.18s ease;
+            margin-bottom: 0.75rem;
+            cursor: pointer;
+        }
+        .option-label:hover {
+            background: rgba(99, 102, 241, 0.1) !important;
+            border-color: rgba(99, 102, 241, 0.4) !important;
+            color: #ffffff !important;
+            transform: translateX(3px);
+        }
+        .option-label .badge {
+            background: rgba(255, 255, 255, 0.06) !important;
+            border: 1px solid rgba(255, 255, 255, 0.12) !important;
+            color: #cbd5e1 !important;
+            transition: all 0.18s ease;
+        }
+        .option-input:checked + .option-label {
+            background: rgba(99, 102, 241, 0.18) !important;
+            border-color: #6366f1 !important;
+            box-shadow: 0 0 18px rgba(99, 102, 241, 0.28) !important;
+            color: #ffffff !important;
+        }
+        .option-input:checked + .option-label .badge {
+            background: #6366f1 !important;
+            border-color: #6366f1 !important;
+            color: #ffffff !important;
+        }
+
+        /* Confidence Box */
+        .confidence-box {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 12px;
+            padding: 1rem;
+        }
+
+        /* Skeleton shimmer in dark mode */
+        .skeleton-card {
+            background: #121624 !important;
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        }
+        .skeleton-shimmer {
+            background: linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.03) 75%) !important;
+            background-size: 200% 100% !important;
+        }
+
+        /* Palette buttons */
+        #question-palette .btn {
+            width: 38px;
+            height: 38px;
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.82rem;
+            font-weight: 700;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.03);
+            color: #94a3b8;
+            transition: all 0.15s ease;
+        }
+        #question-palette .btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: #ffffff;
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+        #question-palette .btn-primary {
+            background: #6366f1 !important;
+            border-color: #6366f1 !important;
+            color: #ffffff !important;
+            box-shadow: 0 0 12px rgba(99, 102, 241, 0.4);
+        }
+        #question-palette .btn-success {
+            background: rgba(16, 185, 129, 0.2) !important;
+            border-color: rgba(16, 185, 129, 0.4) !important;
+            color: #34d399 !important;
+        }
+        #question-palette .btn-warning {
+            background: rgba(245, 158, 11, 0.2) !important;
+            border-color: rgba(245, 158, 11, 0.4) !important;
+            color: #fbbf24 !important;
+        }
+
         /* ── Dynamic AI Loading Overlay & Orb Animations ── */
         .loading-overlay {
             position: fixed;
@@ -15944,29 +16129,32 @@ const AppUI = (() => {
         }
     </style>
 </head>
-<body class="bg-light">
+<body class="quiz-dark-theme position-relative">
+
+    <!-- Ambient Glow Drops -->
+    <div class="ambient-glow-quiz"></div>
 
     <!-- ── Top Header ── -->
-    <nav class="navbar navbar-custom sticky-top py-2">
+    <nav class="quiz-topbar py-2">
         <div class="container d-flex justify-content-between align-items-center">
             <div class="d-flex align-items-center gap-3">
-                <a href="index.html" class="btn btn-sm btn-outline-secondary rounded-circle" id="btn-quiz-back" title="Quay lại">
+                <a href="index.html" class="btn btn-sm btn-outline-secondary rounded-circle d-flex align-items-center justify-content-center" id="btn-quiz-back" title="Quay lại" style="width: 36px; height: 36px; border-color: rgba(255, 255, 255, 0.15); color: #cbd5e1;">
                     <i class="fa-solid fa-arrow-left"></i>
                 </a>
                 <div>
-                    <h6 class="mb-0 fw-bold text-dark" id="quiz-topic-title">Đang tải chủ đề...</h6>
-                    <small class="text-muted" id="quiz-question-counter">Câu 1 / --</small>
+                    <h6 class="mb-0 fw-bold quiz-title" id="quiz-topic-title">Đang tải chủ đề...</h6>
+                    <small class="text-secondary" id="quiz-question-counter">Câu 1 / --</small>
                 </div>
             </div>
 
             <div class="d-flex align-items-center gap-3">
                 <!-- Đồng hồ đếm giờ -->
-                <div class="badge bg-light text-dark border px-3 py-2 rounded-pill fs-6 d-flex align-items-center gap-2">
-                    <i class="fa-regular fa-clock text-primary"></i>
-                    <span id="quiz-timer" class="fw-bold font-monospace">15:00</span>
+                <div class="timer-pill d-flex align-items-center gap-2">
+                    <i class="fa-regular fa-clock text-info"></i>
+                    <span id="quiz-timer" class="fw-bold">15:00</span>
                 </div>
                 <!-- Nút nộp bài -->
-                <button id="btn-submit-quiz" class="btn btn-success px-3 py-1 rounded-pill fw-semibold shadow-sm">
+                <button id="btn-submit-quiz" class="btn btn-sm px-3 py-2 rounded-pill fw-semibold shadow-sm text-white" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); border: none;">
                     <i class="fa-solid fa-cloud-arrow-up me-1"></i>Nộp Bài
                 </button>
             </div>
@@ -15974,17 +16162,17 @@ const AppUI = (() => {
     </nav>
 
     <!-- ── Progress Bar ── -->
-    <div class="progress rounded-0" style="height: 4px;">
-        <div id="quiz-progress-bar" class="progress-bar bg-primary" role="progressbar" style="width: 0%;"></div>
+    <div class="progress rounded-0" style="height: 4px; background: rgba(255, 255, 255, 0.05);">
+        <div id="quiz-progress-bar" class="progress-bar" role="progressbar" style="width: 0%; background: linear-gradient(90deg, #6366f1, #38bdf8);"></div>
     </div>
 
     <!-- ── Main Quiz Container ── -->
-    <div class="container my-4">
+    <div class="container my-4 position-relative" style="z-index: 1;">
         <div class="row g-4">
             <!-- Cột câu hỏi chính (Left) -->
             <div class="col-lg-8">
                 <!-- Dynamic Quiz Loading Card with Skeleton Shimmer -->
-                <div id="quiz-loading" class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white position-relative overflow-hidden skeleton-card">
+                <div id="quiz-loading" class="card border-0 shadow-sm rounded-4 p-4 p-md-5 quiz-card skeleton-card position-relative overflow-hidden">
                     <div class="d-flex align-items-center justify-content-between mb-4">
                         <div class="skeleton-shimmer skeleton-badge"></div>
                         <div class="d-flex align-items-center gap-2">
@@ -15997,10 +16185,10 @@ const AppUI = (() => {
                     <div class="skeleton-shimmer skeleton-line w-75 mb-4"></div>
                     
                     <div class="d-flex flex-column gap-2.5 mb-4">
-                        <div class="skeleton-shimmer p-3 rounded-3" style="height: 48px; background: #f8fafc; border: 1px solid #e2e8f0;"></div>
-                        <div class="skeleton-shimmer p-3 rounded-3" style="height: 48px; background: #f8fafc; border: 1px solid #e2e8f0;"></div>
-                        <div class="skeleton-shimmer p-3 rounded-3" style="height: 48px; background: #f8fafc; border: 1px solid #e2e8f0;"></div>
-                        <div class="skeleton-shimmer p-3 rounded-3" style="height: 48px; background: #f8fafc; border: 1px solid #e2e8f0;"></div>
+                        <div class="skeleton-shimmer p-3 rounded-3" style="height: 48px; border: 1px solid rgba(255, 255, 255, 0.06);"></div>
+                        <div class="skeleton-shimmer p-3 rounded-3" style="height: 48px; border: 1px solid rgba(255, 255, 255, 0.06);"></div>
+                        <div class="skeleton-shimmer p-3 rounded-3" style="height: 48px; border: 1px solid rgba(255, 255, 255, 0.06);"></div>
+                        <div class="skeleton-shimmer p-3 rounded-3" style="height: 48px; border: 1px solid rgba(255, 255, 255, 0.06);"></div>
                     </div>
                     <div class="d-flex justify-content-center align-items-center gap-2 text-muted small pt-2">
                         <div class="typing-dots"><span></span><span></span><span></span></div>
@@ -16009,19 +16197,19 @@ const AppUI = (() => {
                 </div>
 
                 <!-- Active Question Card -->
-                <div id="quiz-question-card" class="card border-0 shadow-sm rounded-4 p-4 bg-white" style="display: none;">
+                <div id="quiz-question-card" class="card border-0 shadow-sm rounded-4 p-4 p-md-5 quiz-card" style="display: none;">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <div class="d-flex align-items-center gap-2">
                             <span class="badge bg-primary text-white px-3 py-1 rounded-pill" id="question-index-badge">Câu 1</span>
-                            <span class="badge bg-light text-muted border" id="question-difficulty-badge">Mức độ: Dễ</span>
+                            <span class="badge rounded-pill border" id="question-difficulty-badge" style="background: rgba(255, 255, 255, 0.05); color: #94a3b8; border-color: rgba(255, 255, 255, 0.1) !important;">Mức độ: Dễ</span>
                         </div>
-                        <button class="btn btn-outline-danger btn-sm border-0 rounded-pill px-2 py-1 small" id="btn-quiz-report" type="button" title="Báo lỗi câu hỏi này cho Giảng viên / Đội ngũ kiểm duyệt">
+                        <button class="btn btn-outline-danger btn-sm border-0 rounded-pill px-2 py-1 small" id="btn-quiz-report" type="button" title="Báo lỗi câu hỏi này cho Giảng viên / Đội ngũ kiểm duyệt" style="background: rgba(239, 68, 68, 0.1); color: #f87171;">
                             <i class="fa-solid fa-flag me-1"></i><span class="d-none d-sm-inline">Báo lỗi câu này</span>
                         </button>
                     </div>
 
                     <!-- Nội dung câu hỏi -->
-                    <h5 class="fw-bold text-dark mb-4 lh-base" id="question-text">
+                    <h5 class="fw-bold text-white mb-4 lh-base" id="question-text" style="font-size: 1.15rem;">
                         Đang tải câu hỏi...
                     </h5>
 
@@ -16033,7 +16221,7 @@ const AppUI = (() => {
                     <!-- ★ ADR-009 Confidence Tagging Selector -->
                     <div class="confidence-box mb-4">
                         <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span class="fw-bold small text-dark d-flex align-items-center gap-1">
+                            <span class="fw-bold small text-light d-flex align-items-center gap-1">
                                 <i class="fa-solid fa-shield-heart text-primary"></i>Mức độ tự tin khi chọn đáp án:
                             </span>
                             <small class="text-muted" style="font-size: 0.75rem;">
@@ -16042,23 +16230,23 @@ const AppUI = (() => {
                         </div>
                         <div class="btn-group w-100" role="group">
                             <input type="radio" class="btn-check" name="confidenceRadio" id="conf-certain" value="CERTAIN" checked>
-                            <label class="btn btn-outline-success btn-sm py-2 fw-semibold" for="conf-certain">
+                            <label class="btn btn-outline-success btn-sm py-2 fw-semibold" for="conf-certain" style="border-color: rgba(16, 185, 129, 0.35);">
                                 <i class="fa-solid fa-check-double me-1"></i>1. Chắc Chắn (Certain)
                             </label>
 
                             <input type="radio" class="btn-check" name="confidenceRadio" id="conf-guess" value="GUESS">
-                            <label class="btn btn-outline-warning btn-sm py-2 fw-semibold" for="conf-guess">
+                            <label class="btn btn-outline-warning btn-sm py-2 fw-semibold" for="conf-guess" style="border-color: rgba(245, 158, 11, 0.35);">
                                 <i class="fa-solid fa-dice me-1"></i>2. Phân Vân / Đoán Mò (Guess)
                             </label>
                         </div>
                     </div>
 
                     <!-- Navigation Action Buttons -->
-                    <div class="d-flex justify-content-between align-items-center pt-3 border-top">
-                        <button id="btn-prev-question" class="btn btn-outline-secondary px-3 rounded-pill" disabled>
+                    <div class="d-flex justify-content-between align-items-center pt-3 border-top" style="border-color: rgba(255, 255, 255, 0.08) !important;">
+                        <button id="btn-prev-question" class="btn btn-outline-secondary px-3 rounded-pill" disabled style="border-color: rgba(255, 255, 255, 0.12); color: #94a3b8;">
                             <i class="fa-solid fa-chevron-left me-1"></i>Câu Trước
                         </button>
-                        <button id="btn-next-question" class="btn btn-primary px-4 rounded-pill fw-semibold">
+                        <button id="btn-next-question" class="btn btn-primary px-4 rounded-pill fw-semibold shadow" style="background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); border: none;">
                             Câu Kế Tiếp<i class="fa-solid fa-chevron-right ms-1"></i>
                         </button>
                     </div>
@@ -16067,8 +16255,8 @@ const AppUI = (() => {
 
             <!-- Cột Bảng câu hỏi & Trạng thái (Right) -->
             <div class="col-lg-4">
-                <div class="card border-0 shadow-sm rounded-4 p-3 bg-white sticky-top" style="top: 80px;">
-                    <h6 class="fw-bold text-dark mb-3">
+                <div class="card border-0 shadow-sm rounded-4 p-4 quiz-card sticky-top" style="top: 80px;">
+                    <h6 class="fw-bold text-white mb-3">
                         <i class="fa-solid fa-table-cells me-2 text-primary"></i>Danh Sách Câu Hỏi
                     </h6>
                     
@@ -16078,18 +16266,18 @@ const AppUI = (() => {
                     </div>
 
                     <!-- Chú thích màu sắc -->
-                    <div class="border-top pt-3 small text-muted">
-                        <div class="d-flex align-items-center gap-2 mb-1">
-                            <span class="badge bg-success rounded-circle p-1" style="width: 14px; height: 14px;"> </span>
-                            <span>Đã chọn (Chắc chắn)</span>
+                    <div class="border-top pt-3 small text-muted" style="border-color: rgba(255, 255, 255, 0.08) !important;">
+                        <div class="d-flex align-items-center gap-2 mb-1.5">
+                            <span class="badge rounded-circle p-1" style="width: 12px; height: 12px; background: #10b981;"> </span>
+                            <span class="text-secondary">Đã chọn (Chắc chắn)</span>
                         </div>
-                        <div class="d-flex align-items-center gap-2 mb-1">
-                            <span class="badge bg-warning rounded-circle p-1" style="width: 14px; height: 14px;"> </span>
-                            <span>Đã chọn (Đoán mò)</span>
+                        <div class="d-flex align-items-center gap-2 mb-1.5">
+                            <span class="badge rounded-circle p-1" style="width: 12px; height: 12px; background: #f59e0b;"> </span>
+                            <span class="text-secondary">Đã chọn (Đoán mò)</span>
                         </div>
                         <div class="d-flex align-items-center gap-2">
-                            <span class="badge bg-light border rounded-circle p-1" style="width: 14px; height: 14px;"> </span>
-                            <span>Chưa trả lời</span>
+                            <span class="badge border rounded-circle p-1" style="width: 12px; height: 12px; background: rgba(255, 255, 255, 0.05); border-color: rgba(255, 255, 255, 0.15) !important;"> </span>
+                            <span class="text-secondary">Chưa trả lời</span>
                         </div>
                     </div>
                 </div>
@@ -16193,6 +16381,10 @@ const AppUI = (() => {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kết Quả & Bài Học Củng Cố AI — Hệ Thống Học Tập Thông Minh</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;1,6..72,400&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- FontAwesome 6 -->
@@ -16202,51 +16394,150 @@ const AppUI = (() => {
     <!-- Highlight.js CSS for Code syntax -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="css/app.css?v=2.2">
-</head>
-<body class="bg-light">
+    <link rel="stylesheet" href="css/app.css?v=3.1">
+    <style>
+        body.result-dark-theme {
+            background-color: #0b0d14 !important;
+            color: #f1f5f9;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .ambient-glow-result {
+            position: fixed;
+            top: -120px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 750px;
+            height: 420px;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.12) 0%, rgba(139, 92, 246, 0.04) 50%, transparent 75%);
+            filter: blur(80px);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .result-topbar {
+            background: rgba(14, 16, 21, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            position: sticky;
+            top: 0;
+            z-index: 1020;
+        }
+
+        .result-card {
+            background: #121624 !important;
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            border-radius: 20px !important;
+            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.45);
+        }
+
+        .result-headline-font {
+            font-family: 'Newsreader', serif;
+            font-size: 1.6rem;
+            color: #ffffff;
+            letter-spacing: -0.01em;
+        }
+
+        .stat-mini-card {
+            background: rgba(255, 255, 255, 0.025);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
+            padding: 0.85rem;
+            transition: all 0.2s ease;
+        }
+        .stat-mini-card:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .review-q-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 14px;
+            padding: 1.25rem;
+        }
+
+        /* Score Circle Gauges in Dark Mode */
+        .score-circle-dark {
+            width: 124px;
+            height: 124px;
+            border-radius: 50%;
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(99, 102, 241, 0.12);
+            border: 3px solid rgba(99, 102, 241, 0.4);
+            box-shadow: 0 0 25px rgba(99, 102, 241, 0.25);
+        }
+
+        /* Modal Dark Overrides */
+        .modal-content.dark-modal {
+            background: #121624;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: #f1f5f9;
+        }
+        .modal-content.dark-modal .modal-header {
+            background: rgba(255, 255, 255, 0.03);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .modal-content.dark-modal .modal-footer {
+            background: rgba(255, 255, 255, 0.03);
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+    </style>
+<body class="result-dark-theme position-relative">
+
+    <!-- Ambient Glow Drops -->
+    <div class="ambient-glow-result"></div>
 
     <!-- ── Navbar ── -->
-    <nav class="navbar navbar-expand-lg navbar-custom sticky-top">
+    <nav class="navbar navbar-expand-lg result-topbar py-2">
         <div class="container">
             <a class="navbar-brand d-flex align-items-center gap-2" href="index.html">
-                <i class="fa-solid fa-graduation-cap fa-lg text-primary"></i>
-                <span>LMS Thông Minh</span>
+                <div class="rounded-3 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; background: linear-gradient(135deg, #6366f1, #a855f7); color: #fff;">
+                    <i class="fa-solid fa-graduation-cap"></i>
+                </div>
+                <span class="text-white fw-bold">LMS Thông Minh</span>
             </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navContent">
-                <span class="navbar-toggler-icon"></span>
+            <button class="navbar-toggler border-0 text-white" type="button" data-bs-toggle="collapse" data-bs-target="#navContent">
+                <i class="fa-solid fa-bars"></i>
             </button>
             <div class="collapse navbar-collapse" id="navContent">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-3">
                     <li class="nav-item">
-                        <a class="nav-link fw-semibold" href="index.html"><i class="fa-solid fa-book-open me-1"></i>Chủ Đề Ôn Tập</a>
+                        <a class="nav-link text-secondary fw-semibold" href="index.html"><i class="fa-solid fa-book-open me-1"></i>Chủ Đề Ôn Tập</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link fw-semibold" href="community.html">
+                        <a class="nav-link text-secondary fw-semibold" href="community.html">
                             <i class="fa-solid fa-comments me-1"></i>Diễn Đàn Cộng Đồng
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link active fw-bold text-primary" href="history.html"><i class="fa-solid fa-chart-line me-1"></i>Lịch Sử & Tiến Độ</a>
+                        <a class="nav-link text-white fw-bold" href="history.html"><i class="fa-solid fa-chart-line me-1"></i>Lịch Sử & Tiến Độ</a>
                     </li>
                     <li class="nav-item d-none" id="nav-teacher-link">
-                        <a class="nav-link fw-bold text-indigo" href="teacher-dashboard.html" style="color: #6366f1;"><i class="fa-solid fa-chalkboard-user me-1"></i>Trang Giảng Viên</a>
+                        <a class="nav-link fw-bold" href="teacher-dashboard.html" style="color: #a5b4fc;"><i class="fa-solid fa-chalkboard-user me-1"></i>Trang Giảng Viên</a>
                     </li>
                 </ul>
                 <div class="d-flex align-items-center gap-3">
                     <div class="dropdown">
-                        <button class="btn btn-outline-secondary dropdown-toggle d-flex align-items-center gap-2 rounded-pill px-3 py-1" type="button" data-bs-toggle="dropdown">
-                            <i class="fa-solid fa-user-circle fa-lg text-primary"></i>
+                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle d-flex align-items-center gap-2 rounded-pill px-3 py-1.5" type="button" data-bs-toggle="dropdown" style="border-color: rgba(255, 255, 255, 0.15); color: #f1f5f9; background: rgba(255, 255, 255, 0.04);">
+                            <i class="fa-solid fa-user-circle text-primary"></i>
                             <span id="nav-username" class="fw-semibold small">Sinh Viên</span>
                         </button>
-                        <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3">
-                            <li><h6 class="dropdown-header" id="nav-fullname">Họ và Tên</h6></li>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-3" style="background: #141722; border: 1px solid rgba(255,255,255,0.1) !important;">
+                            <li><h6 class="dropdown-header text-secondary" id="nav-fullname">Họ và Tên</h6></li>
                             <li class="d-none" id="dropdown-teacher-item">
                                 <a class="dropdown-item text-primary fw-semibold d-flex align-items-center gap-2" href="teacher-dashboard.html">
-                                    <i class="fa-solid fa-chalkboard-user"></i>Bảng Quản Trị Giảng Viên
+                                    <i class="fa-solid fa-chalkboard-user"></i>Trang Giảng Viên
                                 </a>
                             </li>
-                            <li><hr class="dropdown-divider"></li>
+                            <li><hr class="dropdown-divider" style="border-color: rgba(255,255,255,0.08);"></li>
                             <li>
                                 <a class="dropdown-item text-danger d-flex align-items-center gap-2" href="#" id="logout-btn">
                                     <i class="fa-solid fa-right-from-bracket"></i>Đăng xuất
@@ -16260,38 +16551,38 @@ const AppUI = (() => {
     </nav>
 
     <!-- ── Main Content ── -->
-    <div class="container my-4" style="max-width: 960px;">
+    <div class="container my-4 position-relative" style="max-width: 960px; z-index: 1;">
         
         <!-- Score Summary Card -->
-        <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white">
+        <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 mb-4 result-card">
             <div class="row align-items-center text-center text-md-start">
                 <div class="col-md-3 text-center mb-3 mb-md-0">
-                    <div class="d-inline-flex flex-column align-items-center justify-content-center bg-primary-subtle text-primary rounded-circle shadow-sm" style="width: 120px; height: 120px;" id="score-circle">
-                        <span class="fs-1 fw-bold lh-1 mb-1" id="score-value">0%</span>
-                        <small class="text-muted fw-semibold" id="score-scale" style="font-size: 0.75rem;">0.0 / 10</small>
+                    <div class="score-circle-dark shadow-sm" id="score-circle">
+                        <span class="fs-1 fw-bold lh-1 mb-1 text-white" id="score-value">0%</span>
+                        <small class="text-secondary fw-semibold" id="score-scale" style="font-size: 0.75rem;">0.0 / 10</small>
                     </div>
                 </div>
                 <div class="col-md-9">
-                    <h4 class="fw-bold text-dark mb-1" id="result-headline">Đang tải kết quả...</h4>
-                    <p class="text-muted small mb-3" id="result-subtext">Hệ thống AI đã tổng hợp và phân tích toàn bộ câu trả lời của bạn.</p>
+                    <h4 class="fw-bold text-white result-headline-font mb-1" id="result-headline">Đang tải kết quả...</h4>
+                    <p class="text-secondary small mb-3" id="result-subtext">Hệ thống AI đã tổng hợp và phân tích toàn bộ câu trả lời của bạn.</p>
                     
                     <div class="row g-2 text-center">
                         <div class="col-4">
-                            <div class="p-2 border rounded-3 bg-light">
+                            <div class="stat-mini-card">
                                 <div class="fs-5 fw-bold text-success" id="correct-count">0</div>
-                                <small class="text-muted" style="font-size: 0.78rem;">Câu Trả Lời Đúng</small>
+                                <small class="text-secondary" style="font-size: 0.78rem;">Câu Trả Lời Đúng</small>
                             </div>
                         </div>
                         <div class="col-4">
-                            <div class="p-2 border rounded-3 bg-light">
+                            <div class="stat-mini-card">
                                 <div class="fs-5 fw-bold text-danger" id="wrong-count">0</div>
-                                <small class="text-muted" style="font-size: 0.78rem;">Câu Trả Lời Sai</small>
+                                <small class="text-secondary" style="font-size: 0.78rem;">Câu Trả Lời Sai</small>
                             </div>
                         </div>
                         <div class="col-4">
-                            <div class="p-2 border rounded-3 bg-light">
+                            <div class="stat-mini-card">
                                 <div class="fs-5 fw-bold text-warning" id="guess-count">0</div>
-                                <small class="text-muted" style="font-size: 0.78rem;">Đoán Mò (Guess)</small>
+                                <small class="text-secondary" style="font-size: 0.78rem;">Đoán Mò (Guess)</small>
                             </div>
                         </div>
                     </div>
@@ -16302,7 +16593,7 @@ const AppUI = (() => {
         <!-- ── Phân Tích & Bài Học Củng Cố Do AI Tạo ── -->
         <div class="mb-4">
             <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5 class="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+                <h5 class="fw-bold text-white mb-0 d-flex align-items-center gap-2">
                     <i class="fa-solid fa-wand-magic-sparkles text-primary"></i>Bài Học Củng Cố Cá Nhân Hóa (AI Remedial)
                 </h5>
                 <span class="badge bg-primary text-white rounded-pill px-3 py-2" id="remedial-badge">0 bài học</span>
@@ -16315,7 +16606,7 @@ const AppUI = (() => {
 
         <!-- ── Thẻ Khắc Phục Lỗi (Adaptive Remediation Card - 2.3) ── -->
         <div id="adaptive-remediation-wrapper" class="mb-4 d-none">
-            <div class="card border-0 shadow-sm rounded-4 p-4 text-white position-relative overflow-hidden" style="background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);">
+            <div class="card border-0 shadow-sm rounded-4 p-4 text-white position-relative overflow-hidden result-card" style="background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);">
                 <div class="d-flex justify-content-between align-items-start flex-wrap gap-3 position-relative" style="z-index: 2;">
                     <div class="flex-grow-1" style="max-width: 680px;">
                         <span class="badge bg-warning text-dark px-3 py-2 rounded-pill fw-bold mb-2 shadow-sm" id="remediation-tag-badge">
@@ -16338,8 +16629,8 @@ const AppUI = (() => {
         </div>
 
         <!-- ── Chi Tiết Toàn Bộ Đề & Đáp Án ── -->
-        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
-            <h5 class="fw-bold text-dark mb-3">
+        <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 result-card mb-4">
+            <h5 class="fw-bold text-white mb-3">
                 <i class="fa-solid fa-list-check text-primary me-2"></i>Xem Lại Từng Câu Hỏi
             </h5>
             <div id="questions-review-list" class="d-flex flex-column gap-3">
@@ -16349,7 +16640,7 @@ const AppUI = (() => {
 
         <!-- Nút hành động cuối trang -->
         <div class="text-center mb-5">
-            <a href="index.html" class="btn btn-primary px-5 py-2 rounded-pill fw-semibold shadow">
+            <a href="index.html" class="btn px-5 py-2.5 rounded-pill fw-semibold shadow text-white" style="background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); border: none;">
                 <i class="fa-solid fa-rotate-left me-2"></i>Luyện Tập Chủ Đề Khác
             </a>
         </div>
@@ -16358,9 +16649,9 @@ const AppUI = (() => {
     <!-- ── Modal Mini-Quiz Hồi Quy Thích Ứng (Adaptive Remediation Modal - 2.3) ── -->
     <div class="modal fade" id="remediationModal" tabindex="-1" aria-labelledby="remediationModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-            <div class="modal-content border-0 shadow-lg rounded-4">
-                <div class="modal-header bg-dark text-white border-0 py-3">
-                    <h5 class="modal-title fw-bold" id="remediationModalLabel">
+            <div class="modal-content border-0 shadow-lg rounded-4 dark-modal">
+                <div class="modal-header border-0 py-3">
+                    <h5 class="modal-title fw-bold text-white" id="remediationModalLabel">
                         <i class="fa-solid fa-wrench me-2 text-warning"></i>Bài Tập Phục Hồi Lỗ Hổng Tư Duy
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -16368,9 +16659,9 @@ const AppUI = (() => {
                 <div class="modal-body p-4" id="remediation-modal-body">
                     <!-- Dynamic mini-quiz questions -->
                 </div>
-                <div class="modal-footer bg-light border-0 py-3">
-                    <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">Đóng</button>
-                    <button type="button" class="btn btn-primary rounded-pill px-4 fw-bold" id="btn-submit-remediation">
+                <div class="modal-footer border-0 py-3">
+                    <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal" style="background: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.1);">Đóng</button>
+                    <button type="button" class="btn btn-primary rounded-pill px-4 fw-bold shadow" id="btn-submit-remediation" style="background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); border: none;">
                         <i class="fa-solid fa-paper-plane me-1"></i>Nộp Bài Vá Lỗi
                     </button>
                 </div>
@@ -16409,7 +16700,7 @@ const AppUI = (() => {
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <title>Teacher & Admin Workspace — Intelligent LMS Studio</title>
+    <title>Giảng Viên & Quản Trị — LMS Thông Minh</title>
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -16514,7 +16805,7 @@ const AppUI = (() => {
                     <i class="fa-solid fa-chalkboard-user"></i>
                 </div>
                 <div class="flex-grow-1 overflow-hidden">
-                    <div class="ws-brand-name">Teacher Studio</div>
+                    <div class="ws-brand-name">LMS Giảng Viên</div>
                     <div class="d-flex align-items-center gap-1 mt-1">
                         <span class="ws-mode-badge" style="background: rgba(16, 185, 129, 0.15); color: #34d399; border-color: rgba(16, 185, 129, 0.3);">Giảng Dạy</span>
                     </div>
@@ -16523,7 +16814,7 @@ const AppUI = (() => {
 
             <!-- Scrollable Nav Groups -->
             <div class="ws-sidebar-scroll">
-                <div class="ws-nav-group-title">Teacher Workspace</div>
+                <div class="ws-nav-group-title">Danh mục giảng dạy</div>
                 
                 <a href="#tab-overview" class="ws-nav-item active" data-bs-toggle="pill" data-bs-target="#tab-overview">
                     <i class="fa-solid fa-chart-line text-emerald"></i>
@@ -16550,7 +16841,7 @@ const AppUI = (() => {
                 <div class="ws-nav-group-title mt-3">Hệ Thống & Quản Trị</div>
                 <a href="#tab-admin" class="ws-nav-item" data-bs-toggle="pill" data-bs-target="#tab-admin">
                     <i class="fa-solid fa-shield-halved text-purple" style="color: #c084fc;"></i>
-                    <span>System Administration</span>
+                    <span>Quản Trị Hệ Thống</span>
                 </a>
 
                 <div class="ws-nav-group-title mt-3">Chuyển Chế Độ</div>
@@ -16589,9 +16880,9 @@ const AppUI = (() => {
                         <i class="fa-solid fa-bars"></i>
                     </button>
                     <div class="d-none d-sm-flex align-items-center gap-2 text-muted small">
-                        <span>Workspace</span>
+                        <span>Hệ thống LMS</span>
                         <i class="fa-solid fa-chevron-right" style="font-size: 0.65rem;"></i>
-                        <span class="text-white fw-semibold">Teacher & Academic Portal</span>
+                        <span class="text-white fw-semibold">Bảng Giảng Viên</span>
                     </div>
                 </div>
 
@@ -16614,11 +16905,11 @@ const AppUI = (() => {
                             Tổng quan giảng dạy
                         </h1>
                         <p class="text-muted small mb-0" style="max-width: 700px;">
-                            Course operations, enrollment, grading và cảnh báo học tập trong một Teacher Workspace riêng biệt.
+                            Quản lý câu hỏi, theo dõi tiến độ, chấm điểm và cảnh báo học tập tích hợp AI.
                         </p>
                     </div>
                     <span class="badge rounded-pill px-3 py-2 border" style="background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.3) !important; color: #34d399; font-size: 0.76rem;">
-                        <i class="fa-solid fa-shield-check me-1"></i>Teacher Workspace Active
+                        <i class="fa-solid fa-shield-check me-1"></i>Cổng Giảng Viên Sẵn Sàng
                     </span>
                 </div>
 

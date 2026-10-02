@@ -3,209 +3,427 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bảng Điều Khiển — Hệ Thống Học Tập Thông Minh</title>
+    <title>Learner Workspace — Intelligent LMS Studio</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- FontAwesome 6 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <!-- SweetAlert2 -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="css/app.css?v=2.2">
+    <!-- Custom Workspace CSS -->
+    <link rel="stylesheet" href="css/app.css?v=3.5">
+
+    <style>
+        /* Ambient Top Background Glow */
+        .workspace-ambient-glow {
+            position: fixed;
+            top: -120px;
+            right: 5%;
+            width: 550px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.12) 0%, rgba(6, 182, 212, 0.05) 50%, transparent 75%);
+            filter: blur(90px);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Topic Card Modern */
+        .ws-topic-card {
+            background: var(--ws-card-bg);
+            border: 1px solid var(--ws-border);
+            border-radius: 16px;
+            padding: 1.45rem;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        .ws-topic-card:hover {
+            border-color: var(--ws-border-hover);
+            background: var(--ws-card-hover);
+            transform: translateY(-3px);
+            box-shadow: 0 14px 30px -8px rgba(0, 0, 0, 0.5);
+        }
+        .ws-topic-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 3px;
+            height: 100%;
+            background: linear-gradient(180deg, #6366f1, #06b6d4);
+            opacity: 0.6;
+        }
+
+        .btn-ws-start {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            border: none;
+            color: #ffffff;
+            font-weight: 600;
+            border-radius: 10px;
+            padding: 0.65rem 1rem;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            box-shadow: 0 4px 14px rgba(79, 70, 229, 0.35);
+        }
+        .btn-ws-start:hover {
+            background: linear-gradient(135deg, #4338ca 0%, #6d28d9 100%);
+            box-shadow: 0 6px 20px rgba(79, 70, 229, 0.5);
+            transform: translateY(-1px);
+            color: #ffffff;
+        }
+
+        /* Journey Progress Item */
+        .journey-item {
+            padding: 0.85rem 0;
+            border-bottom: 1px solid var(--ws-border);
+        }
+        .journey-item:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        /* Floating AI Trigger Widget Match */
+        .ws-ai-chip {
+            background: rgba(99, 102, 241, 0.12);
+            border: 1px solid rgba(99, 102, 241, 0.25);
+            color: #a5b4fc;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.3rem 0.65rem;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+    </style>
 </head>
-<body>
+<body class="workspace-body">
 
-    <!-- ── Navbar ── -->
-    <nav class="navbar navbar-expand-lg navbar-custom sticky-top">
-        <div class="container">
-            <a class="navbar-brand d-flex align-items-center gap-2" href="index.html">
-                <i class="fa-solid fa-graduation-cap fa-lg text-primary"></i>
-                <span>LMS Thông Minh</span>
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navContent">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navContent">
-                <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-3">
-                    <li class="nav-item">
-                        <a class="nav-link active fw-bold text-primary" href="index.html"><i class="fa-solid fa-book-open me-1"></i>Chủ Đề Ôn Tập</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link fw-semibold" href="community.html">
-                            <i class="fa-solid fa-comments me-1"></i>Diễn Đàn Cộng Đồng
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link fw-semibold" href="history.html"><i class="fa-solid fa-chart-line me-1"></i>Lịch Sử & Tiến Độ</a>
-                    </li>
-                    <li class="nav-item d-none" id="nav-teacher-link">
-                        <a class="nav-link fw-bold text-indigo" href="teacher-dashboard.html" style="color: #6366f1;"><i class="fa-solid fa-chalkboard-user me-1"></i>Trang Giảng Viên</a>
-                    </li>
-                </ul>
+    <!-- Ambient Glow Aura -->
+    <div class="workspace-ambient-glow"></div>
+
+    <div class="workspace-layout">
+        <!-- ── SIDEBAR (Left Navigation Drawer) ── -->
+        <aside class="ws-sidebar" id="ws-sidebar">
+            <!-- Brand Logo -->
+            <div class="ws-sidebar-brand">
+                <div class="ws-brand-logo">
+                    <i class="fa-solid fa-graduation-cap"></i>
+                </div>
+                <div class="flex-grow-1 overflow-hidden">
+                    <div class="ws-brand-name">Intelligent LMS</div>
+                    <div class="d-flex align-items-center gap-1 mt-1">
+                        <span class="ws-mode-badge">Học Tập</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Scrollable Nav Groups -->
+            <div class="ws-sidebar-scroll">
+                <div class="ws-nav-group-title">Learner Workspace</div>
+                
+                <a href="index.html" class="ws-nav-item active">
+                    <i class="fa-solid fa-chart-pie"></i>
+                    <span>Tổng quan học tập</span>
+                </a>
+                <a href="#topics-section" class="ws-nav-item">
+                    <i class="fa-solid fa-book-open"></i>
+                    <span>Khám phá chủ đề</span>
+                </a>
+                <a href="history.html" class="ws-nav-item">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                    <span>Lịch sử & Tiến độ</span>
+                </a>
+                <a href="community.html" class="ws-nav-item">
+                    <i class="fa-solid fa-comments"></i>
+                    <span>Diễn đàn cộng đồng</span>
+                </a>
+
+                <div class="ws-nav-group-title mt-3">Công cụ & Phục Hồi</div>
+                <a href="#" class="ws-nav-item" onclick="startQuickQuiz(); return false;">
+                    <i class="fa-solid fa-bolt text-warning"></i>
+                    <span>Luyện tập nhanh AI</span>
+                </a>
+                <a href="#" class="ws-nav-item" id="sidebar-ai-ask" onclick="openChatWidget(); return false;">
+                    <i class="fa-solid fa-wand-magic-sparkles text-info"></i>
+                    <span>Hỏi trợ giảng AI</span>
+                </a>
+
+                <!-- Teacher Link (Nếu là Giảng viên / Admin) -->
+                <div class="d-none" id="sidebar-teacher-group">
+                    <div class="ws-nav-group-title mt-3 text-warning">Chế độ Giảng Dạy</div>
+                    <a href="teacher-dashboard.html" class="ws-nav-item" style="color: #a5b4fc;">
+                        <i class="fa-solid fa-chalkboard-user text-primary"></i>
+                        <span>Teacher Workspace</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Sidebar Footer: Profile Card & Logout -->
+            <div class="ws-sidebar-footer">
+                <div class="ws-user-card">
+                    <div class="ws-user-avatar" id="ws-avatar">SV</div>
+                    <div class="flex-grow-1 overflow-hidden">
+                        <div class="ws-user-name" id="nav-fullname">Đang tải...</div>
+                        <div class="ws-user-role" id="nav-role-badge">STUDENT • LEARNER</div>
+                    </div>
+                </div>
+                <button type="button" class="ws-btn-logout" id="logout-btn">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                    <span>Đăng xuất</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- ── MAIN CONTENT AREA ── -->
+        <main class="ws-main">
+            <!-- Topbar (Mobile trigger, breadcrumb, status) -->
+            <div class="ws-topbar">
                 <div class="d-flex align-items-center gap-3">
-                    <div class="dropdown">
-                        <button class="btn btn-outline-secondary dropdown-toggle d-flex align-items-center gap-2 rounded-pill px-3 py-1" type="button" data-bs-toggle="dropdown">
-                            <i class="fa-solid fa-user-circle fa-lg text-primary"></i>
-                            <span id="nav-username" class="fw-semibold small">Sinh Viên</span>
-                        </button>
-                        <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3">
-                            <li><h6 class="dropdown-header" id="nav-fullname">Họ và Tên</h6></li>
-                            <li class="d-none" id="dropdown-teacher-item">
-                                <a class="dropdown-item text-primary fw-semibold d-flex align-items-center gap-2" href="teacher-dashboard.html">
-                                    <i class="fa-solid fa-chalkboard-user"></i>Bảng Quản Trị Giảng Viên
-                                </a>
-                            </li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li>
-                                <a class="dropdown-item text-danger d-flex align-items-center gap-2" href="#" id="logout-btn">
-                                    <i class="fa-solid fa-right-from-bracket"></i>Đăng xuất
-                                </a>
-                            </li>
-                        </ul>
+                    <button type="button" class="ws-mobile-toggle" id="ws-toggle-btn" aria-label="Toggle Navigation">
+                        <i class="fa-solid fa-bars"></i>
+                    </button>
+                    <div class="d-none d-sm-flex align-items-center gap-2 text-muted small">
+                        <span>Workspace</span>
+                        <i class="fa-solid fa-chevron-right" style="font-size: 0.65rem;"></i>
+                        <span class="text-white fw-semibold">Learner Hub</span>
                     </div>
                 </div>
-            </div>
-        </div>
-    </nav>
 
-    <!-- ── Main Content ── -->
-    <main class="container my-4 flex-grow-1">
-        <!-- Hero Banner -->
-        <div class="hero-banner shadow-sm mb-4">
-            <div class="row align-items-center position-relative" style="z-index: 1;">
-                <div class="col-lg-8">
-                    <span class="badge bg-primary-subtle text-white border border-primary px-3 py-2 rounded-pill mb-3">
-                        <i class="fa-solid fa-wand-magic-sparkles me-1"></i>Tích hợp Trí Tuệ Nhân Tạo Google Gemini
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge rounded-pill px-3 py-2 border" style="background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.25) !important; color: #34d399; font-size: 0.76rem;">
+                        <i class="fa-solid fa-circle-check me-1"></i>Hệ thống AI sẵn sàng
                     </span>
-                    <h2 class="fw-bold mb-2">Học Tập Chủ Động — Phát Hiện & Sửa Sai Bằng AI</h2>
-                    <p class="text-light opacity-75 mb-4" style="max-width: 600px;">
-                        Làm bài kiểm tra trắc nghiệm với tính năng <strong>Confidence Tagging</strong>. AI sẽ tự động phân tích quan niệm sai lầm và thiết kế bài học củng cố dành riêng cho bạn!
-                    </p>
-                    <div class="d-flex gap-2 flex-wrap">
-                        <button class="btn btn-primary px-4 py-2 rounded-pill fw-semibold shadow" onclick="startQuickQuiz()">
-                            <i class="fa-solid fa-bolt me-2"></i>Luyện Tập Nhanh
+                    <a href="teacher-dashboard.html" id="topbar-teacher-btn" class="btn btn-sm btn-outline-primary rounded-pill px-3 d-none">
+                        <i class="fa-solid fa-chalkboard-user me-1"></i>Giảng Dạy
+                    </a>
+                </div>
+            </div>
+
+            <!-- Main Workspace Canvas -->
+            <div class="ws-container">
+                <!-- Header Title Section (Editorial Style) -->
+                <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-3">
+                    <div>
+                        <h1 class="font-editorial fw-bold text-white mb-2" style="font-size: 2.35rem;">
+                            Tổng quan học tập
+                        </h1>
+                        <p class="text-muted small mb-0" id="welcome-subtext" style="max-width: 650px;">
+                            Chào bạn. Đây là Learner Workspace của bạn, được cá nhân hóa hoàn toàn nhằm chuẩn đoán lỗ hổng tư duy và thiết kế bài học củng cố bằng AI.
+                        </p>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <button class="btn btn-ws-start" onclick="startQuickQuiz()">
+                            <i class="fa-solid fa-bolt"></i>
+                            <span>Luyện Tập Nhanh</span>
                         </button>
-                        <a href="community.html" class="btn btn-outline-info text-white border-light-subtle px-4 py-2 rounded-pill fw-semibold">
-                            <i class="fa-solid fa-comments me-2"></i>Diễn Đàn Học Tập
-                        </a>
-                        <a href="history.html" class="btn btn-outline-light px-4 py-2 rounded-pill fw-semibold">
-                            <i class="fa-solid fa-clock-rotate-left me-2"></i>Lịch Sử & Tiến Độ
-                        </a>
                     </div>
                 </div>
-                <div class="col-lg-4 text-center d-none d-lg-block">
-                    <i class="fa-solid fa-brain-circuit text-white opacity-25" style="font-size: 150px;"></i>
-                </div>
-            </div>
-        </div>
 
-        <!-- Topics Section -->
-        <section id="topics-section">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h4 class="fw-bold text-dark mb-0">
-                    <i class="fa-solid fa-layer-group text-primary me-2"></i>Danh Sách Chủ Đề
-                </h4>
-                <span class="text-muted small" id="topics-count">Đang tải chủ đề...</span>
-            </div>
-
-            <!-- Dynamic Topics Loading (Shimmer Skeleton Cards) -->
-            <div id="topics-loading" class="py-2">
-                <div class="d-flex align-items-center justify-content-center gap-2 mb-4 text-muted small">
-                    <div class="lms-spinner lms-spinner-sm"></div>
-                    <span class="fw-semibold">Đang đồng bộ danh mục chủ đề học tập...</span>
+                <!-- ── 4 KPI Metric Cards (Hàng chỉ số tổng quan) ── -->
+                <div class="ws-metric-grid">
+                    <div class="ws-metric-card">
+                        <div class="ws-metric-label">Số Đợt Đã Thi</div>
+                        <div class="ws-metric-number" id="metric-total-tests">0</div>
+                        <div class="ws-metric-sub">Lượt kiểm tra hoàn tất</div>
+                    </div>
+                    <div class="ws-metric-card">
+                        <div class="ws-metric-label">Điểm Trung Bình</div>
+                        <div class="ws-metric-number text-info" id="metric-avg-score">0%</div>
+                        <div class="ws-metric-sub" id="metric-avg-sub">0.0 / 10 thang điểm</div>
+                    </div>
+                    <div class="ws-metric-card">
+                        <div class="ws-metric-label">Thành Tích Cao Nhất</div>
+                        <div class="ws-metric-number text-success" id="metric-highest-score">0%</div>
+                        <div class="ws-metric-sub">Kỷ lục đạt được</div>
+                    </div>
+                    <div class="ws-metric-card">
+                        <div class="ws-metric-label">Chủ Đề Khả Dụng</div>
+                        <div class="ws-metric-number text-purple" style="color: #c084fc;" id="metric-topics-count">0</div>
+                        <div class="ws-metric-sub">Kho ngân hàng câu hỏi</div>
+                    </div>
                 </div>
-                <div class="row g-4">
-                    <div class="col-md-6 col-lg-4">
-                        <div class="skeleton-card shadow-sm h-100 p-4">
-                            <div class="d-flex align-items-center gap-3 mb-3">
-                                <div class="skeleton-shimmer skeleton-avatar"></div>
-                                <div class="flex-grow-1">
-                                    <div class="skeleton-shimmer skeleton-line w-75 mb-2"></div>
-                                    <div class="skeleton-shimmer skeleton-line sm w-50"></div>
-                                </div>
+
+                <!-- ── Row: Hành trình học tập (Trái) & Quyền lợi AI (Phải) ── -->
+                <div class="row g-4 mb-5">
+                    <div class="col-lg-7">
+                        <div class="ws-card h-100">
+                            <div class="ws-card-header">
+                                <h3 class="ws-card-title">
+                                    <i class="fa-solid fa-route text-primary"></i>
+                                    <span>Hành trình học tập & Tiến độ</span>
+                                </h3>
+                                <a href="history.html" class="text-decoration-none small" style="color: #818cf8;">Chi tiết lịch sử <i class="fa-solid fa-arrow-right ms-1"></i></a>
                             </div>
-                            <div class="skeleton-shimmer skeleton-line w-100 mb-2"></div>
-                            <div class="skeleton-shimmer skeleton-line w-85 mb-4"></div>
-                            <div class="d-flex justify-content-between align-items-center pt-2 border-top">
-                                <div class="skeleton-shimmer skeleton-badge"></div>
-                                <div class="skeleton-shimmer skeleton-badge"></div>
+
+                            <div id="learning-journey-list">
+                                <div class="text-center py-4 text-muted small">
+                                    <div class="lms-spinner lms-spinner-sm me-2 align-middle"></div>
+                                    <span class="align-middle">Đang tổng hợp tiến trình học tập...</span>
+                                </div>
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-6 col-lg-4">
-                        <div class="skeleton-card shadow-sm h-100 p-4">
-                            <div class="d-flex align-items-center gap-3 mb-3">
-                                <div class="skeleton-shimmer skeleton-avatar"></div>
-                                <div class="flex-grow-1">
-                                    <div class="skeleton-shimmer skeleton-line w-75 mb-2"></div>
-                                    <div class="skeleton-shimmer skeleton-line sm w-50"></div>
+
+                    <div class="col-lg-5">
+                        <div class="ws-card h-100">
+                            <div class="ws-card-header">
+                                <h3 class="ws-card-title">
+                                    <i class="fa-solid fa-shield-halved text-cyan" style="color: #06b6d4;"></i>
+                                    <span>Cơ chế Chuẩn Đoán AI</span>
+                                </h3>
+                                <span class="ws-ai-chip"><i class="fa-solid fa-brain"></i>Gemini Flash</span>
+                            </div>
+                            
+                            <p class="text-muted small mb-3">
+                                Hệ thống tự động phân tách câu trả lời theo luồng <strong>Confidence Tagging</strong> (Chắc chắn vs Đoán mò).
+                            </p>
+
+                            <div class="p-3 rounded-3 mb-3" style="background: rgba(255, 255, 255, 0.025); border: 1px solid var(--ws-border);">
+                                <div class="d-flex align-items-center gap-2 mb-2">
+                                    <i class="fa-solid fa-check-circle text-success"></i>
+                                    <strong class="text-white small">Bài học củng cố cá nhân hóa</strong>
                                 </div>
+                                <p class="text-muted small mb-0" style="font-size: 0.8rem;">
+                                    Khi phát hiện lỗi sai hoặc phán đoán mò, AI lập tức giải thích nguyên nhân gốc rễ và tạo mini-quiz vá lỗ hổng nhận thức tức thì.
+                                </p>
                             </div>
-                            <div class="skeleton-shimmer skeleton-line w-100 mb-2"></div>
-                            <div class="skeleton-shimmer skeleton-line w-85 mb-4"></div>
-                            <div class="d-flex justify-content-between align-items-center pt-2 border-top">
-                                <div class="skeleton-shimmer skeleton-badge"></div>
-                                <div class="skeleton-shimmer skeleton-badge"></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-6 col-lg-4 d-none d-lg-block">
-                        <div class="skeleton-card shadow-sm h-100 p-4">
-                            <div class="d-flex align-items-center gap-3 mb-3">
-                                <div class="skeleton-shimmer skeleton-avatar"></div>
-                                <div class="flex-grow-1">
-                                    <div class="skeleton-shimmer skeleton-line w-75 mb-2"></div>
-                                    <div class="skeleton-shimmer skeleton-line sm w-50"></div>
+
+                            <div class="p-3 rounded-3" style="background: rgba(99, 102, 241, 0.05); border: 1px solid rgba(99, 102, 241, 0.2);">
+                                <div class="d-flex align-items-center justify-content-between mb-1">
+                                    <span class="text-white small fw-bold"><i class="fa-solid fa-robot me-1 text-primary"></i>Hỏi Trợ Giảng Ảo</span>
+                                    <button class="btn btn-sm btn-outline-primary rounded-pill px-3" onclick="openChatWidget()">Nhắn AI</button>
                                 </div>
-                            </div>
-                            <div class="skeleton-shimmer skeleton-line w-100 mb-2"></div>
-                            <div class="skeleton-shimmer skeleton-line w-85 mb-4"></div>
-                            <div class="d-flex justify-content-between align-items-center pt-2 border-top">
-                                <div class="skeleton-shimmer skeleton-badge"></div>
-                                <div class="skeleton-shimmer skeleton-badge"></div>
+                                <small class="text-muted" style="font-size: 0.78rem;">
+                                    Sẵn sàng giải đáp thắc mắc về lập trình và lý thuyết 24/7.
+                                </small>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Topic Cards Grid -->
-            <div class="row g-4" id="topics-grid" style="display: none;">
-                <!-- Rendered dynamically -->
-            </div>
-        </section>
-    </main>
+                <!-- ── Topics Section: Danh Mục Chủ Đề Ôn Tập ── -->
+                <section id="topics-section" class="pt-2">
+                    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                        <div>
+                            <h2 class="font-editorial fw-bold text-white mb-1" style="font-size: 1.75rem;">
+                                Danh sách chủ đề kiểm tra
+                            </h2>
+                            <p class="text-muted small mb-0">Chọn một chủ đề để bắt đầu làm bài trắc nghiệm thông minh.</p>
+                        </div>
+                        <span class="badge bg-dark border border-secondary text-muted px-3 py-2 rounded-pill" id="topics-count">
+                            Đang tải chủ đề...
+                        </span>
+                    </div>
 
-    <!-- ── Footer ── -->
-    <footer class="bg-white border-top py-3 text-center text-muted small mt-auto">
-        <div class="container">
-            &copy; 2026 Đồ án Công Nghệ Phần Mềm — Đại học LMS Thông Minh
-        </div>
-    </footer>
+                    <!-- Dynamic Topics Loading (Shimmer Skeleton Cards) -->
+                    <div id="topics-loading" class="py-2">
+                        <div class="d-flex align-items-center justify-content-center gap-2 mb-4 text-muted small">
+                            <div class="lms-spinner lms-spinner-sm"></div>
+                            <span class="fw-semibold">Đang đồng bộ danh mục chủ đề học tập...</span>
+                        </div>
+                        <div class="row g-4">
+                            <div class="col-md-6 col-lg-4">
+                                <div class="skeleton-card shadow-sm h-100 p-4" style="background: var(--ws-card-bg); border-radius: 16px; border: 1px solid var(--ws-border);">
+                                    <div class="skeleton-shimmer skeleton-line w-75 mb-2"></div>
+                                    <div class="skeleton-shimmer skeleton-line sm w-50 mb-3"></div>
+                                    <div class="skeleton-shimmer skeleton-line w-100 mb-2"></div>
+                                    <div class="skeleton-shimmer skeleton-line w-85 mb-4"></div>
+                                    <div class="skeleton-shimmer skeleton-line w-100" style="height: 38px; border-radius: 8px;"></div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 col-lg-4">
+                                <div class="skeleton-card shadow-sm h-100 p-4" style="background: var(--ws-card-bg); border-radius: 16px; border: 1px solid var(--ws-border);">
+                                    <div class="skeleton-shimmer skeleton-line w-75 mb-2"></div>
+                                    <div class="skeleton-shimmer skeleton-line sm w-50 mb-3"></div>
+                                    <div class="skeleton-shimmer skeleton-line w-100 mb-2"></div>
+                                    <div class="skeleton-shimmer skeleton-line w-85 mb-4"></div>
+                                    <div class="skeleton-shimmer skeleton-line w-100" style="height: 38px; border-radius: 8px;"></div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 col-lg-4 d-none d-lg-block">
+                                <div class="skeleton-card shadow-sm h-100 p-4" style="background: var(--ws-card-bg); border-radius: 16px; border: 1px solid var(--ws-border);">
+                                    <div class="skeleton-shimmer skeleton-line w-75 mb-2"></div>
+                                    <div class="skeleton-shimmer skeleton-line sm w-50 mb-3"></div>
+                                    <div class="skeleton-shimmer skeleton-line w-100 mb-2"></div>
+                                    <div class="skeleton-shimmer skeleton-line w-85 mb-4"></div>
+                                    <div class="skeleton-shimmer skeleton-line w-100" style="height: 38px; border-radius: 8px;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Topic Cards Grid -->
+                    <div class="row g-4" id="topics-grid" style="display: none;">
+                        <!-- Rendered dynamically -->
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script src="js/ui.js?v=3.0"></script>
-    <script src="js/api.js?v=3.0"></script>
-    <script src="js/chat-widget.js?v=3.0"></script>
+    <script src="js/ui.js?v=3.5"></script>
+    <script src="js/api.js?v=3.5"></script>
+    <script src="js/chat-widget.js?v=3.5"></script>
 
     <script>
-        // Kiểm tra xác thực
+        // 1. Kiểm tra xác thực
         const currentUser = API.auth.requireAuth();
         if (currentUser) {
-            document.getElementById('nav-username').textContent = currentUser.username;
-            document.getElementById('nav-fullname').textContent = currentUser.fullName || currentUser.username;
+            const fullnameEl = document.getElementById('nav-fullname');
+            if (fullnameEl) fullnameEl.textContent = currentUser.fullName || currentUser.username;
+            
+            const avatarEl = document.getElementById('ws-avatar');
+            if (avatarEl) {
+                const nameStr = currentUser.fullName || currentUser.username || 'SV';
+                avatarEl.textContent = nameStr.substring(0, 2).toUpperCase();
+            }
+
+            const roleStr = (currentUser.role || 'STUDENT').toUpperCase();
+            const roleBadge = document.getElementById('nav-role-badge');
+            if (roleBadge) {
+                roleBadge.textContent = roleStr === 'TEACHER' ? 'TEACHER • INSTRUCTOR' : (roleStr === 'ADMIN' ? 'SUPER • ADMIN' : 'STUDENT • LEARNER');
+            }
+
+            // Nếu là Teacher hoặc Admin, hiện switch mode
             if (API.auth.isTeacher()) {
-                const teacherLink = document.getElementById('nav-teacher-link');
-                if (teacherLink) teacherLink.classList.remove('d-none');
-                const dropdownTeacherItem = document.getElementById('dropdown-teacher-item');
-                if (dropdownTeacherItem) dropdownTeacherItem.classList.remove('d-none');
+                const teacherGroup = document.getElementById('sidebar-teacher-group');
+                if (teacherGroup) teacherGroup.classList.remove('d-none');
+                const topbarBtn = document.getElementById('topbar-teacher-btn');
+                if (topbarBtn) topbarBtn.classList.remove('d-none');
             }
         }
 
-        // Đăng xuất
+        // 2. Mobile Sidebar Toggle
+        const toggleBtn = document.getElementById('ws-toggle-btn');
+        const sidebar = document.getElementById('ws-sidebar');
+        if (toggleBtn && sidebar) {
+            toggleBtn.addEventListener('click', () => {
+                sidebar.classList.toggle('open');
+            });
+            // Click outside để đóng trên mobile
+            document.addEventListener('click', (e) => {
+                if (window.innerWidth <= 991 && sidebar.classList.contains('open') && !sidebar.contains(e.target) && !toggleBtn.contains(e.target)) {
+                    sidebar.classList.remove('open');
+                }
+            });
+        }
+
+        // 3. Đăng xuất
         document.getElementById('logout-btn').addEventListener('click', (e) => {
             e.preventDefault();
             Swal.fire({
@@ -222,9 +440,93 @@
             });
         });
 
+        // 4. Mở widget chat AI
+        function openChatWidget() {
+            const chatToggle = document.getElementById('lms-chat-toggle-btn');
+            if (chatToggle) {
+                chatToggle.click();
+            } else {
+                Swal.fire('Trợ giảng AI', 'Hộp thoại trợ giảng ảo đang được kích hoạt ở góc phải màn hình!', 'info');
+            }
+        }
+
         let allLoadedTopics = [];
 
-        // Tải danh sách chủ đề
+        // 5. Tải dữ liệu tiến độ cá nhân & Lịch sử
+        async function loadLearnerMetrics() {
+            try {
+                const res = await API.quiz.history();
+                const sessions = res.data || [];
+                
+                document.getElementById('metric-total-tests').textContent = sessions.length;
+
+                let totalScore = 0;
+                let highest = 0;
+                const topicStats = {};
+
+                sessions.forEach(s => {
+                    const sc = s.score !== undefined ? Number(s.score) : 0;
+                    let p = 0;
+                    if (s.totalQuestions > 0 && s.correctCount !== undefined) {
+                        p = Math.round((s.correctCount / s.totalQuestions) * 100);
+                    } else if (sc <= 10) {
+                        p = Math.round(sc * 10);
+                    } else {
+                        p = Math.round(sc);
+                    }
+                    totalScore += p;
+                    if (p > highest) highest = p;
+
+                    // Nhóm theo topic
+                    const tName = s.topicName || ('Chủ đề #' + s.topicId);
+                    if (!topicStats[tName] || p > topicStats[tName].percent) {
+                        topicStats[tName] = {
+                            name: tName,
+                            percent: p,
+                            score10: (sc <= 10 ? sc : sc / 10).toFixed(1),
+                            topicId: s.topicId
+                        };
+                    }
+                });
+
+                const avg = sessions.length > 0 ? Math.round(totalScore / sessions.length) : 0;
+                const avg10 = (avg / 10).toFixed(1);
+
+                document.getElementById('metric-avg-score').textContent = `${avg}%`;
+                document.getElementById('metric-avg-sub').textContent = `${avg10} / 10 thang điểm`;
+                document.getElementById('metric-highest-score').textContent = `${highest}%`;
+
+                // Render danh sách hành trình học tập
+                const journeyContainer = document.getElementById('learning-journey-list');
+                const journeyEntries = Object.values(topicStats);
+
+                if (journeyEntries.length === 0) {
+                    journeyContainer.innerHTML = `
+                        <div class="text-center py-4 text-muted small">
+                            <i class="fa-solid fa-graduation-cap fa-2x mb-2 text-secondary opacity-50"></i>
+                            <div>Bạn chưa làm bài kiểm tra nào.</div>
+                            <div class="mt-2 text-indigo-400" style="color: #818cf8;">Hãy chọn một chủ đề bên dưới để bắt đầu ghi dấu tiến độ!</div>
+                        </div>
+                    `;
+                } else {
+                    journeyContainer.innerHTML = journeyEntries.slice(0, 4).map(item => `
+                        <div class="journey-item">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="fw-semibold text-white small">${escapeHtml(item.name)}</span>
+                                <span class="fw-bold font-monospace small" style="color: #818cf8;">${item.percent}%</span>
+                            </div>
+                            <div class="ws-progress-track">
+                                <div class="ws-progress-bar" style="width: ${item.percent}%;"></div>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            } catch (err) {
+                console.error('Không thể tải chỉ số học tập:', err);
+            }
+        }
+
+        // 6. Tải danh sách chủ đề
         async function loadTopics() {
             try {
                 const res = await API.topics.list();
@@ -235,6 +537,7 @@
                 const grid = document.getElementById('topics-grid');
                 grid.style.display = 'flex';
                 document.getElementById('topics-count').textContent = `${topics.length} chủ đề khả dụng`;
+                document.getElementById('metric-topics-count').textContent = topics.length;
 
                 if (topics.length === 0) {
                     grid.innerHTML = `<div class="col-12 text-center text-muted py-5">Chưa có chủ đề nào trong CSDL.</div>`;
@@ -243,18 +546,19 @@
 
                 grid.innerHTML = topics.map(t => `
                     <div class="col-md-6 col-lg-4">
-                        <div class="card card-hover h-100 p-3 bg-white">
+                        <div class="ws-topic-card">
                             <div class="d-flex justify-content-between align-items-start mb-2">
-                                <span class="badge bg-primary-subtle text-primary fw-bold px-2 py-1 rounded-pill">
+                                <span class="badge px-2 py-1 rounded-pill" style="background: rgba(99, 102, 241, 0.15); color: #a5b4fc; font-size: 0.72rem;">
                                     <i class="fa-solid fa-circle-question me-1"></i>${t.questionCount || 0} câu hỏi
                                 </span>
-                                <span class="badge bg-light text-muted border">ID: ${t.topicId}</span>
+                                <span class="badge border text-muted" style="background: rgba(255,255,255,0.03); border-color: var(--ws-border) !important; font-size: 0.7rem;">ID: ${t.topicId}</span>
                             </div>
-                            <h5 class="fw-bold text-dark mb-2">${t.topicName}</h5>
-                            <p class="text-muted small flex-grow-1">${t.description || 'Chưa có mô tả chi tiết cho chủ đề này.'}</p>
-                            <div class="pt-3 border-top mt-2">
-                                <button class="btn btn-primary w-100 rounded-3 py-2 fw-semibold" onclick="startQuiz(${t.topicId}, '${encodeURIComponent(t.topicName)}')">
-                                    <i class="fa-solid fa-pen-to-square me-2"></i>Vào Làm Bài
+                            <h5 class="fw-bold text-white mb-2">${escapeHtml(t.topicName)}</h5>
+                            <p class="text-muted small flex-grow-1 mb-4" style="line-height: 1.5;">${escapeHtml(t.description || 'Chưa có mô tả chi tiết cho chủ đề này.')}</p>
+                            <div class="pt-3 border-top mt-auto" style="border-color: var(--ws-border) !important;">
+                                <button class="btn btn-ws-start w-100" onclick="startQuiz(${t.topicId}, '${encodeURIComponent(t.topicName)}')">
+                                    <i class="fa-solid fa-pen-to-square"></i>
+                                    <span>Vào Làm Bài</span>
                                 </button>
                             </div>
                         </div>
@@ -262,56 +566,37 @@
                 `).join('');
             } catch (err) {
                 document.getElementById('topics-loading').innerHTML = `
-                    <div class="alert alert-danger d-inline-block">
-                        <i class="fa-solid fa-triangle-exclamation me-2"></i>Lỗi tải chủ đề: ${err.message}
+                    <div class="alert alert-danger border-0 rounded-4 text-center">
+                        <i class="fa-solid fa-circle-exclamation me-1"></i>Lỗi kết nối máy chủ: ${err.message}
                     </div>
                 `;
             }
         }
 
-        // Luyện tập nhanh với 1 chủ đề ngẫu nhiên
+        function escapeHtml(text) {
+            if (!text) return '';
+            const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+            return String(text).replace(/[&<>"']/g, m => map[m]);
+        }
+
+        // 7. Bắt đầu làm bài theo chủ đề
+        function startQuiz(topicId, topicName) {
+            window.location.href = `quiz.html?topicId=${topicId}&topicName=${topicName}`;
+        }
+
+        // 8. Làm bài nhanh ngẫu nhiên
         function startQuickQuiz() {
-            if (!allLoadedTopics || allLoadedTopics.length === 0) {
-                Swal.fire({
-                    icon: 'info',
-                    title: 'Đang tải dữ liệu',
-                    text: 'Danh sách chủ đề đang được nạp, vui lòng đợi trong giây lát!',
-                    timer: 2000
-                });
+            if (allLoadedTopics.length === 0) {
+                Swal.fire('Thông báo', 'Đang tải danh sách chủ đề, vui lòng thử lại sau giây lát!', 'info');
                 return;
             }
             const randomTopic = allLoadedTopics[Math.floor(Math.random() * allLoadedTopics.length)];
-            const topicName = randomTopic.topicName || 'Chủ đề ôn tập';
-            const topicDesc = randomTopic.description || 'Bài kiểm tra trắc nghiệm củng cố kiến thức.';
-
-            Swal.fire({
-                title: '<i class="fa-solid fa-bolt text-warning me-2"></i>Luyện Tập Nhanh Cùng AI',
-                html: `
-                    <p class="text-muted small mb-3">Hệ thống chọn ngẫu nhiên một môn học để bạn thử sức ngay:</p>
-                    <div class="p-3 bg-light rounded-3 border text-start mb-2">
-                        <div class="fw-bold text-primary mb-1"><i class="fa-solid fa-book-open me-2"></i>${topicName}</div>
-                        <small class="text-muted">${topicDesc}</small>
-                    </div>
-                `,
-                showCancelButton: true,
-                confirmButtonText: '<i class="fa-solid fa-play me-1"></i>Vào thi ngay',
-                cancelButtonText: 'Để tôi tự chọn môn',
-                confirmButtonColor: '#4361ee'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    startQuiz(randomTopic.topicId, encodeURIComponent(topicName));
-                } else {
-                    const el = document.getElementById('topics-section');
-                    if (el) el.scrollIntoView({ behavior: 'smooth' });
-                }
-            });
+            startQuiz(randomTopic.topicId, encodeURIComponent(randomTopic.topicName));
         }
 
-        function startQuiz(topicId, topicNameEncoded) {
-            window.location.href = `quiz.html?topicId=${topicId}&topicName=${topicNameEncoded}`;
-        }
-
+        // Khởi động
         loadTopics();
+        loadLearnerMetrics();
     </script>
 </body>
 </html>

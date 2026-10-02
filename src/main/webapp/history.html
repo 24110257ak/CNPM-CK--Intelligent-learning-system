@@ -3,205 +3,249 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lịch Sử Học Tập — Hệ Thống Học Tập Thông Minh</title>
+    <title>Lịch Sử & Tiến Độ — Intelligent LMS Studio</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400..700;1,6..72,400..700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- FontAwesome 6 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="css/app.css?v=2.2">
+    <!-- SweetAlert2 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <!-- Custom Workspace CSS -->
+    <link rel="stylesheet" href="css/app.css?v=3.5">
+
+    <style>
+        .table-ws {
+            --bs-table-bg: transparent;
+            --bs-table-color: var(--ws-text);
+            --bs-table-border-color: var(--ws-border);
+            color: var(--ws-text);
+        }
+        .table-ws th {
+            background-color: rgba(255, 255, 255, 0.02) !important;
+            color: var(--ws-text-muted) !important;
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            border-bottom: 1px solid var(--ws-border);
+            padding: 0.95rem 1.15rem;
+        }
+        .table-ws td {
+            border-bottom: 1px solid var(--ws-border);
+            padding: 1rem 1.15rem;
+            color: var(--ws-text);
+            font-size: 0.88rem;
+            background-color: transparent !important;
+        }
+        .table-ws tbody tr:hover td {
+            background-color: rgba(255, 255, 255, 0.025) !important;
+        }
+    </style>
 </head>
-<body>
+<body class="workspace-body">
 
-    <!-- ── Navbar ── -->
-    <nav class="navbar navbar-expand-lg navbar-custom sticky-top">
-        <div class="container">
-            <a class="navbar-brand d-flex align-items-center gap-2" href="index.html">
-                <i class="fa-solid fa-graduation-cap fa-lg text-primary"></i>
-                <span>LMS Thông Minh</span>
-            </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navContent">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navContent">
-                <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-3">
-                    <li class="nav-item">
-                        <a class="nav-link fw-semibold" href="index.html"><i class="fa-solid fa-book-open me-1"></i>Chủ Đề Ôn Tập</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link fw-semibold" href="community.html">
-                            <i class="fa-solid fa-comments me-1"></i>Diễn Đàn Cộng Đồng
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link active fw-bold text-primary" href="history.html"><i class="fa-solid fa-chart-line me-1"></i>Lịch Sử & Tiến Độ</a>
-                    </li>
-                    <li class="nav-item d-none" id="nav-teacher-link">
-                        <a class="nav-link fw-bold text-indigo" href="teacher-dashboard.html" style="color: #6366f1;"><i class="fa-solid fa-chalkboard-user me-1"></i>Trang Giảng Viên</a>
-                    </li>
-                </ul>
+    <div class="workspace-layout">
+        <!-- ── SIDEBAR (Left Navigation Drawer) ── -->
+        <aside class="ws-sidebar" id="ws-sidebar">
+            <div class="ws-sidebar-brand">
+                <div class="ws-brand-logo">
+                    <i class="fa-solid fa-graduation-cap"></i>
+                </div>
+                <div class="flex-grow-1 overflow-hidden">
+                    <div class="ws-brand-name">Intelligent LMS</div>
+                    <div class="d-flex align-items-center gap-1 mt-1">
+                        <span class="ws-mode-badge">Học Tập</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="ws-sidebar-scroll">
+                <div class="ws-nav-group-title">Learner Workspace</div>
+                <a href="index.html" class="ws-nav-item">
+                    <i class="fa-solid fa-chart-pie"></i>
+                    <span>Tổng quan học tập</span>
+                </a>
+                <a href="index.html#topics-section" class="ws-nav-item">
+                    <i class="fa-solid fa-book-open"></i>
+                    <span>Khám phá chủ đề</span>
+                </a>
+                <a href="history.html" class="ws-nav-item active">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                    <span>Lịch sử & Tiến độ</span>
+                </a>
+                <a href="community.html" class="ws-nav-item">
+                    <i class="fa-solid fa-comments"></i>
+                    <span>Diễn đàn cộng đồng</span>
+                </a>
+
+                <div class="ws-nav-group-title mt-3">Giảng Dạy</div>
+                <div class="d-none" id="sidebar-teacher-group">
+                    <a href="teacher-dashboard.html" class="ws-nav-item" style="color: #a5b4fc;">
+                        <i class="fa-solid fa-chalkboard-user text-primary"></i>
+                        <span>Teacher Workspace</span>
+                    </a>
+                </div>
+            </div>
+
+            <div class="ws-sidebar-footer">
+                <div class="ws-user-card">
+                    <div class="ws-user-avatar" id="ws-avatar">SV</div>
+                    <div class="flex-grow-1 overflow-hidden">
+                        <div class="ws-user-name" id="nav-fullname">Đang tải...</div>
+                        <div class="ws-user-role" id="nav-role-badge">STUDENT • LEARNER</div>
+                    </div>
+                </div>
+                <button type="button" class="ws-btn-logout" id="logout-btn">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                    <span>Đăng xuất</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- ── MAIN CONTENT AREA ── -->
+        <main class="ws-main">
+            <!-- Topbar -->
+            <div class="ws-topbar">
                 <div class="d-flex align-items-center gap-3">
-                    <div class="dropdown">
-                        <button class="btn btn-outline-secondary dropdown-toggle d-flex align-items-center gap-2 rounded-pill px-3 py-1" type="button" data-bs-toggle="dropdown">
-                            <i class="fa-solid fa-user-circle fa-lg text-primary"></i>
-                            <span id="nav-username" class="fw-semibold small">Sinh Viên</span>
-                        </button>
-                        <ul class="dropdown-menu dropdown-menu-end shadow border-0 rounded-3">
-                            <li><h6 class="dropdown-header" id="nav-fullname">Họ và Tên</h6></li>
-                            <li class="d-none" id="dropdown-teacher-item">
-                                <a class="dropdown-item text-primary fw-semibold d-flex align-items-center gap-2" href="teacher-dashboard.html">
-                                    <i class="fa-solid fa-chalkboard-user"></i>Bảng Quản Trị Giảng Viên
-                                </a>
-                            </li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li>
-                                <a class="dropdown-item text-danger d-flex align-items-center gap-2" href="#" id="logout-btn">
-                                    <i class="fa-solid fa-right-from-bracket"></i>Đăng xuất
-                                </a>
-                            </li>
-                        </ul>
+                    <button type="button" class="ws-mobile-toggle" id="ws-toggle-btn" aria-label="Toggle Navigation">
+                        <i class="fa-solid fa-bars"></i>
+                    </button>
+                    <div class="d-none d-sm-flex align-items-center gap-2 text-muted small">
+                        <span>Workspace</span>
+                        <i class="fa-solid fa-chevron-right" style="font-size: 0.65rem;"></i>
+                        <span class="text-white fw-semibold">Lịch Sử & Tiến Độ</span>
+                    </div>
+                </div>
+
+                <a href="index.html" class="btn btn-sm btn-primary rounded-pill px-3">
+                    <i class="fa-solid fa-plus me-1"></i>Làm Bài Mới
+                </a>
+            </div>
+
+            <!-- Container Canvas -->
+            <div class="ws-container">
+                <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-3">
+                    <div>
+                        <h1 class="font-editorial fw-bold text-white mb-2" style="font-size: 2.35rem;">
+                            Lịch sử làm bài & Thống kê
+                        </h1>
+                        <p class="text-muted small mb-0">Theo dõi sự tiến bộ, điểm số quy đổi và xem lại các bài học củng cố qua từng phiên.</p>
+                    </div>
+                </div>
+
+                <!-- 3 Metric KPI Cards -->
+                <div class="ws-metric-grid mb-4">
+                    <div class="ws-metric-card">
+                        <div class="ws-metric-label">Tổng Số Lần Thi</div>
+                        <div class="ws-metric-number" id="stat-total-tests">0</div>
+                        <div class="ws-metric-sub">Lượt nộp bài hoàn tất</div>
+                    </div>
+                    <div class="ws-metric-card">
+                        <div class="ws-metric-label">Điểm Cao Nhất</div>
+                        <div class="ws-metric-number text-success" id="stat-highest-score">0%</div>
+                        <div class="ws-metric-sub">Kỷ lục đạt được</div>
+                    </div>
+                    <div class="ws-metric-card">
+                        <div class="ws-metric-label">Điểm Trung Bình</div>
+                        <div class="ws-metric-number text-info" id="stat-avg-score">0%</div>
+                        <div class="ws-metric-sub">Tỷ lệ chính xác toàn bộ</div>
+                    </div>
+                </div>
+
+                <!-- History Table Card -->
+                <div class="ws-card">
+                    <div class="ws-card-header">
+                        <h3 class="ws-card-title">
+                            <i class="fa-solid fa-clock-rotate-left text-primary"></i>
+                            <span>Danh sách phiên kiểm tra đã thực hiện</span>
+                        </h3>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-ws align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th class="ps-3">Mã Phiên</th>
+                                    <th>Chủ Đề</th>
+                                    <th>Đúng / Tổng</th>
+                                    <th>Điểm Số</th>
+                                    <th>Thời Gian</th>
+                                    <th class="text-end pe-3">Thao Tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="history-tbody">
+                                <tr>
+                                    <td colspan="6" class="text-center py-5 text-muted">
+                                        <div class="lms-spinner lms-spinner-sm me-2 align-middle"></div>
+                                        <span class="align-middle fw-semibold">Đang tải lịch sử & thống kê tiến độ học tập...</span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
-        </div>
-    </nav>
-
-    <!-- ── Main Content ── -->
-    <main class="container my-4 flex-grow-1" style="max-width: 960px;">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h4 class="fw-bold text-dark mb-1">
-                    <i class="fa-solid fa-clock-rotate-left text-primary me-2"></i>Lịch Sử Làm Bài & Tiến Độ
-                </h4>
-                <p class="text-muted small mb-0">Theo dõi sự tiến bộ và xem lại các bài học củng cố qua từng phiên.</p>
-            </div>
-            <a href="index.html" class="btn btn-primary rounded-pill px-3 fw-semibold">
-                <i class="fa-solid fa-plus me-1"></i>Làm Bài Mới
-            </a>
-        </div>
-
-        <!-- Stat Cards -->
-        <div class="row g-3 mb-4">
-            <div class="col-md-4">
-                <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
-                    <div class="d-flex align-items-center gap-3">
-                        <div class="bg-primary-subtle text-primary p-3 rounded-circle">
-                            <i class="fa-solid fa-file-signature fa-lg"></i>
-                        </div>
-                        <div>
-                            <div class="fs-4 fw-bold text-dark" id="stat-total-tests">0</div>
-                            <small class="text-muted">Tổng Số Lần Thi</small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-4">
-                <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
-                    <div class="d-flex align-items-center gap-3">
-                        <div class="bg-success-subtle text-success p-3 rounded-circle">
-                            <i class="fa-solid fa-trophy fa-lg"></i>
-                        </div>
-                        <div>
-                            <div class="fs-4 fw-bold text-dark" id="stat-highest-score">0%</div>
-                            <small class="text-muted">Điểm Cao Nhất</small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-4">
-                <div class="card border-0 shadow-sm rounded-4 p-3 bg-white">
-                    <div class="d-flex align-items-center gap-3">
-                        <div class="bg-info-subtle text-info p-3 rounded-circle">
-                            <i class="fa-solid fa-chart-pie fa-lg"></i>
-                        </div>
-                        <div>
-                            <div class="fs-4 fw-bold text-dark" id="stat-avg-score">0%</div>
-                            <small class="text-muted">Điểm Trung Bình</small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- History Table Card -->
-        <div class="card border-0 shadow-sm rounded-4 bg-white overflow-hidden">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="table-light">
-                        <tr>
-                            <th class="ps-4">Mã Phiên</th>
-                            <th>Chủ Đề</th>
-                            <th>Đúng / Tổng</th>
-                            <th>Điểm Số</th>
-                            <th>Thời Gian</th>
-                            <th class="text-end pe-4">Thao Tác</th>
-                        </tr>
-                    </thead>
-                    <tbody id="history-tbody">
-                        <tr>
-                            <td colspan="6" class="text-center py-5 text-muted">
-                                <div class="lms-spinner lms-spinner-sm me-2 align-middle"></div>
-                                <span class="align-middle fw-semibold">Đang tải lịch sử & thống kê tiến độ học tập...</span>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </main>
-
-    <!-- ── Footer ── -->
-    <footer class="bg-white border-top py-3 text-center text-muted small mt-auto">
-        <div class="container">
-            &copy; 2026 Đồ án Công Nghệ Phần Mềm — Hệ Thống Học Tập Thông Minh
-        </div>
-    </footer>
+        </main>
+    </div>
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <script src="js/ui.js?v=3.0"></script>
-    <script src="js/api.js?v=3.0"></script>
-    <script src="js/chat-widget.js?v=3.0"></script>
+    <script src="js/ui.js?v=3.5"></script>
+    <script src="js/api.js?v=3.5"></script>
+    <script src="js/chat-widget.js?v=3.5"></script>
 
     <script>
         const currentUser = API.auth.requireAuth();
         if (currentUser) {
-            const usernameEl = document.getElementById('nav-username');
             const fullnameEl = document.getElementById('nav-fullname');
-            if (usernameEl) usernameEl.textContent = currentUser.username;
             if (fullnameEl) fullnameEl.textContent = currentUser.fullName || currentUser.username;
-
+            const avatarEl = document.getElementById('ws-avatar');
+            if (avatarEl) {
+                const nameStr = currentUser.fullName || currentUser.username || 'SV';
+                avatarEl.textContent = nameStr.substring(0, 2).toUpperCase();
+            }
             if (API.auth.isTeacher()) {
-                const teacherLink = document.getElementById('nav-teacher-link');
-                if (teacherLink) teacherLink.classList.remove('d-none');
-                const dropdownTeacherItem = document.getElementById('dropdown-teacher-item');
-                if (dropdownTeacherItem) dropdownTeacherItem.classList.remove('d-none');
+                const teacherGroup = document.getElementById('sidebar-teacher-group');
+                if (teacherGroup) teacherGroup.classList.remove('d-none');
             }
         }
 
-        const logoutBtn = document.getElementById('logout-btn');
-        if (logoutBtn) {
-            logoutBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                Swal.fire({
-                    title: 'Đăng xuất?',
-                    text: 'Bạn có chắc chắn muốn rời khỏi hệ thống?',
-                    icon: 'question',
-                    showCancelButton: true,
-                    confirmButtonText: 'Đăng xuất',
-                    cancelButtonText: 'Hủy'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        API.auth.logout();
-                    }
-                });
+        // Mobile Sidebar Toggle
+        const toggleBtn = document.getElementById('ws-toggle-btn');
+        const sidebar = document.getElementById('ws-sidebar');
+        if (toggleBtn && sidebar) {
+            toggleBtn.addEventListener('click', () => {
+                sidebar.classList.toggle('open');
+            });
+            document.addEventListener('click', (e) => {
+                if (window.innerWidth <= 991 && sidebar.classList.contains('open') && !sidebar.contains(e.target) && !toggleBtn.contains(e.target)) {
+                    sidebar.classList.remove('open');
+                }
             });
         }
 
+        // Logout
+        document.getElementById('logout-btn').addEventListener('click', (e) => {
+            e.preventDefault();
+            Swal.fire({
+                title: 'Đăng xuất?',
+                text: 'Bạn có chắc chắn muốn rời khỏi hệ thống?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Đăng xuất',
+                cancelButtonText: 'Hủy'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    API.auth.logout();
+                }
+            });
+        });
+
+        // Load History Data
         async function loadHistory() {
             try {
                 const res = await API.quiz.history();
@@ -254,15 +298,15 @@
 
                     return `
                         <tr>
-                            <td class="ps-4 fw-semibold text-muted">#${s.sessionId}</td>
-                            <td class="fw-bold text-dark">${s.topicName || ('Chủ đề #' + s.topicId)}</td>
+                            <td class="ps-3 fw-semibold text-muted">#${s.sessionId}</td>
+                            <td class="fw-bold text-white">${escapeHtml(s.topicName || ('Chủ đề #' + s.topicId))}</td>
                             <td>${s.correctCount || 0} / ${s.totalQuestions || 0}</td>
                             <td>
                                 <span class="badge ${badgeColor} rounded-pill px-3 py-1 fs-6">${score10} / 10</span>
                                 <span class="text-muted small ms-1">(${percent}%)</span>
                             </td>
                             <td class="text-muted small">${dateStr}</td>
-                            <td class="text-end pe-4">
+                            <td class="text-end pe-3">
                                 <a href="result.html?sessionId=${s.sessionId}" class="btn btn-sm btn-outline-primary rounded-pill px-3">
                                     <i class="fa-solid fa-eye me-1"></i>Xem Lại
                                 </a>
@@ -279,6 +323,12 @@
                     </tr>
                 `;
             }
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' };
+            return String(text).replace(/[&<>"']/g, m => map[m]);
         }
 
         loadHistory();

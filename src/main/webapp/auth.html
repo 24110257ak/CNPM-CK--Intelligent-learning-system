@@ -320,11 +320,11 @@
             </p>
 
             <!-- Pill Tabs -->
-            <div class="auth-nav-tabs" role="tablist">
-                <button class="auth-nav-link active" id="login-tab" data-bs-toggle="pill" data-bs-target="#login-pane" type="button" role="tab">
+            <div class="auth-nav-tabs nav" role="tablist">
+                <button class="auth-nav-link active" id="login-tab" data-bs-toggle="pill" data-bs-target="#login-pane" type="button" role="tab" onclick="switchAuthTab('login')">
                     <i class="fa-solid fa-right-to-bracket me-2"></i>Đăng Nhập
                 </button>
-                <button class="auth-nav-link" id="register-tab" data-bs-toggle="pill" data-bs-target="#register-pane" type="button" role="tab">
+                <button class="auth-nav-link" id="register-tab" data-bs-toggle="pill" data-bs-target="#register-pane" type="button" role="tab" onclick="switchAuthTab('register')">
                     <i class="fa-solid fa-user-plus me-2"></i>Tạo Tài Khoản
                 </button>
             </div>
@@ -456,14 +456,44 @@
             }
         }
 
-        // Tự động cập nhật tiêu đề khi đổi tab
-        document.getElementById('login-tab').addEventListener('shown.bs.tab', () => {
-            document.getElementById('auth-main-title').textContent = 'Đăng nhập';
-            document.getElementById('auth-main-subtitle').textContent = 'Nền tảng kiểm tra trực tuyến tích hợp chẩn đoán bẫy nhận thức và cá nhân hóa bài học củng cố bằng AI.';
-        });
-        document.getElementById('register-tab').addEventListener('shown.bs.tab', () => {
-            document.getElementById('auth-main-title').textContent = 'Tạo tài khoản';
-            document.getElementById('auth-main-subtitle').textContent = 'Khởi tạo tài khoản người học hoặc giảng viên để bắt đầu hành trình học tập cá nhân hóa.';
+        // Chuyển đổi tab Đăng nhập / Đăng ký tin cậy 100%
+        function switchAuthTab(mode) {
+            const isLogin = mode === 'login';
+            const loginTab = document.getElementById('login-tab');
+            const registerTab = document.getElementById('register-tab');
+            const loginPane = document.getElementById('login-pane');
+            const registerPane = document.getElementById('register-pane');
+            const titleEl = document.getElementById('auth-main-title');
+            const subEl = document.getElementById('auth-main-subtitle');
+
+            if (isLogin) {
+                loginTab?.classList.add('active');
+                registerTab?.classList.remove('active');
+                loginPane?.classList.add('show', 'active');
+                registerPane?.classList.remove('show', 'active');
+                if (titleEl) titleEl.textContent = 'Đăng nhập';
+                if (subEl) subEl.textContent = 'Nền tảng kiểm tra trực tuyến tích hợp chẩn đoán bẫy nhận thức và cá nhân hóa bài học củng cố bằng AI.';
+            } else {
+                registerTab?.classList.add('active');
+                loginTab?.classList.remove('active');
+                registerPane?.classList.add('show', 'active');
+                loginPane?.classList.remove('show', 'active');
+                if (titleEl) titleEl.textContent = 'Tạo tài khoản';
+                if (subEl) subEl.textContent = 'Khởi tạo tài khoản người học hoặc giảng viên để bắt đầu hành trình học tập cá nhân hóa.';
+            }
+
+            if (window.history && window.history.replaceState) {
+                window.history.replaceState(null, null, isLogin ? '#login' : '#register');
+            }
+        }
+        window.switchAuthTab = switchAuthTab;
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const hash = window.location.hash;
+            const params = new URLSearchParams(window.location.search);
+            if (hash === '#register' || params.get('tab') === 'register' || params.get('mode') === 'register') {
+                switchAuthTab('register');
+            }
         });
 
         // Xử lý Login

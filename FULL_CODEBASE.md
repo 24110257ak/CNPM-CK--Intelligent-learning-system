@@ -1,6 +1,6 @@
 ﻿# TOAN BO MA NGUON DU AN - HE THONG HOC TAP THONG MINH (INTELLIGENT LMS)
 
-> **Thoi gian tao file:** 2026-10-03 00:03:36
+> **Thoi gian tao file:** 2026-10-05 10:06:19
 > **Tong so file:** 58
 > **Muc dich:** Gom toan bo source code thanh 1 file duy nhat de gui cho ben thu ba xem xet, danh gia va gop y.
 
@@ -13851,11 +13851,11 @@ const AppUI = (() => {
             </p>
 
             <!-- Pill Tabs -->
-            <div class="auth-nav-tabs" role="tablist">
-                <button class="auth-nav-link active" id="login-tab" data-bs-toggle="pill" data-bs-target="#login-pane" type="button" role="tab">
+            <div class="auth-nav-tabs nav" role="tablist">
+                <button class="auth-nav-link active" id="login-tab" data-bs-toggle="pill" data-bs-target="#login-pane" type="button" role="tab" onclick="switchAuthTab('login')">
                     <i class="fa-solid fa-right-to-bracket me-2"></i>Đăng Nhập
                 </button>
-                <button class="auth-nav-link" id="register-tab" data-bs-toggle="pill" data-bs-target="#register-pane" type="button" role="tab">
+                <button class="auth-nav-link" id="register-tab" data-bs-toggle="pill" data-bs-target="#register-pane" type="button" role="tab" onclick="switchAuthTab('register')">
                     <i class="fa-solid fa-user-plus me-2"></i>Tạo Tài Khoản
                 </button>
             </div>
@@ -13987,14 +13987,44 @@ const AppUI = (() => {
             }
         }
 
-        // Tự động cập nhật tiêu đề khi đổi tab
-        document.getElementById('login-tab').addEventListener('shown.bs.tab', () => {
-            document.getElementById('auth-main-title').textContent = 'Đăng nhập';
-            document.getElementById('auth-main-subtitle').textContent = 'Nền tảng kiểm tra trực tuyến tích hợp chẩn đoán bẫy nhận thức và cá nhân hóa bài học củng cố bằng AI.';
-        });
-        document.getElementById('register-tab').addEventListener('shown.bs.tab', () => {
-            document.getElementById('auth-main-title').textContent = 'Tạo tài khoản';
-            document.getElementById('auth-main-subtitle').textContent = 'Khởi tạo tài khoản người học hoặc giảng viên để bắt đầu hành trình học tập cá nhân hóa.';
+        // Chuyển đổi tab Đăng nhập / Đăng ký tin cậy 100%
+        function switchAuthTab(mode) {
+            const isLogin = mode === 'login';
+            const loginTab = document.getElementById('login-tab');
+            const registerTab = document.getElementById('register-tab');
+            const loginPane = document.getElementById('login-pane');
+            const registerPane = document.getElementById('register-pane');
+            const titleEl = document.getElementById('auth-main-title');
+            const subEl = document.getElementById('auth-main-subtitle');
+
+            if (isLogin) {
+                loginTab?.classList.add('active');
+                registerTab?.classList.remove('active');
+                loginPane?.classList.add('show', 'active');
+                registerPane?.classList.remove('show', 'active');
+                if (titleEl) titleEl.textContent = 'Đăng nhập';
+                if (subEl) subEl.textContent = 'Nền tảng kiểm tra trực tuyến tích hợp chẩn đoán bẫy nhận thức và cá nhân hóa bài học củng cố bằng AI.';
+            } else {
+                registerTab?.classList.add('active');
+                loginTab?.classList.remove('active');
+                registerPane?.classList.add('show', 'active');
+                loginPane?.classList.remove('show', 'active');
+                if (titleEl) titleEl.textContent = 'Tạo tài khoản';
+                if (subEl) subEl.textContent = 'Khởi tạo tài khoản người học hoặc giảng viên để bắt đầu hành trình học tập cá nhân hóa.';
+            }
+
+            if (window.history && window.history.replaceState) {
+                window.history.replaceState(null, null, isLogin ? '#login' : '#register');
+            }
+        }
+        window.switchAuthTab = switchAuthTab;
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const hash = window.location.hash;
+            const params = new URLSearchParams(window.location.search);
+            if (hash === '#register' || params.get('tab') === 'register' || params.get('mode') === 'register') {
+                switchAuthTab('register');
+            }
         });
 
         // Xử lý Login
@@ -14347,7 +14377,7 @@ const AppUI = (() => {
                 </a>
 
                 <div class="ws-nav-group-title mt-3">Công cụ & Trợ Giúp</div>
-                <a href="index.html" class="ws-nav-item">
+                <a href="index.html?quickQuiz=true" class="ws-nav-item">
                     <i class="fa-solid fa-bolt text-warning"></i>
                     <span>Luyện tập nhanh AI</span>
                 </a>
@@ -14883,6 +14913,16 @@ const AppUI = (() => {
                     <span>Diễn đàn cộng đồng</span>
                 </a>
 
+                <div class="ws-nav-group-title mt-3">Công cụ & Phục Hồi</div>
+                <a href="index.html?quickQuiz=true" class="ws-nav-item">
+                    <i class="fa-solid fa-bolt text-warning"></i>
+                    <span>Luyện tập nhanh AI</span>
+                </a>
+                <a href="#" class="ws-nav-item" onclick="openChatWidget(); return false;">
+                    <i class="fa-solid fa-wand-magic-sparkles text-info"></i>
+                    <span>Hỏi trợ giảng AI</span>
+                </a>
+
                 <div class="ws-nav-group-title mt-3">Giảng Dạy</div>
                 <div class="d-none" id="sidebar-teacher-group">
                     <a href="teacher-dashboard.html" class="ws-nav-item" style="color: #a5b4fc;">
@@ -15287,7 +15327,7 @@ const AppUI = (() => {
                     <i class="fa-solid fa-chart-pie"></i>
                     <span>Tổng quan học tập</span>
                 </a>
-                <a href="#topics-section" class="ws-nav-item">
+                <a href="#topics-section" class="ws-nav-item" onclick="document.getElementById('topics-section')?.scrollIntoView({behavior: 'smooth'}); return false;">
                     <i class="fa-solid fa-book-open"></i>
                     <span>Khám phá chủ đề</span>
                 </a>
@@ -15748,6 +15788,24 @@ const AppUI = (() => {
         // Khởi động
         loadTopics();
         loadLearnerMetrics();
+
+        // Xử lý deep link / query params
+        window.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('quickQuiz') === 'true') {
+                const checkInterval = setInterval(() => {
+                    if (allLoadedTopics && allLoadedTopics.length > 0) {
+                        clearInterval(checkInterval);
+                        startQuickQuiz();
+                    }
+                }, 150);
+            }
+            if (window.location.hash === '#topics-section') {
+                setTimeout(() => {
+                    document.getElementById('topics-section')?.scrollIntoView({ behavior: 'smooth' });
+                }, 350);
+            }
+        });
     </script>
 </body>
 </html>
@@ -16932,30 +16990,30 @@ const AppUI = (() => {
             <div class="ws-sidebar-scroll">
                 <div class="ws-nav-group-title">Danh mục giảng dạy</div>
                 
-                <a href="#tab-overview" class="ws-nav-item active" data-bs-toggle="pill" data-bs-target="#tab-overview">
+                <a href="#tab-overview" class="ws-nav-item active" data-teacher-tab="tab-overview" onclick="switchTeacherTab('tab-overview'); return false;">
                     <i class="fa-solid fa-chart-line text-emerald"></i>
                     <span>Tổng quan giảng dạy</span>
                 </a>
-                <a href="#tab-questions" class="ws-nav-item" data-bs-toggle="pill" data-bs-target="#tab-questions">
+                <a href="#tab-questions" class="ws-nav-item" data-teacher-tab="tab-questions" onclick="switchTeacherTab('tab-questions'); return false;">
                     <i class="fa-solid fa-boxes-stacked"></i>
                     <span>Ngân hàng đề thi</span>
                 </a>
-                <a href="#tab-insights" class="ws-nav-item" data-bs-toggle="pill" data-bs-target="#tab-insights">
+                <a href="#tab-insights" class="ws-nav-item" data-teacher-tab="tab-insights" onclick="switchTeacherTab('tab-insights'); return false;">
                     <i class="fa-solid fa-brain text-info"></i>
                     <span>Chẩn đoán sư phạm AI</span>
                 </a>
-                <a href="#tab-ai-copilot" class="ws-nav-item" data-bs-toggle="pill" data-bs-target="#tab-ai-copilot">
+                <a href="#tab-ai-copilot" class="ws-nav-item" data-teacher-tab="tab-ai-copilot" onclick="switchTeacherTab('tab-ai-copilot'); return false;">
                     <i class="fa-solid fa-wand-magic-sparkles text-warning"></i>
                     <span>Trợ lý soạn đề AI</span>
                 </a>
-                <a href="#tab-reports" class="ws-nav-item" data-bs-toggle="pill" data-bs-target="#tab-reports">
+                <a href="#tab-reports" class="ws-nav-item" data-teacher-tab="tab-reports" onclick="switchTeacherTab('tab-reports'); return false;">
                     <i class="fa-solid fa-triangle-exclamation text-danger"></i>
                     <span>Phản hồi & Báo lỗi</span>
                     <span class="ws-nav-badge" id="reports-count-badge">0</span>
                 </a>
 
                 <div class="ws-nav-group-title mt-3">Hệ Thống & Quản Trị</div>
-                <a href="#tab-admin" class="ws-nav-item" data-bs-toggle="pill" data-bs-target="#tab-admin">
+                <a href="#tab-admin" class="ws-nav-item" data-teacher-tab="tab-admin" onclick="switchTeacherTab('tab-admin'); return false;">
                     <i class="fa-solid fa-shield-halved text-purple" style="color: #c084fc;"></i>
                     <span>Quản Trị Hệ Thống</span>
                 </a>
@@ -16998,7 +17056,7 @@ const AppUI = (() => {
                     <div class="d-none d-sm-flex align-items-center gap-2 text-muted small">
                         <span>Hệ thống LMS</span>
                         <i class="fa-solid fa-chevron-right" style="font-size: 0.65rem;"></i>
-                        <span class="text-white fw-semibold">Bảng Giảng Viên</span>
+                        <span class="text-white fw-semibold" id="topbar-breadcrumb-title">Tổng quan giảng dạy</span>
                     </div>
                 </div>
 
@@ -17017,10 +17075,10 @@ const AppUI = (() => {
                 <!-- Header (Editorial Style) -->
                 <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-3">
                     <div>
-                        <h1 class="font-editorial fw-bold text-white mb-2" style="font-size: 2.35rem;">
+                        <h1 class="font-editorial fw-bold text-white mb-2" style="font-size: 2.35rem;" id="main-editorial-title">
                             Tổng quan giảng dạy
                         </h1>
-                        <p class="text-muted small mb-0" style="max-width: 700px;">
+                        <p class="text-muted small mb-0" style="max-width: 700px;" id="main-editorial-subtitle">
                             Quản lý câu hỏi, theo dõi tiến độ, chấm điểm và cảnh báo học tập tích hợp AI.
                         </p>
                     </div>
@@ -17058,22 +17116,22 @@ const AppUI = (() => {
                 <!-- ── Navigation Pill Tabs ── -->
                 <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
                     <div class="ws-pill-tabs" role="tablist">
-                        <button class="ws-pill-tab active" data-bs-toggle="pill" data-bs-target="#tab-overview" type="button">
+                        <button class="ws-pill-tab active" id="tab-overview-btn" data-teacher-tab="tab-overview" onclick="switchTeacherTab('tab-overview')" type="button">
                             <i class="fa-solid fa-gauge-high"></i>Tổng Quan & Hàng Đợi
                         </button>
-                        <button class="ws-pill-tab" id="tab-questions-btn" data-bs-toggle="pill" data-bs-target="#tab-questions" type="button">
+                        <button class="ws-pill-tab" id="tab-questions-btn" data-teacher-tab="tab-questions" onclick="switchTeacherTab('tab-questions')" type="button">
                             <i class="fa-solid fa-boxes-stacked"></i>Ngân Hàng Đề Thi
                         </button>
-                        <button class="ws-pill-tab" id="tab-insights-btn" data-bs-toggle="pill" data-bs-target="#tab-insights" type="button">
+                        <button class="ws-pill-tab" id="tab-insights-btn" data-teacher-tab="tab-insights" onclick="switchTeacherTab('tab-insights')" type="button">
                             <i class="fa-solid fa-brain"></i>Chẩn Đoán Nhận Thức
                         </button>
-                        <button class="ws-pill-tab" id="tab-ai-copilot-btn" data-bs-toggle="pill" data-bs-target="#tab-ai-copilot" type="button">
+                        <button class="ws-pill-tab" id="tab-ai-copilot-btn" data-teacher-tab="tab-ai-copilot" onclick="switchTeacherTab('tab-ai-copilot')" type="button">
                             <i class="fa-solid fa-wand-magic-sparkles text-warning"></i>Soạn Đề AI
                         </button>
-                        <button class="ws-pill-tab" id="tab-reports-btn" data-bs-toggle="pill" data-bs-target="#tab-reports" type="button">
+                        <button class="ws-pill-tab" id="tab-reports-btn" data-teacher-tab="tab-reports" onclick="switchTeacherTab('tab-reports')" type="button">
                             <i class="fa-solid fa-triangle-exclamation text-danger"></i>Báo Lỗi
                         </button>
-                        <button class="ws-pill-tab" id="tab-admin-btn" data-bs-toggle="pill" data-bs-target="#tab-admin" type="button">
+                        <button class="ws-pill-tab" id="tab-admin-btn" data-teacher-tab="tab-admin" onclick="switchTeacherTab('tab-admin')" type="button">
                             <i class="fa-solid fa-shield-halved text-purple" style="color: #c084fc;"></i>Admin Hub
                         </button>
                     </div>
@@ -17098,7 +17156,7 @@ const AppUI = (() => {
                                         <span class="badge bg-dark border text-muted">Teacher queue</span>
                                     </div>
 
-                                    <div class="ws-queue-item" onclick="document.getElementById('tab-insights-btn').click()">
+                                    <div class="ws-queue-item" onclick="switchTeacherTab('tab-insights')">
                                         <div class="ws-queue-dot dot-amber"></div>
                                         <div class="flex-grow-1">
                                             <div class="fw-bold text-white small">Bài nộp gần đây cần rà soát</div>
@@ -17107,7 +17165,7 @@ const AppUI = (() => {
                                         <i class="fa-solid fa-chevron-right text-muted small mt-1"></i>
                                     </div>
 
-                                    <div class="ws-queue-item" onclick="document.getElementById('tab-insights-btn').click()">
+                                    <div class="ws-queue-item" onclick="switchTeacherTab('tab-insights')">
                                         <div class="ws-queue-dot dot-rose"></div>
                                         <div class="flex-grow-1">
                                             <div class="fw-bold text-white small">Sinh viên có điểm dưới 5.0 (Nguy cơ tụt tiến độ)</div>
@@ -17116,7 +17174,7 @@ const AppUI = (() => {
                                         <i class="fa-solid fa-chevron-right text-muted small mt-1"></i>
                                     </div>
 
-                                    <div class="ws-queue-item" onclick="document.getElementById('tab-reports-btn').click()">
+                                    <div class="ws-queue-item" onclick="switchTeacherTab('tab-reports')">
                                         <div class="ws-queue-dot dot-blue"></div>
                                         <div class="flex-grow-1">
                                             <div class="fw-bold text-white small">Phản hồi & Câu hỏi bị báo cáo từ cộng đồng</div>
@@ -17125,7 +17183,7 @@ const AppUI = (() => {
                                         <i class="fa-solid fa-chevron-right text-muted small mt-1"></i>
                                     </div>
 
-                                    <div class="ws-queue-item" onclick="document.getElementById('tab-questions-btn').click()">
+                                    <div class="ws-queue-item" onclick="switchTeacherTab('tab-questions')">
                                         <div class="ws-queue-dot dot-emerald"></div>
                                         <div class="flex-grow-1">
                                             <div class="fw-bold text-white small">Chủ đề mở đã kích hoạt AI Co-Pilot</div>
@@ -17495,63 +17553,178 @@ const AppUI = (() => {
                         <!-- User Management Table with Filter -->
                         <div class="ws-card">
                             <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-                                <div class="ws-pill-tabs">
-                                    <button class="ws-pill-tab active">Users</button>
-                                    <button class="ws-pill-tab">Organizations</button>
-                                    <button class="ws-pill-tab">Courses</button>
-                                    <button class="ws-pill-tab">Audit log</button>
+                                <div class="ws-pill-tabs" id="admin-subtabs-group">
+                                    <button class="ws-pill-tab active" type="button" data-admin-subtab="users" onclick="switchAdminSubtab('users')">
+                                        <i class="fa-solid fa-users me-1"></i>Users
+                                    </button>
+                                    <button class="ws-pill-tab" type="button" data-admin-subtab="orgs" onclick="switchAdminSubtab('orgs')">
+                                        <i class="fa-solid fa-building-columns me-1"></i>Organizations
+                                    </button>
+                                    <button class="ws-pill-tab" type="button" data-admin-subtab="courses" onclick="switchAdminSubtab('courses')">
+                                        <i class="fa-solid fa-book me-1"></i>Courses
+                                    </button>
+                                    <button class="ws-pill-tab" type="button" data-admin-subtab="audit" onclick="switchAdminSubtab('audit')">
+                                        <i class="fa-solid fa-clock-rotate-left me-1"></i>Audit log
+                                    </button>
                                 </div>
                                 <div style="max-width: 280px; width: 100%;">
                                     <input type="text" class="ws-input" id="admin-search-user" placeholder="Tìm user...">
                                 </div>
                             </div>
 
-                            <div class="table-responsive">
-                                <table class="table table-ws align-middle mb-0">
-                                    <thead>
-                                        <tr>
-                                            <th>USER</th>
-                                            <th>GLOBAL ROLE</th>
-                                            <th>STATUS</th>
-                                            <th class="text-end pe-3">ACTIONS</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody id="admin-users-tbody">
-                                        <tr>
-                                            <td>
-                                                <div class="fw-bold text-white">Phạm Quỳnh Anh</div>
-                                                <small class="text-muted">admin@lms.edu.vn</small>
-                                            </td>
-                                            <td><span class="badge" style="background: rgba(139, 92, 246, 0.2); color: #c084fc; border: 1px solid rgba(139, 92, 246, 0.35);">SUPER_ADMIN</span></td>
-                                            <td><span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #34d399;">ACTIVE</span></td>
-                                            <td class="text-end pe-3">
-                                                <button class="btn btn-sm btn-outline-secondary rounded-pill px-3" onclick="Swal.fire('Quản trị', 'Tài khoản Super Admin không thể bị khóa.', 'info')">Khóa</button>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td>
-                                                <div class="fw-bold text-white">Trần Nhật Minh</div>
-                                                <small class="text-muted">teacher@lms.edu.vn</small>
-                                            </td>
-                                            <td><span class="badge" style="background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.35);">TEACHER</span></td>
-                                            <td><span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #34d399;">ACTIVE</span></td>
-                                            <td class="text-end pe-3">
-                                                <button class="btn btn-sm btn-outline-warning rounded-pill px-3" onclick="Swal.fire('Thao tác', 'Đã đổi trạng thái tài khoản thành công!', 'success')">Khóa</button>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td>
-                                                <div class="fw-bold text-white">Nguyễn Hà Lan</div>
-                                                <small class="text-muted">student@lms.edu.vn</small>
-                                            </td>
-                                            <td><span class="badge" style="background: rgba(100, 116, 139, 0.2); color: #94a3b8; border: 1px solid rgba(100, 116, 139, 0.35);">STUDENT</span></td>
-                                            <td><span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #34d399;">ACTIVE</span></td>
-                                            <td class="text-end pe-3">
-                                                <button class="btn btn-sm btn-outline-warning rounded-pill px-3" onclick="Swal.fire('Thao tác', 'Đã đổi trạng thái tài khoản thành công!', 'success')">Khóa</button>
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
+                            <!-- Sub-tab 1: Users -->
+                            <div id="admin-subtab-users" class="admin-subpane">
+                                <div class="table-responsive">
+                                    <table class="table table-ws align-middle mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th>USER</th>
+                                                <th>GLOBAL ROLE</th>
+                                                <th>STATUS</th>
+                                                <th class="text-end pe-3">ACTIONS</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="admin-users-tbody">
+                                            <tr>
+                                                <td>
+                                                    <div class="fw-bold text-white">Phạm Quỳnh Anh</div>
+                                                    <small class="text-muted">admin@lms.edu.vn</small>
+                                                </td>
+                                                <td><span class="badge" style="background: rgba(139, 92, 246, 0.2); color: #c084fc; border: 1px solid rgba(139, 92, 246, 0.35);">SUPER_ADMIN</span></td>
+                                                <td><span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #34d399;">ACTIVE</span></td>
+                                                <td class="text-end pe-3">
+                                                    <button class="btn btn-sm btn-outline-secondary rounded-pill px-3" onclick="Swal.fire('Quản trị', 'Tài khoản Super Admin không thể bị khóa.', 'info')">Khóa</button>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <div class="fw-bold text-white">Trần Nhật Minh</div>
+                                                    <small class="text-muted">teacher@lms.edu.vn</small>
+                                                </td>
+                                                <td><span class="badge" style="background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.35);">TEACHER</span></td>
+                                                <td><span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #34d399;">ACTIVE</span></td>
+                                                <td class="text-end pe-3">
+                                                    <button class="btn btn-sm btn-outline-warning rounded-pill px-3" onclick="Swal.fire('Thao tác', 'Đã đổi trạng thái tài khoản thành công!', 'success')">Khóa</button>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>
+                                                    <div class="fw-bold text-white">Nguyễn Hà Lan</div>
+                                                    <small class="text-muted">student@lms.edu.vn</small>
+                                                </td>
+                                                <td><span class="badge" style="background: rgba(100, 116, 139, 0.2); color: #94a3b8; border: 1px solid rgba(100, 116, 139, 0.35);">STUDENT</span></td>
+                                                <td><span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #34d399;">ACTIVE</span></td>
+                                                <td class="text-end pe-3">
+                                                    <button class="btn btn-sm btn-outline-warning rounded-pill px-3" onclick="Swal.fire('Thao tác', 'Đã đổi trạng thái tài khoản thành công!', 'success')">Khóa</button>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- Sub-tab 2: Organizations -->
+                            <div id="admin-subtab-orgs" class="admin-subpane py-2" style="display: none;">
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <div class="p-3 rounded-4" style="background: rgba(255,255,255,0.025); border: 1px solid var(--ws-border);">
+                                            <div class="d-flex align-items-center gap-3">
+                                                <div class="rounded-3 p-3 text-info" style="background: rgba(6, 182, 212, 0.12);">
+                                                    <i class="fa-solid fa-graduation-cap fa-2x"></i>
+                                                </div>
+                                                <div>
+                                                    <h6 class="text-white fw-bold mb-1">Khoa Công Nghệ Thông Tin</h6>
+                                                    <small class="text-muted">Cơ sở chính — 8 Giảng viên • 450 Sinh viên</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="p-3 rounded-4" style="background: rgba(255,255,255,0.025); border: 1px solid var(--ws-border);">
+                                            <div class="d-flex align-items-center gap-3">
+                                                <div class="rounded-3 p-3 text-purple" style="background: rgba(139, 92, 246, 0.12); color: #c084fc;">
+                                                    <i class="fa-solid fa-square-root-variable fa-2x"></i>
+                                                </div>
+                                                <div>
+                                                    <h6 class="text-white fw-bold mb-1">Khoa Toán & Khoa Học Ứng Dụng</h6>
+                                                    <small class="text-muted">Cơ sở 2 — 4 Giảng viên • 280 Sinh viên</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Sub-tab 3: Courses -->
+                            <div id="admin-subtab-courses" class="admin-subpane py-2" style="display: none;">
+                                <div class="p-3 rounded-4" style="background: rgba(255,255,255,0.025); border: 1px solid var(--ws-border);">
+                                    <h6 class="text-white fw-bold mb-3"><i class="fa-solid fa-book-bookmark text-primary me-2"></i>Danh mục môn học & khóa đào tạo đang mở</h6>
+                                    <div class="table-responsive">
+                                        <table class="table table-ws align-middle mb-0">
+                                            <thead>
+                                                <tr>
+                                                    <th>ID</th>
+                                                    <th>MÔN HỌC / CHỦ ĐỀ</th>
+                                                    <th>TRẠNG THÁI</th>
+                                                    <th>AI CO-PILOT</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="admin-courses-tbody">
+                                                <tr>
+                                                    <td>1</td>
+                                                    <td><strong>Lập trình hướng đối tượng Java (OOP)</strong></td>
+                                                    <td><span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #34d399;">Đang mở</span></td>
+                                                    <td><span class="badge" style="background: rgba(6, 182, 212, 0.2); color: #38bdf8;"><i class="fa-solid fa-bolt me-1"></i>Active</span></td>
+                                                </tr>
+                                                <tr>
+                                                    <td>2</td>
+                                                    <td><strong>Cấu trúc dữ liệu cơ bản</strong></td>
+                                                    <td><span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #34d399;">Đang mở</span></td>
+                                                    <td><span class="badge" style="background: rgba(6, 182, 212, 0.2); color: #38bdf8;"><i class="fa-solid fa-bolt me-1"></i>Active</span></td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Sub-tab 4: Audit log -->
+                            <div id="admin-subtab-audit" class="admin-subpane py-2" style="display: none;">
+                                <div class="p-3 rounded-4" style="background: rgba(255,255,255,0.025); border: 1px solid var(--ws-border);">
+                                    <h6 class="text-white fw-bold mb-3"><i class="fa-solid fa-shield-halved text-purple me-2"></i>Nhật ký vận hành hệ thống (Audit Logs)</h6>
+                                    <div class="table-responsive">
+                                        <table class="table table-ws align-middle mb-0">
+                                            <thead>
+                                                <tr>
+                                                    <th>THỜI GIAN</th>
+                                                    <th>TÀI KHOẢN</th>
+                                                    <th>HÀNH ĐỘNG</th>
+                                                    <th>KẾT QUẢ</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td><small class="text-muted">Vừa xong</small></td>
+                                                    <td><strong>giangvien01</strong></td>
+                                                    <td>Khảo thí & Quản trị câu hỏi</td>
+                                                    <td><span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #34d399;">SUCCESS</span></td>
+                                                </tr>
+                                                <tr>
+                                                    <td><small class="text-muted">15 phút trước</small></td>
+                                                    <td><strong>sinhvien01</strong></td>
+                                                    <td>Nộp bài kiểm tra OOP</td>
+                                                    <td><span class="badge" style="background: rgba(6, 182, 212, 0.2); color: #38bdf8;">SCORED</span></td>
+                                                </tr>
+                                                <tr>
+                                                    <td><small class="text-muted">1 giờ trước</small></td>
+                                                    <td><strong>admin</strong></td>
+                                                    <td>Đồng bộ cấu hình Gemini 1.5 Flash</td>
+                                                    <td><span class="badge" style="background: rgba(99, 102, 241, 0.2); color: #818cf8;">SYNCED</span></td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -17727,30 +17900,115 @@ const AppUI = (() => {
             });
         }
 
-        // Tự động đồng bộ active tab giữa sidebar và pill-tabs
-        document.querySelectorAll('.ws-pill-tab').forEach(tabBtn => {
-            tabBtn.addEventListener('shown.bs.tab', (e) => {
-                const target = e.target.getAttribute('data-bs-target');
-                document.querySelectorAll('.ws-sidebar .ws-nav-item').forEach(nav => {
-                    if (nav.getAttribute('data-bs-target') === target) {
-                        nav.classList.add('active');
-                    } else if (nav.getAttribute('data-bs-target')) {
-                        nav.classList.remove('active');
-                    }
-                });
+        /**
+         * Chuyển tab trong Teacher Dashboard (100% tin cậy, đồng bộ cả Sidebar và Pill Tabs)
+         */
+        function switchTeacherTab(tabId) {
+            if (!tabId) return;
+            const cleanId = tabId.replace(/^#/, '');
+            const targetPane = document.getElementById(cleanId);
+            if (!targetPane) {
+                console.warn('Tab pane not found:', cleanId);
+                return;
+            }
+
+            // 1. Ẩn tất cả tab pane trong #dashboardTabContent, hiện pane mục tiêu
+            document.querySelectorAll('#dashboardTabContent > .tab-pane').forEach(pane => {
+                pane.classList.remove('active', 'show');
             });
-        });
-        document.querySelectorAll('.ws-sidebar .ws-nav-item[data-bs-toggle="pill"]').forEach(nav => {
-            nav.addEventListener('shown.bs.tab', (e) => {
-                const target = e.target.getAttribute('data-bs-target');
-                document.querySelectorAll('.ws-pill-tab').forEach(tabBtn => {
-                    if (tabBtn.getAttribute('data-bs-target') === target) {
-                        tabBtn.classList.add('active');
-                    } else {
-                        tabBtn.classList.remove('active');
-                    }
-                });
+            targetPane.classList.add('active', 'show');
+
+            // 2. Đồng bộ active trên thanh Pill Tabs
+            document.querySelectorAll('.ws-pill-tabs button[data-teacher-tab]').forEach(btn => {
+                if (btn.getAttribute('data-teacher-tab') === cleanId) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
             });
+
+            // 3. Đồng bộ active trên Sidebar
+            document.querySelectorAll('.ws-sidebar [data-teacher-tab]').forEach(nav => {
+                if (nav.getAttribute('data-teacher-tab') === cleanId) {
+                    nav.classList.add('active');
+                } else {
+                    nav.classList.remove('active');
+                }
+            });
+
+            // 4. Cập nhật breadcrumb và tiêu đề trang tương ứng
+            const tabMeta = {
+                'tab-overview': { breadcrumb: 'Tổng quan giảng dạy', title: 'Tổng quan giảng dạy', subtitle: 'Quản lý câu hỏi, theo dõi tiến độ, chấm điểm và cảnh báo học tập tích hợp AI.' },
+                'tab-questions': { breadcrumb: 'Ngân hàng đề thi', title: 'Ngân hàng đề thi', subtitle: 'Quản lý, tìm kiếm, chỉnh sửa và tạo mới câu hỏi trắc nghiệm kèm bẫy nhận thức.' },
+                'tab-insights': { breadcrumb: 'Chẩn đoán sư phạm AI', title: 'Chẩn đoán sư phạm AI', subtitle: 'Mô hình phân tích sư phạm của Gemini AI đối với mọi bài nộp để phát hiện sớm các quan niệm sai lầm.' },
+                'tab-ai-copilot': { breadcrumb: 'Trợ lý soạn đề AI', title: 'AI Question Studio & Co-Pilot', subtitle: 'Sinh câu hỏi trắc nghiệm & bẫy tư duy chuẩn Bloom với Gemini 1.5 Flash.' },
+                'tab-reports': { breadcrumb: 'Phản hồi & Báo lỗi', title: 'Phản hồi & Báo lỗi cộng đồng', subtitle: 'Các câu hỏi bị sinh viên đánh giá độ tin cậy thấp hoặc gửi lý do sai sót.' },
+                'tab-admin': { breadcrumb: 'Quản Trị Hệ Thống', title: 'Bảng Điều Khiển Quản Trị Hệ Thống', subtitle: 'Quản trị tài khoản người dùng, phân tách quyền RBAC, tổ chức đào tạo và audit logs.' }
+            };
+            const meta = tabMeta[cleanId];
+            if (meta) {
+                const bEl = document.getElementById('topbar-breadcrumb-title');
+                if (bEl) bEl.textContent = meta.breadcrumb;
+                const tEl = document.getElementById('main-editorial-title');
+                if (tEl) tEl.textContent = meta.title;
+                const sEl = document.getElementById('main-editorial-subtitle');
+                if (sEl) sEl.textContent = meta.subtitle;
+            }
+
+            // 5. Cập nhật URL Hash không giật trang
+            if (window.history && window.history.replaceState) {
+                window.history.replaceState(null, null, '#' + cleanId);
+            }
+
+            // 6. Tải dữ liệu bổ trợ theo tab nếu cần
+            if (cleanId === 'tab-questions') {
+                if (typeof loadQuestions === 'function' && (!allQuestions || allQuestions.length === 0)) {
+                    loadQuestions();
+                }
+            } else if (cleanId === 'tab-insights') {
+                if (typeof loadTeacherStats === 'function') {
+                    loadTeacherStats();
+                }
+            } else if (cleanId === 'tab-reports') {
+                if (typeof loadReportedQuestions === 'function') {
+                    loadReportedQuestions();
+                }
+            }
+
+            // 7. Cuộn nhẹ lên đầu nếu cần
+            const mainEl = document.querySelector('.ws-main');
+            if (mainEl && mainEl.scrollTop > 150) {
+                mainEl.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+        window.switchTeacherTab = switchTeacherTab;
+
+        /**
+         * Chuyển sub-tab trong Admin Hub (Users, Orgs, Courses, Audit)
+         */
+        function switchAdminSubtab(subtabName) {
+            document.querySelectorAll('#admin-subtabs-group .ws-pill-tab').forEach(btn => {
+                if (btn.getAttribute('data-admin-subtab') === subtabName) {
+                    btn.classList.add('active');
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+            ['users', 'orgs', 'courses', 'audit'].forEach(name => {
+                const pane = document.getElementById('admin-subtab-' + name);
+                if (pane) {
+                    pane.style.display = (name === subtabName) ? 'block' : 'none';
+                }
+            });
+        }
+        window.switchAdminSubtab = switchAdminSubtab;
+
+        // Tự động mở đúng tab nếu truy cập bằng URL hash (ví dụ #tab-questions)
+        window.addEventListener('DOMContentLoaded', () => {
+            const hash = window.location.hash;
+            if (hash && hash.startsWith('#tab-')) {
+                setTimeout(() => switchTeacherTab(hash), 120);
+            }
         });
 
         // Filter User Admin

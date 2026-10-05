@@ -139,7 +139,7 @@
                     <i class="fa-solid fa-chart-pie"></i>
                     <span>Tổng quan học tập</span>
                 </a>
-                <a href="#topics-section" class="ws-nav-item">
+                <a href="#topics-section" class="ws-nav-item" onclick="document.getElementById('topics-section')?.scrollIntoView({behavior: 'smooth'}); return false;">
                     <i class="fa-solid fa-book-open"></i>
                     <span>Khám phá chủ đề</span>
                 </a>
@@ -600,6 +600,24 @@
         // Khởi động
         loadTopics();
         loadLearnerMetrics();
+
+        // Xử lý deep link / query params
+        window.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('quickQuiz') === 'true') {
+                const checkInterval = setInterval(() => {
+                    if (allLoadedTopics && allLoadedTopics.length > 0) {
+                        clearInterval(checkInterval);
+                        startQuickQuiz();
+                    }
+                }, 150);
+            }
+            if (window.location.hash === '#topics-section') {
+                setTimeout(() => {
+                    document.getElementById('topics-section')?.scrollIntoView({ behavior: 'smooth' });
+                }, 350);
+            }
+        });
     </script>
 </body>
 </html>

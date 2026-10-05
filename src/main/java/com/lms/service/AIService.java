@@ -31,15 +31,15 @@ public class AIService {
     private final boolean isConfigured;
 
     private static String getEffectiveModel() {
-        String model = ConfigLoader.get("GEMINI_MODEL", "gemini-2.5-flash").trim();
-        if (model.isEmpty() || model.contains("3.6") || model.contains("3.8")) {
-            return "gemini-2.5-flash";
+        String model = ConfigLoader.get("GEMINI_MODEL", "gemini-2.0-flash").trim();
+        if (model.isEmpty() || model.contains("3.6") || model.contains("3.8") || model.contains("2.5")) {
+            return "gemini-2.0-flash";
         }
         return model;
     }
 
     private static String getEffectiveFallbackModel() {
-        return MODEL_NAME.contains("2.5") ? "gemini-1.5-flash" : "gemini-2.5-flash";
+        return "gemini-1.5-flash";
     }
 
     public AIService() {
@@ -196,68 +196,96 @@ public class AIService {
     }
 
     /**
-     * Dành cho Giảng viên / Admin: Tự động sinh danh sách câu hỏi trắc nghiệm chất lượng cao.
+     * Lấy Client phù hợp: Nếu request có truyền API Key cá nhân từ UI (X-Gemini-Api-Key)
+     * thì ưu tiên sử dụng, ngược lại dùng client mặc định của hệ thống.
      */
-    public List<Map<String, Object>> generateQuestionsForTeacher(String topicName, String difficulty, String misconceptionTag, int count, String promptHint) {
-        List<Map<String, Object>> questionsList = new ArrayList<>();
-        if (!isConfigured) {
-            System.err.println("[AIService] ⚠️ Chưa cấu hình GEMINI_API_KEY để sinh câu hỏi.");
-            return questionsList;
-        }
-
-        try {
-            String prompt = PromptBuilder.buildTeacherQuestionGenPrompt(topicName, difficulty, misconceptionTag, count, promptHint);
-            String systemInstruction = PromptBuilder.getTeacherCoPilotInstruction();
-
-            GenerateContentConfig config = GenerateContentConfig.builder()
-                    .systemInstruction(Content.fromParts(Part.fromText(systemInstruction)))
-                    .responseMimeType("application/json")
-                    .temperature(0.5f)
-                    .build();
-
-            GenerateContentResponse response;
+    public Client getClient(String customApiKey) {
+        if (isValidApiKey(customApiKey)) {
             try {
-                response = client.models.generateContent(MODEL_NAME, prompt, config);
-            } catch (Exception modelErr) {
-                String fallbackModel = FALLBACK_MODEL;
-                response = client.models.generateContent(fallbackModel, prompt, config);
+                return Client.builder().apiKey(customApiKey.trim()).build();
+            } catch (Exception e) {
+                System.err.println("[AIService] ⚠️ Không thể khởi tạo custom Gemini Client: " + e.getMessage());
             }
+        }
+        return this.client;
+    }
 
-            String jsonText = response.text();
-            if (jsonText != null && !jsonText.isBlank()) {
-                JsonArray arr = JsonParser.parseString(jsonText).getAsJsonArray();
-                for (JsonElement el : arr) {
-                    if (el.isJsonObject()) {
-                        JsonObject obj = el.getAsJsonObject();
-                        Map<String, Object> map = new HashMap<>();
-                        map.put("questionText", obj.has("question_text") ? obj.get("question_text").getAsString() : "");
-                        map.put("optionA", obj.has("option_a") ? obj.get("option_a").getAsString() : "");
-                        map.put("optionB", obj.has("option_b") ? obj.get("option_b").getAsString() : "");
-                        map.put("optionC", obj.has("option_c") ? obj.get("option_c").getAsString() : "");
-                        map.put("optionD", obj.has("option_d") ? obj.get("option_d").getAsString() : "");
-                        map.put("correctAnswer", obj.has("correct_answer") ? obj.get("correct_answer").getAsString().toUpperCase() : "A");
-                        map.put("explanation", obj.has("explanation") ? obj.get("explanation").getAsString() : "");
-                        map.put("difficulty", obj.has("difficulty") ? obj.get("difficulty").getAsString().toLowerCase() : (difficulty != null ? difficulty : "medium"));
-                        map.put("misconceptionTag", obj.has("misconception_tag") ? obj.get("misconception_tag").getAsString().toLowerCase() : "mental_model_gap");
-                        questionsList.add(map);
+    /**
+     * Dành cho Giảng viên / Admin: Tự động sinh danh sách câu hỏi trắc nghiệm chất lượng cao.
+     * Tự động kích hoạt Bộ máy Sư phạm Thông minh (Fallback Engine) nếu Gemini API offline hoặc chưa có key.
+     */
+    public List<Map<String, Object>> generateQuestionsForTeacher(
+            String topicName, String difficulty, String misconceptionTag, int count, String promptHint, String customApiKey) {
+
+        List<Map<String, Object>> questionsList = new ArrayList<>();
+        Client activeClient = getClient(customApiKey);
+
+        if (activeClient != null) {
+            try {
+                String prompt = PromptBuilder.buildTeacherQuestionGenPrompt(topicName, difficulty, misconceptionTag, count, promptHint);
+                String systemInstruction = PromptBuilder.getTeacherCoPilotInstruction();
+
+                GenerateContentConfig config = GenerateContentConfig.builder()
+                        .systemInstruction(Content.fromParts(Part.fromText(systemInstruction)))
+                        .responseMimeType("application/json")
+                        .temperature(0.5f)
+                        .build();
+
+                GenerateContentResponse response;
+                try {
+                    response = activeClient.models.generateContent(MODEL_NAME, prompt, config);
+                } catch (Exception modelErr) {
+                    System.err.println("[AIService] ⚠️ Model " + MODEL_NAME + " gặp sự cố (" + modelErr.getMessage() + "), chuyển sang model dự phòng " + FALLBACK_MODEL);
+                    response = activeClient.models.generateContent(FALLBACK_MODEL, prompt, config);
+                }
+
+                String jsonText = response != null ? response.text() : null;
+                if (jsonText != null && !jsonText.isBlank()) {
+                    jsonText = cleanJsonText(jsonText);
+                    JsonArray arr = JsonParser.parseString(jsonText).getAsJsonArray();
+                    for (JsonElement el : arr) {
+                        if (el.isJsonObject()) {
+                            JsonObject obj = el.getAsJsonObject();
+                            Map<String, Object> map = new HashMap<>();
+                            map.put("questionText", obj.has("question_text") ? obj.get("question_text").getAsString() : "");
+                            map.put("optionA", obj.has("option_a") ? obj.get("option_a").getAsString() : "");
+                            map.put("optionB", obj.has("option_b") ? obj.get("option_b").getAsString() : "");
+                            map.put("optionC", obj.has("option_c") ? obj.get("option_c").getAsString() : "");
+                            map.put("optionD", obj.has("option_d") ? obj.get("option_d").getAsString() : "");
+                            map.put("correctAnswer", obj.has("correct_answer") ? obj.get("correct_answer").getAsString().toUpperCase() : "A");
+                            map.put("explanation", obj.has("explanation") ? obj.get("explanation").getAsString() : "");
+                            map.put("difficulty", obj.has("difficulty") ? obj.get("difficulty").getAsString().toLowerCase() : (difficulty != null ? difficulty : "medium"));
+                            map.put("misconceptionTag", obj.has("misconception_tag") ? obj.get("misconception_tag").getAsString().toLowerCase() : "mental_model_gap");
+                            map.put("source", "Google Gemini 2.0 Flash");
+                            questionsList.add(map);
+                        }
                     }
                 }
+            } catch (Exception e) {
+                System.err.println("[AIService] ⚠️ Gọi Gemini sinh câu hỏi thất bại: " + e.getMessage() + ". Tự động chuyển sang Bộ máy Sư phạm Thông minh.");
             }
-        } catch (Exception e) {
-            System.err.println("[AIService] ❌ Gọi Gemini sinh câu hỏi thất bại: " + e.getMessage());
-            e.printStackTrace();
+        }
+
+        // Tự động kích hoạt Fallback Engine nếu Gemini không phản hồi hoặc chưa có API key
+        if (questionsList.isEmpty()) {
+            System.out.println("[AIService] 🚀 Kích hoạt Bộ máy Sư phạm Thông minh (ADR-008) cho môn: " + topicName);
+            questionsList = FallbackService.generateFallbackQuestions(topicName, difficulty, misconceptionTag, count, promptHint);
         }
 
         return questionsList;
     }
 
+    public List<Map<String, Object>> generateQuestionsForTeacher(String topicName, String difficulty, String misconceptionTag, int count, String promptHint) {
+        return generateQuestionsForTeacher(topicName, difficulty, misconceptionTag, count, promptHint, null);
+    }
+
     /**
      * Dành cho Giảng viên / Admin: Chatbot tư vấn sư phạm và thiết kế bài thi.
      */
-    public String teacherChat(String userMessage, String context) {
-        if (!isConfigured) {
-            return "Xin chào Thầy/Cô! Hiện tại hệ thống đang ở chế độ ngoại tuyến do chưa cấu hình GEMINI_API_KEY hợp lệ. "
-                 + "Vui lòng cấu hình API Key để kích hoạt Trợ Lý AI Co-Pilot hỗ trợ soạn đề.";
+    public String teacherChat(String userMessage, String context, String customApiKey) {
+        Client activeClient = getClient(customApiKey);
+        if (activeClient == null) {
+            return FallbackService.generateTeacherChatResponse(userMessage, context);
         }
 
         try {
@@ -272,17 +300,22 @@ public class AIService {
 
             GenerateContentResponse response;
             try {
-                response = client.models.generateContent(MODEL_NAME, fullPrompt, config);
+                response = activeClient.models.generateContent(MODEL_NAME, fullPrompt, config);
             } catch (Exception modelErr) {
                 String fallbackModel = FALLBACK_MODEL;
-                response = client.models.generateContent(fallbackModel, fullPrompt, config);
+                response = activeClient.models.generateContent(fallbackModel, fullPrompt, config);
             }
 
-            return response.text();
+            return response != null ? response.text() : FallbackService.generateTeacherChatResponse(userMessage, context);
         } catch (Exception e) {
-            System.err.println("[AIService] ❌ Gọi Teacher Chat thất bại: " + e.getMessage());
-            return "Trợ lý AI tạm thời gặp sự cố kết nối (" + e.getMessage() + "). Thầy/Cô vui lòng thử lại sau giây lát nhé!";
+            System.err.println("[AIService] ⚠️ Gọi Teacher Chat thất bại: " + e.getMessage() + ". Kích hoạt phản hồi dự phòng.");
+            return FallbackService.generateTeacherChatResponse(userMessage, context);
         }
+    }
+
+    public String teacherChat(String userMessage, String context) {
+        return teacherChat(userMessage, context, null);
+    }
     }
 
     /**

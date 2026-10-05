@@ -47,6 +47,10 @@ const API = {
             if (user && user.userId && !headers['X-User-Id']) {
                 headers['X-User-Id'] = String(user.userId);
             }
+            const geminiKey = localStorage.getItem('gemini_api_key');
+            if (geminiKey && !headers['X-Gemini-Api-Key']) {
+                headers['X-Gemini-Api-Key'] = geminiKey.trim();
+            }
 
             const config = {
                 credentials: 'same-origin',
@@ -161,7 +165,8 @@ const API = {
         suggestMisconceptions: topicName => API.request('/teacher/ai/suggest-misconceptions', { method:'POST', body:JSON.stringify({topicName}), timeout:30000 }),
         validateTopic: topicName => API.request('/teacher/ai/validate-topic', { method:'POST', body:JSON.stringify({topicName}), timeout:30000 }),
         validateMisconception: (topicName, misconception) => API.request('/teacher/ai/validate-misconception', { method:'POST', body:JSON.stringify({topicName, misconception}), timeout:30000 }),
-        assistQuestion: (topicName, questionPrompt, difficulty='medium') => API.request('/teacher/ai/assist-question', { method:'POST', body:JSON.stringify({topicName, questionPrompt, difficulty}), timeout:45000 })
+        assistQuestion: (topicName, questionPrompt, difficulty='medium') => API.request('/teacher/ai/assist-question', { method:'POST', body:JSON.stringify({topicName, questionPrompt, difficulty}), timeout:45000 }),
+        validateApiKey: apiKey => API.request('/teacher/ai/validate-key', { method:'POST', body:JSON.stringify({apiKey}), timeout:20000 })
     },
     quiz: {
         start: topicId => API.request('/quiz/start', { method:'POST', body:JSON.stringify({topicId}) }),

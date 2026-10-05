@@ -63,9 +63,37 @@ public class TeacherServlet extends HttpServlet {
             handleAiValidateMisconception(req, resp);
         } else if ("/ai/assist-question".equals(pathInfo)) {
             handleAiAssistQuestion(req, resp);
+        } else if ("/ai/validate-key".equals(pathInfo)) {
+            handleValidateApiKey(req, resp);
         } else {
             resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
             resp.getWriter().write(JsonHelper.error("Không tìm thấy endpoint POST: " + pathInfo));
+        }
+    }
+
+    private void handleValidateApiKey(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        JsonObject body = JsonHelper.parseRequestBody(req);
+        String key = body != null && body.has("apiKey") ? body.get("apiKey").getAsString().trim() : "";
+        if (!AIService.isValidApiKey(key)) {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            resp.getWriter().write(JsonHelper.error("API Key không hợp lệ. Vui lòng lấy key từ Google AI Studio (bắt đầu bằng AIzaSy...)."));
+            return;
+        }
+
+        try {
+            com.google.genai.Client testClient = com.google.genai.Client.builder().apiKey(key).build();
+            var response = testClient.models.generateContent("gemini-2.0-flash", "Xin chào, phản hồi 'OK' nếu bạn kết nối thành công.", null);
+            if (response != null && response.text() != null) {
+                HttpSession session = req.getSession(true);
+                session.setAttribute("gemini_api_key", key);
+                resp.getWriter().write(JsonHelper.success("Kết nối thành công tới Google Gemini 2.0 Flash!", null));
+            } else {
+                resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                resp.getWriter().write(JsonHelper.error("Google Gemini không trả về dữ liệu. Hãy kiểm tra lại API Key."));
+            }
+        } catch (Exception e) {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            resp.getWriter().write(JsonHelper.error("Lỗi xác thực API Key với Google: " + e.getMessage()));
         }
     }
 
@@ -113,19 +141,26 @@ public class TeacherServlet extends HttpServlet {
         String promptHint = body.has("promptHint") && !body.get("promptHint").isJsonNull()
                 ? body.get("promptHint").getAsString().trim() : "";
 
+        String customApiKey = req.getHeader("X-Gemini-Api-Key");
+        if (customApiKey == null || customApiKey.isBlank()) {
+            HttpSession session = req.getSession(false);
+            if (session != null && session.getAttribute("gemini_api_key") != null) {
+                customApiKey = (String) session.getAttribute("gemini_api_key");
+            }
+        }
+
         try {
             // Đảm bảo chủ đề luôn tồn tại trong DB để gán topicId hợp lệ
             com.lms.model.Topic topic = topicDAO.findOrCreate(topicName, "Chủ đề mở do người dùng khởi tạo");
             int topicId = topic != null ? topic.getTopicId() : 1;
 
             List<Map<String, Object>> generatedList = aiService.generateQuestionsForTeacher(
-                    topicName, difficulty, misconceptionTag, count, promptHint
+                    topicName, difficulty, misconceptionTag, count, promptHint, customApiKey
             );
 
             if (generatedList.isEmpty()) {
-                resp.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
-                resp.getWriter().write(JsonHelper.error("AI tạm thời không phản hồi hoặc chưa cấu hình API Key. Vui lòng thử lại sau."));
-                return;
+                // Tự động kích hoạt Fallback Engine nếu vì lý do nào đó danh sách rỗng
+                generatedList = FallbackService.generateFallbackQuestions(topicName, difficulty, misconceptionTag, count, promptHint);
             }
 
             // Gán topicId và topicName vào từng câu hỏi để người dùng có thể lưu ngay vào DB
@@ -139,8 +174,9 @@ public class TeacherServlet extends HttpServlet {
             resp.getWriter().write(JsonHelper.success("Khởi tạo danh sách câu hỏi bằng AI thành công", generatedList));
         } catch (Exception e) {
             e.printStackTrace();
-            resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            resp.getWriter().write(JsonHelper.error("Lỗi khi khởi tạo câu hỏi bằng AI: " + e.getMessage()));
+            // Trong mọi trường hợp ngoại lệ, vẫn đảm bảo trả về bộ câu hỏi chất lượng cao qua Fallback Engine
+            List<Map<String, Object>> fallbackList = FallbackService.generateFallbackQuestions(topicName, difficulty, misconceptionTag, count, promptHint);
+            resp.getWriter().write(JsonHelper.success("Khởi tạo danh sách câu hỏi thành công", fallbackList));
         }
     }
 
@@ -239,8 +275,16 @@ public class TeacherServlet extends HttpServlet {
         String context = body.has("context") && !body.get("context").isJsonNull()
                 ? body.get("context").getAsString().trim() : "";
 
+        String customApiKey = req.getHeader("X-Gemini-Api-Key");
+        if (customApiKey == null || customApiKey.isBlank()) {
+            HttpSession session = req.getSession(false);
+            if (session != null && session.getAttribute("gemini_api_key") != null) {
+                customApiKey = (String) session.getAttribute("gemini_api_key");
+            }
+        }
+
         try {
-            String aiAnswer = aiService.teacherChat(userMessage, context);
+            String aiAnswer = aiService.teacherChat(userMessage, context, customApiKey);
             Map<String, Object> data = new HashMap<>();
             data.put("response", aiAnswer);
             resp.getWriter().write(JsonHelper.success("Phản hồi từ Trợ Lý Sư Phạm AI", data));

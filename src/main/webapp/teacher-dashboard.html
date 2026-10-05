@@ -196,7 +196,7 @@
                     <button class="btn btn-sm btn-outline-primary rounded-pill px-3" id="btn-open-topic-modal">
                         <i class="fa-solid fa-folder-plus me-1"></i>Thêm Môn / Chủ Đề
                     </button>
-                    <button class="btn btn-sm btn-primary rounded-pill px-3" id="btn-open-create-modal">
+                    <button class="btn btn-sm btn-primary rounded-pill px-3" id="btn-open-create-modal" onclick="openCreateModal()">
                         <i class="fa-solid fa-circle-plus me-1"></i>Thêm Câu Hỏi
                     </button>
                 </div>
@@ -423,7 +423,7 @@
                                     <button class="btn btn-outline-primary rounded-pill px-3 py-2 fw-semibold small" onclick="document.getElementById('btn-open-topic-modal').click()">
                                         <i class="fa-solid fa-folder-plus me-1"></i>Thêm Môn
                                     </button>
-                                    <button class="btn btn-primary rounded-pill px-3 py-2 fw-semibold small" onclick="document.getElementById('btn-open-create-modal').click()">
+                                    <button class="btn btn-primary rounded-pill px-3 py-2 fw-semibold small" onclick="openCreateModal()">
                                         <i class="fa-solid fa-circle-plus me-1"></i>Thêm Câu Hỏi
                                     </button>
                                 </div>
@@ -521,7 +521,12 @@
                                             <h3 class="ws-card-title"><i class="fa-solid fa-wand-magic-sparkles text-warning"></i>AI Question Studio</h3>
                                             <small class="text-muted">Sinh câu hỏi trắc nghiệm & bẫy tư duy chuẩn Bloom với Gemini AI</small>
                                         </div>
-                                        <span class="ws-ai-chip"><i class="fa-solid fa-bolt"></i>Gemini Flash</span>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <button type="button" class="btn btn-sm btn-outline-info rounded-pill px-3 py-1 small fw-semibold" id="btn-open-apikey-modal" title="Cấu hình Google Gemini API Key cá nhân" onclick="openApiKeyModal()">
+                                                <i class="fa-solid fa-key me-1"></i><span id="gemini-key-status-text">Cấu hình API Key</span>
+                                            </button>
+                                            <span class="ws-ai-chip"><i class="fa-solid fa-bolt"></i>Gemini Flash</span>
+                                        </div>
                                     </div>
 
                                     <form id="ai-generator-form">
@@ -891,8 +896,8 @@
                         
                         <div class="row g-3 mb-3">
                             <div class="col-md-6">
-                                <label for="modal-topic" class="form-label small fw-semibold text-muted">Chủ Đề / Môn Học <span class="text-danger">*</span></label>
-                                <select class="ws-input" id="modal-topic" required></select>
+                                <label for="modal-topic-id" class="form-label small fw-semibold text-muted">Chủ Đề / Môn Học <span class="text-danger">*</span></label>
+                                <select class="ws-input" id="modal-topic-id" name="modal-topic" required></select>
                             </div>
                             <div class="col-md-3">
                                 <label for="modal-difficulty" class="form-label small fw-semibold text-muted">Độ Khó</label>
@@ -939,8 +944,8 @@
 
                         <div class="row g-3 mb-3">
                             <div class="col-12">
-                                <label for="modal-misconception" class="form-label small fw-semibold text-muted">Phân Loại Lỗ Hổng Nhận Thức (Misconception)</label>
-                                <input type="text" class="ws-input" id="modal-misconception" list="modal-misconception-datalist" placeholder="Chọn hoặc nhập bẫy nhận thức...">
+                                <label for="modal-misconception-tag" class="form-label small fw-semibold text-muted">Phân Loại Lỗ Hổng Nhận Thức (Misconception)</label>
+                                <input type="text" class="ws-input" id="modal-misconception-tag" name="modal-misconception" list="modal-misconception-datalist" placeholder="Chọn hoặc nhập bẫy nhận thức...">
                                 <datalist id="modal-misconception-datalist">
                                     <option value="syntax_swap">syntax_swap (Nhầm lẫn cú pháp, công thức, keyword)</option>
                                     <option value="boundary_blindness">boundary_blindness (Lỗi biên, ngoại lệ, giá trị rỗng)</option>
@@ -1053,6 +1058,66 @@
                 </div>
                 <div class="modal-footer modal-footer-ws py-2">
                     <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-4" data-bs-dismiss="modal">Đóng</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <!-- MODAL CẤU HÌNH GOOGLE GEMINI API KEY -->
+    <!-- ═══════════════════════════════════════════════════════════════════ -->
+    <div class="modal fade" id="geminiApiKeyModal" tabindex="-1" aria-labelledby="geminiApiKeyModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content modal-content-ws">
+                <div class="modal-header modal-header-ws">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="rounded-3 p-2 d-flex align-items-center justify-content-center" style="background: rgba(14, 165, 233, 0.15); color: #38bdf8; width: 36px; height: 36px;">
+                            <i class="fa-solid fa-key"></i>
+                        </div>
+                        <div>
+                            <h5 class="modal-title fw-bold text-white mb-0" id="geminiApiKeyModalLabel">
+                                Cấu Hình Gemini AI Key
+                            </h5>
+                            <small class="text-muted" style="font-size: 0.76rem;">Sử dụng API Key cá nhân để sinh câu hỏi & Co-Pilot không giới hạn</small>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="alert alert-dark border-0 p-3 mb-3 rounded-3" style="background: rgba(56, 189, 248, 0.08); border-left: 3px solid #38bdf8 !important;">
+                        <div class="d-flex align-items-start gap-2">
+                            <i class="fa-solid fa-circle-info text-info mt-1"></i>
+                            <div class="small text-muted" style="line-height: 1.45;">
+                                Khóa API được lưu trên trình duyệt của bạn (LocalStorage) và chỉ dùng để gửi yêu cầu sinh câu hỏi Gemini 2.0 Flash. Bạn có thể lấy khóa miễn phí tại <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-info fw-semibold">Google AI Studio <i class="fa-solid fa-arrow-up-right-from-square small"></i></a>.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="input-gemini-api-key" class="form-label small fw-semibold text-muted">Google Gemini API Key</label>
+                        <div class="input-group">
+                            <input type="password" class="ws-input form-control" id="input-gemini-api-key" placeholder="AIzaSy..." autocomplete="off">
+                            <button class="btn btn-outline-secondary" type="button" id="btn-toggle-apikey-visibility" onclick="toggleApiKeyVisibility()">
+                                <i class="fa-solid fa-eye" id="icon-toggle-apikey"></i>
+                            </button>
+                        </div>
+                        <div id="apikey-status-feedback" class="small mt-2" style="display: none;"></div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-sm btn-outline-info rounded-pill px-3 py-1 fw-semibold" id="btn-test-gemini-key" onclick="handleTestGeminiKey()">
+                            <i class="fa-solid fa-vial me-1"></i>Kiểm tra kết nối
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-danger rounded-pill px-3 py-1 fw-semibold ms-auto" id="btn-clear-gemini-key" onclick="handleClearGeminiKey()">
+                            <i class="fa-solid fa-trash me-1"></i>Xóa Key
+                        </button>
+                    </div>
+                </div>
+                <div class="modal-footer modal-footer-ws py-2">
+                    <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-4" data-bs-dismiss="modal">Đóng</button>
+                    <button type="button" class="btn btn-primary btn-sm rounded-pill px-4 fw-semibold" id="btn-save-gemini-key" onclick="handleSaveGeminiKey()">
+                        <i class="fa-solid fa-floppy-disk me-1"></i>Lưu cấu hình
+                    </button>
                 </div>
             </div>
         </div>

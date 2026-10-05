@@ -54,6 +54,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Tải dữ liệu ban đầu
     loadInitialData();
+
+    // Cập nhật trạng thái cấu hình Gemini API Key
+    updateGeminiKeyBadge();
 });
 
 /**
@@ -890,20 +893,36 @@ function filterQuestions(keyword) {
  * Mở modal tạo mới câu hỏi
  */
 function openCreateModal() {
-    document.getElementById('question-form').reset();
-    document.getElementById('modal-question-id').value = '';
-    document.getElementById('questionModalLabel').innerHTML = '<i class="fa-solid fa-plus-circle me-2"></i>Thêm Câu Hỏi Mới';
-    document.getElementById('modal-difficulty').value = 'medium';
-    document.getElementById('modal-misconception-tag').value = '';
+    const form = document.getElementById('question-form');
+    if (form) form.reset();
+
+    const idEl = document.getElementById('modal-question-id');
+    if (idEl) idEl.value = '';
+
+    const labelEl = document.getElementById('questionModalLabel');
+    if (labelEl) labelEl.innerHTML = '<i class="fa-solid fa-plus-circle me-2"></i>Thêm Câu Hỏi Mới';
+
+    const diffEl = document.getElementById('modal-difficulty');
+    if (diffEl) diffEl.value = 'medium';
+
+    const misEl = document.getElementById('modal-misconception-tag') || document.getElementById('modal-misconception');
+    if (misEl) misEl.value = '';
 
     // Chọn topic mặc định nếu đang lọc theo topic
-    const currentTopicFilter = document.getElementById('filter-topic').value;
-    if (currentTopicFilter) {
-        document.getElementById('modal-topic-id').value = currentTopicFilter;
+    const filterTopicEl = document.getElementById('filter-topic');
+    const currentTopicFilter = filterTopicEl ? filterTopicEl.value : '';
+    const topicEl = document.getElementById('modal-topic-id') || document.getElementById('modal-topic');
+    if (topicEl && currentTopicFilter) {
+        topicEl.value = currentTopicFilter;
     }
 
-    questionModal.show();
+    const modalEl = document.getElementById('questionModal');
+    if (modalEl) {
+        const modalInstance = bootstrap.Modal.getOrCreateInstance(modalEl);
+        modalInstance.show();
+    }
 }
+window.openCreateModal = openCreateModal;
 
 /**
  * Mở modal chỉnh sửa câu hỏi hiện có
@@ -912,41 +931,82 @@ function openEditModal(questionId) {
     const q = allQuestions.find(item => item.questionId === questionId);
     if (!q) return;
 
-    document.getElementById('modal-question-id').value = q.questionId;
-    document.getElementById('questionModalLabel').innerHTML = `<i class="fa-solid fa-pen-to-square me-2"></i>Chỉnh Sửa Câu Hỏi #${q.questionId}`;
-    document.getElementById('modal-topic-id').value = q.topicId;
-    document.getElementById('modal-difficulty').value = q.difficulty || 'medium';
-    document.getElementById('modal-question-text').value = q.questionText;
-    document.getElementById('modal-option-a').value = q.optionA;
-    document.getElementById('modal-option-b').value = q.optionB;
-    document.getElementById('modal-option-c').value = q.optionC;
-    document.getElementById('modal-option-d').value = q.optionD;
-    document.getElementById('modal-correct-answer').value = q.correctAnswer;
-    document.getElementById('modal-explanation').value = q.explanation || '';
-    document.getElementById('modal-misconception-tag').value = q.misconceptionTag || '';
+    const idEl = document.getElementById('modal-question-id');
+    if (idEl) idEl.value = q.questionId;
 
-    questionModal.show();
+    const labelEl = document.getElementById('questionModalLabel');
+    if (labelEl) labelEl.innerHTML = `<i class="fa-solid fa-pen-to-square me-2"></i>Chỉnh Sửa Câu Hỏi #${q.questionId}`;
+
+    const topicEl = document.getElementById('modal-topic-id') || document.getElementById('modal-topic');
+    if (topicEl) topicEl.value = q.topicId;
+
+    const diffEl = document.getElementById('modal-difficulty');
+    if (diffEl) diffEl.value = q.difficulty || 'medium';
+
+    const textEl = document.getElementById('modal-question-text');
+    if (textEl) textEl.value = q.questionText || '';
+
+    const optA = document.getElementById('modal-option-a');
+    if (optA) optA.value = q.optionA || '';
+
+    const optB = document.getElementById('modal-option-b');
+    if (optB) optB.value = q.optionB || '';
+
+    const optC = document.getElementById('modal-option-c');
+    if (optC) optC.value = q.optionC || '';
+
+    const optD = document.getElementById('modal-option-d');
+    if (optD) optD.value = q.optionD || '';
+
+    const ansEl = document.getElementById('modal-correct-answer');
+    if (ansEl) ansEl.value = q.correctAnswer || 'A';
+
+    const expEl = document.getElementById('modal-explanation');
+    if (expEl) expEl.value = q.explanation || '';
+
+    const misEl = document.getElementById('modal-misconception-tag') || document.getElementById('modal-misconception');
+    if (misEl) misEl.value = q.misconceptionTag || '';
+
+    const modalEl = document.getElementById('questionModal');
+    if (modalEl) {
+        const modalInstance = bootstrap.Modal.getOrCreateInstance(modalEl);
+        modalInstance.show();
+    }
 }
+window.openEditModal = openEditModal;
 
 /**
  * Lưu câu hỏi (Thêm mới hoặc Cập nhật)
  */
 async function handleSaveQuestion() {
-    const idVal = document.getElementById('modal-question-id').value;
+    const idEl = document.getElementById('modal-question-id');
+    const idVal = idEl ? idEl.value : '';
     const isEdit = !!idVal;
 
-    const topicId = parseInt(document.getElementById('modal-topic-id').value);
-    const difficulty = document.getElementById('modal-difficulty').value;
-    const misconceptionTag = document.getElementById('modal-misconception-tag').value || null;
-    const questionText = document.getElementById('modal-question-text').value.trim();
-    const optionA = document.getElementById('modal-option-a').value.trim();
-    const optionB = document.getElementById('modal-option-b').value.trim();
-    const optionC = document.getElementById('modal-option-c').value.trim();
-    const optionD = document.getElementById('modal-option-d').value.trim();
-    const correctAnswer = document.getElementById('modal-correct-answer').value;
-    const explanation = document.getElementById('modal-explanation').value.trim();
+    const topicEl = document.getElementById('modal-topic-id') || document.getElementById('modal-topic');
+    const topicId = topicEl ? parseInt(topicEl.value) : NaN;
 
-    if (!topicId || !questionText || !optionA || !optionB || !optionC || !optionD || !correctAnswer) {
+    const diffEl = document.getElementById('modal-difficulty');
+    const difficulty = diffEl ? diffEl.value : 'medium';
+
+    const misEl = document.getElementById('modal-misconception-tag') || document.getElementById('modal-misconception');
+    const misconceptionTag = misEl ? (misEl.value.trim() || null) : null;
+
+    const qTextEl = document.getElementById('modal-question-text');
+    const questionText = qTextEl ? qTextEl.value.trim() : '';
+
+    const optA = document.getElementById('modal-option-a') ? document.getElementById('modal-option-a').value.trim() : '';
+    const optB = document.getElementById('modal-option-b') ? document.getElementById('modal-option-b').value.trim() : '';
+    const optC = document.getElementById('modal-option-c') ? document.getElementById('modal-option-c').value.trim() : '';
+    const optD = document.getElementById('modal-option-d') ? document.getElementById('modal-option-d').value.trim() : '';
+
+    const ansEl = document.getElementById('modal-correct-answer');
+    const correctAnswer = ansEl ? ansEl.value : '';
+
+    const expEl = document.getElementById('modal-explanation');
+    const explanation = expEl ? expEl.value.trim() : '';
+
+    if (!topicId || !questionText || !optA || !optB || !optC || !optD || !correctAnswer) {
         Swal.fire({
             icon: 'warning',
             title: 'Thiếu thông tin',
@@ -960,10 +1020,10 @@ async function handleSaveQuestion() {
         difficulty,
         misconceptionTag,
         questionText,
-        optionA,
-        optionB,
-        optionC,
-        optionD,
+        optionA: optA,
+        optionB: optB,
+        optionC: optC,
+        optionD: optD,
         correctAnswer,
         explanation
     };
@@ -990,7 +1050,12 @@ async function handleSaveQuestion() {
             });
         }
 
-        questionModal.hide();
+        const modalEl = document.getElementById('questionModal');
+        if (modalEl) {
+            const modalInstance = bootstrap.Modal.getOrCreateInstance(modalEl);
+            modalInstance.hide();
+        }
+
         // Nạp lại danh sách câu hỏi và cập nhật KPI
         await Promise.all([
             loadQuestions(),
@@ -1438,21 +1503,49 @@ function openModalWithAiQuestion(index) {
     const q = currentGeneratedQuestions[index];
     if (!q) return;
 
-    document.getElementById('modal-question-id').value = '';
-    document.getElementById('questionModalLabel').innerHTML = `<i class="fa-solid fa-wand-magic-sparkles text-warning me-2"></i>Tùy Biến Câu Hỏi AI (Câu #${index + 1})`;
-    document.getElementById('modal-topic-id').value = q.topicId || '';
-    document.getElementById('modal-difficulty').value = q.difficulty || 'medium';
-    document.getElementById('modal-question-text').value = q.questionText || '';
-    document.getElementById('modal-option-a').value = q.optionA || '';
-    document.getElementById('modal-option-b').value = q.optionB || '';
-    document.getElementById('modal-option-c').value = q.optionC || '';
-    document.getElementById('modal-option-d').value = q.optionD || '';
-    document.getElementById('modal-correct-answer').value = normalizeCorrectAnswer(q.correctAnswer);
-    document.getElementById('modal-explanation').value = q.explanation || '';
-    document.getElementById('modal-misconception-tag').value = q.misconceptionTag || '';
+    const idEl = document.getElementById('modal-question-id');
+    if (idEl) idEl.value = '';
 
-    if (questionModal) questionModal.show();
+    const labelEl = document.getElementById('questionModalLabel');
+    if (labelEl) labelEl.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles text-warning me-2"></i>Tùy Biến Câu Hỏi AI (Câu #${index + 1})`;
+
+    const topicEl = document.getElementById('modal-topic-id') || document.getElementById('modal-topic');
+    if (topicEl) topicEl.value = q.topicId || '';
+
+    const diffEl = document.getElementById('modal-difficulty');
+    if (diffEl) diffEl.value = q.difficulty || 'medium';
+
+    const textEl = document.getElementById('modal-question-text');
+    if (textEl) textEl.value = q.questionText || '';
+
+    const optA = document.getElementById('modal-option-a');
+    if (optA) optA.value = q.optionA || '';
+
+    const optB = document.getElementById('modal-option-b');
+    if (optB) optB.value = q.optionB || '';
+
+    const optC = document.getElementById('modal-option-c');
+    if (optC) optC.value = q.optionC || '';
+
+    const optD = document.getElementById('modal-option-d');
+    if (optD) optD.value = q.optionD || '';
+
+    const ansEl = document.getElementById('modal-correct-answer');
+    if (ansEl) ansEl.value = normalizeCorrectAnswer(q.correctAnswer);
+
+    const expEl = document.getElementById('modal-explanation');
+    if (expEl) expEl.value = q.explanation || '';
+
+    const misEl = document.getElementById('modal-misconception-tag') || document.getElementById('modal-misconception');
+    if (misEl) misEl.value = q.misconceptionTag || '';
+
+    const modalEl = document.getElementById('questionModal');
+    if (modalEl) {
+        const modalInstance = bootstrap.Modal.getOrCreateInstance(modalEl);
+        modalInstance.show();
+    }
 }
+window.openModalWithAiQuestion = openModalWithAiQuestion;
 
 /**
  * Xử lý trò chuyện với Trợ Lý Sư Phạm AI Co-Pilot
@@ -1978,4 +2071,212 @@ async function handleQuickAddTopicFromModal() {
         });
     }
 }
+
+// ═══════════════════════════════════════════════════════════════════
+// QUẢN LÝ CẤU HÌNH GOOGLE GEMINI API KEY CÁ NHÂN
+// ═══════════════════════════════════════════════════════════════════
+
+/**
+ * Mở modal cấu hình API Key
+ */
+function openApiKeyModal() {
+    const modalEl = document.getElementById('geminiApiKeyModal');
+    if (!modalEl) return;
+
+    const inputKey = document.getElementById('input-gemini-api-key');
+    const existingKey = localStorage.getItem('gemini_api_key') || '';
+    if (inputKey) {
+        inputKey.value = existingKey;
+        inputKey.type = 'password';
+    }
+
+    const iconToggle = document.getElementById('icon-toggle-apikey');
+    if (iconToggle) {
+        iconToggle.className = 'fa-solid fa-eye';
+    }
+
+    const feedbackEl = document.getElementById('apikey-status-feedback');
+    if (feedbackEl) {
+        if (existingKey) {
+            feedbackEl.className = 'small mt-2 text-success';
+            feedbackEl.innerHTML = '<i class="fa-solid fa-circle-check me-1"></i>Đang sử dụng API Key cá nhân lưu trên trình duyệt.';
+            feedbackEl.style.display = 'block';
+        } else {
+            feedbackEl.style.display = 'none';
+        }
+    }
+
+    const modalInstance = bootstrap.Modal.getOrCreateInstance(modalEl);
+    modalInstance.show();
+}
+window.openApiKeyModal = openApiKeyModal;
+
+/**
+ * Bật/tắt ẩn hiện API Key
+ */
+function toggleApiKeyVisibility() {
+    const inputKey = document.getElementById('input-gemini-api-key');
+    const iconToggle = document.getElementById('icon-toggle-apikey');
+    if (!inputKey) return;
+
+    if (inputKey.type === 'password') {
+        inputKey.type = 'text';
+        if (iconToggle) iconToggle.className = 'fa-solid fa-eye-slash';
+    } else {
+        inputKey.type = 'password';
+        if (iconToggle) iconToggle.className = 'fa-solid fa-eye';
+    }
+}
+window.toggleApiKeyVisibility = toggleApiKeyVisibility;
+
+/**
+ * Lưu API Key vào localStorage
+ */
+function handleSaveGeminiKey() {
+    const inputKey = document.getElementById('input-gemini-api-key');
+    const key = inputKey ? inputKey.value.trim() : '';
+
+    if (!key) {
+        localStorage.removeItem('gemini_api_key');
+        updateGeminiKeyBadge();
+        Swal.fire({
+            icon: 'info',
+            title: 'Đã xóa Key',
+            text: 'Hệ thống sẽ sử dụng cấu hình AI mặc định của máy chủ.',
+            timer: 1800,
+            showConfirmButton: false
+        });
+    } else {
+        localStorage.setItem('gemini_api_key', key);
+        updateGeminiKeyBadge();
+        Swal.fire({
+            icon: 'success',
+            title: 'Đã lưu API Key!',
+            text: 'Từ giờ hệ thống sẽ sử dụng Gemini API Key cá nhân của Thầy/Cô khi sinh câu hỏi và Co-Pilot.',
+            timer: 2000,
+            showConfirmButton: false
+        });
+    }
+
+    const modalEl = document.getElementById('geminiApiKeyModal');
+    if (modalEl) {
+        const modalInstance = bootstrap.Modal.getOrCreateInstance(modalEl);
+        modalInstance.hide();
+    }
+}
+window.handleSaveGeminiKey = handleSaveGeminiKey;
+
+/**
+ * Xóa API Key khỏi localStorage
+ */
+function handleClearGeminiKey() {
+    localStorage.removeItem('gemini_api_key');
+    const inputKey = document.getElementById('input-gemini-api-key');
+    if (inputKey) inputKey.value = '';
+
+    const feedbackEl = document.getElementById('apikey-status-feedback');
+    if (feedbackEl) {
+        feedbackEl.className = 'small mt-2 text-muted';
+        feedbackEl.innerHTML = '<i class="fa-solid fa-info-circle me-1"></i>Đã xóa khóa cá nhân. Trở về chế độ mặc định của hệ thống.';
+        feedbackEl.style.display = 'block';
+    }
+
+    updateGeminiKeyBadge();
+
+    Swal.fire({
+        toast: true,
+        position: 'top-end',
+        icon: 'info',
+        title: 'Đã xóa API Key cá nhân',
+        showConfirmButton: false,
+        timer: 2000
+    });
+}
+window.handleClearGeminiKey = handleClearGeminiKey;
+
+/**
+ * Kiểm tra kết nối API Key với Google Gemini
+ */
+async function handleTestGeminiKey() {
+    const inputKey = document.getElementById('input-gemini-api-key');
+    const key = inputKey ? inputKey.value.trim() : '';
+    const btnTest = document.getElementById('btn-test-gemini-key');
+    const feedbackEl = document.getElementById('apikey-status-feedback');
+
+    const originalBtnHtml = btnTest ? btnTest.innerHTML : '';
+    if (btnTest) {
+        btnTest.disabled = true;
+        btnTest.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Đang kiểm tra...';
+    }
+
+    if (feedbackEl) {
+        feedbackEl.className = 'small mt-2 text-info';
+        feedbackEl.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-1"></i>Đang gửi yêu cầu test đến Gemini 2.0 Flash...';
+        feedbackEl.style.display = 'block';
+    }
+
+    try {
+        const res = await API.teacher.validateApiKey(key);
+        const data = res.data || {};
+
+        if (feedbackEl) {
+            feedbackEl.className = 'small mt-2 text-success';
+            feedbackEl.innerHTML = `<i class="fa-solid fa-circle-check me-1"></i><strong>Kết nối thành công!</strong> Model: ${data.model || 'gemini-2.0-flash'}.`;
+            feedbackEl.style.display = 'block';
+        }
+
+        Swal.fire({
+            icon: 'success',
+            title: 'Khóa API Hợp Lệ!',
+            text: `Google Gemini phản hồi tốt (${data.model || 'gemini-2.0-flash'}). Thầy/Cô có thể bấm "Lưu cấu hình" để sử dụng.`,
+            timer: 2500,
+            showConfirmButton: false
+        });
+    } catch (err) {
+        console.error('Lỗi kiểm tra API Key:', err);
+        if (feedbackEl) {
+            feedbackEl.className = 'small mt-2 text-danger';
+            feedbackEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation me-1"></i><strong>Kiểm tra thất bại:</strong> ${err.message || 'Key không hợp lệ hoặc bị chặn mạng'}.`;
+            feedbackEl.style.display = 'block';
+        }
+
+        Swal.fire({
+            icon: 'error',
+            title: 'Không Thể Xác Thực API Key',
+            text: err.message || 'Vui lòng kiểm tra lại tính chính xác của API Key hoặc quyền truy cập Google AI Studio.'
+        });
+    } finally {
+        if (btnTest) {
+            btnTest.disabled = false;
+            btnTest.innerHTML = originalBtnHtml;
+        }
+    }
+}
+window.handleTestGeminiKey = handleTestGeminiKey;
+
+/**
+ * Cập nhật nút trạng thái Gemini API Key trên giao diện
+ */
+function updateGeminiKeyBadge() {
+    const key = localStorage.getItem('gemini_api_key');
+    const btn = document.getElementById('btn-open-apikey-modal');
+    const textEl = document.getElementById('gemini-key-status-text');
+
+    if (key && key.trim().length > 5) {
+        if (btn) {
+            btn.className = 'btn btn-sm btn-outline-success rounded-pill px-3 py-1 small fw-semibold';
+        }
+        if (textEl) {
+            textEl.innerHTML = '<i class="fa-solid fa-check-circle text-success me-1"></i>Key riêng: Đang bật';
+        }
+    } else {
+        if (btn) {
+            btn.className = 'btn btn-sm btn-outline-info rounded-pill px-3 py-1 small fw-semibold';
+        }
+        if (textEl) {
+            textEl.innerHTML = 'Cấu hình API Key';
+        }
+    }
+}
+window.updateGeminiKeyBadge = updateGeminiKeyBadge;
 

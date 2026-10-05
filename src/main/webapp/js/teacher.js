@@ -827,6 +827,14 @@ async function handleAiGenerateSubmit(e) {
         });
         return;
     }
+    if (count > 50) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Số lượng câu hỏi vượt quá giới hạn',
+            text: 'Mỗi lần tạo đề AI hỗ trợ tối đa 50 câu để đảm bảo chất lượng và thời gian phản hồi tốt nhất!'
+        });
+        return;
+    }
 
     const promptHint = document.getElementById('ai-custom-prompt').value.trim();
 

@@ -1,6 +1,6 @@
 ﻿# TOAN BO MA NGUON DU AN - HE THONG HOC TAP THONG MINH (INTELLIGENT LMS)
 
-> **Thoi gian tao file:** 2026-10-05 10:06:19
+> **Thoi gian tao file:** 2026-10-05 10:20:20
 > **Tong so file:** 58
 > **Muc dich:** Gom toan bo source code thanh 1 file duy nhat de gui cho ben thu ba xem xet, danh gia va gop y.
 
@@ -12575,6 +12575,14 @@ async function handleAiGenerateSubmit(e) {
         });
         return;
     }
+    if (count > 50) {
+        Swal.fire({
+            icon: 'warning',
+            title: 'Số lượng câu hỏi vượt quá giới hạn',
+            text: 'Mỗi lần tạo đề AI hỗ trợ tối đa 50 câu để đảm bảo chất lượng và thời gian phản hồi tốt nhất!'
+        });
+        return;
+    }
 
     const promptHint = document.getElementById('ai-custom-prompt').value.trim();
 
@@ -17418,8 +17426,8 @@ const AppUI = (() => {
                                                 </select>
                                             </div>
                                             <div class="col-sm-4">
-                                                <label class="form-label small fw-semibold text-muted">Số câu muốn tạo</label>
-                                                <input type="number" class="ws-input" id="ai-count" min="1" max="10" value="3">
+                                                <label class="form-label small fw-semibold text-muted">Số câu muốn tạo (1 - 50 câu)</label>
+                                                <input type="number" class="ws-input" id="ai-count" min="1" max="50" value="5" placeholder="Ví dụ: 10, 25, 50">
                                             </div>
                                         </div>
 
@@ -17868,7 +17876,7 @@ const AppUI = (() => {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     <script src="js/ui.js?v=4.0"></script>
     <script src="js/api.js?v=4.0"></script>
-    <script src="js/teacher.js?v=4.0"></script>
+    <script src="js/teacher.js?v=4.1"></script>
 
     <script>
         // Đồng bộ số liệu thống kê vào tab detail

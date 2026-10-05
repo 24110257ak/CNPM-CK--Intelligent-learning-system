@@ -112,7 +112,9 @@ const API = {
     topics: {
         list: () => API.request('/topics/list'),
         get: id => API.request(`/topics/${encodeURIComponent(id)}`),
-        create: data => API.request('/topics', { method: 'POST', body: JSON.stringify(data) })
+        create: data => API.request('/topics', { method: 'POST', body: JSON.stringify(data) }),
+        update: (id, data) => API.request(`/topics/${encodeURIComponent(id)}`, { method: 'PUT', body: JSON.stringify(data) }),
+        delete: id => API.request(`/topics/${encodeURIComponent(id)}`, { method: 'DELETE' })
     },
     questions: {
         list: (topicId=null) => API.request(`/questions${topicId ? `?topicId=${encodeURIComponent(topicId)}` : ''}`),

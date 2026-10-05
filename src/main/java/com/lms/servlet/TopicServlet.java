@@ -102,4 +102,84 @@ public class TopicServlet extends HttpServlet {
             resp.getWriter().write(JsonHelper.error("ID chủ đề không hợp lệ."));
         }
     }
+
+    @Override
+    protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        resp.setContentType("application/json;charset=UTF-8");
+        String pathInfo = req.getPathInfo();
+        if (pathInfo == null || pathInfo.equals("/")) {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            resp.getWriter().write(JsonHelper.error("Thiếu ID chủ đề cần cập nhật."));
+            return;
+        }
+
+        try {
+            int topicId = Integer.parseInt(pathInfo.substring(1));
+            Optional<Topic> opt = topicDAO.findById(topicId);
+            if (opt.isEmpty()) {
+                resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                resp.getWriter().write(JsonHelper.error("Không tìm thấy chủ đề ID: " + topicId));
+                return;
+            }
+
+            JsonObject body = JsonHelper.parseRequestBody(req);
+            if (body == null || !body.has("topicName") || body.get("topicName").getAsString().trim().isEmpty()) {
+                resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                resp.getWriter().write(JsonHelper.error("Tên chủ đề không được để trống."));
+                return;
+            }
+
+            Topic topic = opt.get();
+            topic.setTopicName(body.get("topicName").getAsString().trim());
+            if (body.has("description")) {
+                topic.setDescription(body.get("description").isJsonNull() ? "" : body.get("description").getAsString().trim());
+            }
+            if (body.has("displayOrder") && !body.get("displayOrder").isJsonNull()) {
+                topic.setDisplayOrder(body.get("displayOrder").getAsInt());
+            }
+
+            boolean ok = topicDAO.update(topic);
+            if (ok) {
+                resp.getWriter().write(JsonHelper.success("Cập nhật thông tin chủ đề thành công", null));
+            } else {
+                resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                resp.getWriter().write(JsonHelper.error("Không thể cập nhật chủ đề vào cơ sở dữ liệu."));
+            }
+        } catch (NumberFormatException e) {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            resp.getWriter().write(JsonHelper.error("ID chủ đề không hợp lệ."));
+        }
+    }
+
+    @Override
+    protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        resp.setContentType("application/json;charset=UTF-8");
+        String pathInfo = req.getPathInfo();
+        if (pathInfo == null || pathInfo.equals("/")) {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            resp.getWriter().write(JsonHelper.error("Thiếu ID chủ đề cần xóa."));
+            return;
+        }
+
+        try {
+            int topicId = Integer.parseInt(pathInfo.substring(1));
+            Optional<Topic> opt = topicDAO.findById(topicId);
+            if (opt.isEmpty()) {
+                resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                resp.getWriter().write(JsonHelper.error("Không tìm thấy chủ đề ID: " + topicId));
+                return;
+            }
+
+            boolean ok = topicDAO.delete(topicId);
+            if (ok) {
+                resp.getWriter().write(JsonHelper.success("Đã xóa chủ đề và dọn dẹp các dữ liệu liên kết thành công", null));
+            } else {
+                resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                resp.getWriter().write(JsonHelper.error("Không thể xóa chủ đề khỏi cơ sở dữ liệu."));
+            }
+        } catch (NumberFormatException e) {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            resp.getWriter().write(JsonHelper.error("ID chủ đề không hợp lệ."));
+        }
+    }
 }

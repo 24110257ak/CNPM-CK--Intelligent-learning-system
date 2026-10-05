@@ -134,6 +134,87 @@ public class TopicDAO {
         return 0;
     }
 
+    /**
+     * Cập nhật thông tin chủ đề / môn học.
+     */
+    public boolean update(Topic topic) {
+        String sql = "UPDATE topics SET topic_name = ?, description = ?, display_order = ? WHERE topic_id = ?";
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, topic.getTopicName().trim());
+            ps.setString(2, topic.getDescription());
+            ps.setInt(3, topic.getDisplayOrder() > 0 ? topic.getDisplayOrder() : 99);
+            ps.setInt(4, topic.getTopicId());
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    /**
+     * Xóa chủ đề và các dữ liệu phụ thuộc một cách an toàn trong Transaction.
+     */
+    public boolean delete(int topicId) {
+        String sqlNullParent = "UPDATE topics SET parent_topic_id = NULL WHERE parent_topic_id = ?";
+        String sqlUserAnswers = "DELETE FROM user_answers WHERE session_id IN (SELECT session_id FROM quiz_sessions WHERE topic_id = ?) "
+                              + "OR question_id IN (SELECT question_id FROM questions WHERE topic_id = ?)";
+        String sqlSessions = "DELETE FROM quiz_sessions WHERE topic_id = ?";
+        String sqlRemedial = "DELETE FROM remedial_lessons WHERE question_id IN (SELECT question_id FROM questions WHERE topic_id = ?)";
+        String sqlRatings = "DELETE FROM question_ratings WHERE question_id IN (SELECT question_id FROM questions WHERE topic_id = ?)";
+        String sqlComments = "DELETE FROM question_comments WHERE question_id IN (SELECT question_id FROM questions WHERE topic_id = ?)";
+        String sqlQuestions = "DELETE FROM questions WHERE topic_id = ?";
+        String sqlTopic = "DELETE FROM topics WHERE topic_id = ?";
+
+        try (Connection conn = DatabaseUtil.getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                try (PreparedStatement ps = conn.prepareStatement(sqlNullParent)) {
+                    ps.setInt(1, topicId);
+                    ps.executeUpdate();
+                }
+                try (PreparedStatement ps = conn.prepareStatement(sqlUserAnswers)) {
+                    ps.setInt(1, topicId);
+                    ps.setInt(2, topicId);
+                    ps.executeUpdate();
+                }
+                try (PreparedStatement ps = conn.prepareStatement(sqlSessions)) {
+                    ps.setInt(1, topicId);
+                    ps.executeUpdate();
+                }
+                try (PreparedStatement ps = conn.prepareStatement(sqlRemedial)) {
+                    ps.setInt(1, topicId);
+                    ps.executeUpdate();
+                }
+                try (PreparedStatement ps = conn.prepareStatement(sqlRatings)) {
+                    ps.setInt(1, topicId);
+                    ps.executeUpdate();
+                }
+                try (PreparedStatement ps = conn.prepareStatement(sqlComments)) {
+                    ps.setInt(1, topicId);
+                    ps.executeUpdate();
+                }
+                try (PreparedStatement ps = conn.prepareStatement(sqlQuestions)) {
+                    ps.setInt(1, topicId);
+                    ps.executeUpdate();
+                }
+                int rows;
+                try (PreparedStatement ps = conn.prepareStatement(sqlTopic)) {
+                    ps.setInt(1, topicId);
+                    rows = ps.executeUpdate();
+                }
+                conn.commit();
+                return rows > 0;
+            } catch (SQLException e) {
+                conn.rollback();
+                throw e;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
     // ── Private Mapper ────────────────────────────────────────────────────
 
     private Topic mapTopic(ResultSet rs) throws SQLException {

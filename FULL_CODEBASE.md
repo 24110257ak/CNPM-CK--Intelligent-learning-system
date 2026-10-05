@@ -1,6 +1,6 @@
 ﻿# TOAN BO MA NGUON DU AN - HE THONG HOC TAP THONG MINH (INTELLIGENT LMS)
 
-> **Thoi gian tao file:** 2026-10-05 10:20:20
+> **Thoi gian tao file:** 2026-10-05 10:29:39
 > **Tong so file:** 58
 > **Muc dich:** Gom toan bo source code thanh 1 file duy nhat de gui cho ben thu ba xem xet, danh gia va gop y.
 
@@ -4269,6 +4269,87 @@ public class TopicDAO {
         return 0;
     }
 
+    /**
+     * Cập nhật thông tin chủ đề / môn học.
+     */
+    public boolean update(Topic topic) {
+        String sql = "UPDATE topics SET topic_name = ?, description = ?, display_order = ? WHERE topic_id = ?";
+        try (Connection conn = DatabaseUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, topic.getTopicName().trim());
+            ps.setString(2, topic.getDescription());
+            ps.setInt(3, topic.getDisplayOrder() > 0 ? topic.getDisplayOrder() : 99);
+            ps.setInt(4, topic.getTopicId());
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    /**
+     * Xóa chủ đề và các dữ liệu phụ thuộc một cách an toàn trong Transaction.
+     */
+    public boolean delete(int topicId) {
+        String sqlNullParent = "UPDATE topics SET parent_topic_id = NULL WHERE parent_topic_id = ?";
+        String sqlUserAnswers = "DELETE FROM user_answers WHERE session_id IN (SELECT session_id FROM quiz_sessions WHERE topic_id = ?) "
+                              + "OR question_id IN (SELECT question_id FROM questions WHERE topic_id = ?)";
+        String sqlSessions = "DELETE FROM quiz_sessions WHERE topic_id = ?";
+        String sqlRemedial = "DELETE FROM remedial_lessons WHERE question_id IN (SELECT question_id FROM questions WHERE topic_id = ?)";
+        String sqlRatings = "DELETE FROM question_ratings WHERE question_id IN (SELECT question_id FROM questions WHERE topic_id = ?)";
+        String sqlComments = "DELETE FROM question_comments WHERE question_id IN (SELECT question_id FROM questions WHERE topic_id = ?)";
+        String sqlQuestions = "DELETE FROM questions WHERE topic_id = ?";
+        String sqlTopic = "DELETE FROM topics WHERE topic_id = ?";
+
+        try (Connection conn = DatabaseUtil.getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                try (PreparedStatement ps = conn.prepareStatement(sqlNullParent)) {
+                    ps.setInt(1, topicId);
+                    ps.executeUpdate();
+                }
+                try (PreparedStatement ps = conn.prepareStatement(sqlUserAnswers)) {
+                    ps.setInt(1, topicId);
+                    ps.setInt(2, topicId);
+                    ps.executeUpdate();
+                }
+                try (PreparedStatement ps = conn.prepareStatement(sqlSessions)) {
+                    ps.setInt(1, topicId);
+                    ps.executeUpdate();
+                }
+                try (PreparedStatement ps = conn.prepareStatement(sqlRemedial)) {
+                    ps.setInt(1, topicId);
+                    ps.executeUpdate();
+                }
+                try (PreparedStatement ps = conn.prepareStatement(sqlRatings)) {
+                    ps.setInt(1, topicId);
+                    ps.executeUpdate();
+                }
+                try (PreparedStatement ps = conn.prepareStatement(sqlComments)) {
+                    ps.setInt(1, topicId);
+                    ps.executeUpdate();
+                }
+                try (PreparedStatement ps = conn.prepareStatement(sqlQuestions)) {
+                    ps.setInt(1, topicId);
+                    ps.executeUpdate();
+                }
+                int rows;
+                try (PreparedStatement ps = conn.prepareStatement(sqlTopic)) {
+                    ps.setInt(1, topicId);
+                    rows = ps.executeUpdate();
+                }
+                conn.commit();
+                return rows > 0;
+            } catch (SQLException e) {
+                conn.rollback();
+                throw e;
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
     // ── Private Mapper ────────────────────────────────────────────────────
 
     private Topic mapTopic(ResultSet rs) throws SQLException {
@@ -7597,6 +7678,86 @@ public class TopicServlet extends HttpServlet {
             resp.getWriter().write(JsonHelper.error("ID chủ đề không hợp lệ."));
         }
     }
+
+    @Override
+    protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        resp.setContentType("application/json;charset=UTF-8");
+        String pathInfo = req.getPathInfo();
+        if (pathInfo == null || pathInfo.equals("/")) {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            resp.getWriter().write(JsonHelper.error("Thiếu ID chủ đề cần cập nhật."));
+            return;
+        }
+
+        try {
+            int topicId = Integer.parseInt(pathInfo.substring(1));
+            Optional<Topic> opt = topicDAO.findById(topicId);
+            if (opt.isEmpty()) {
+                resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                resp.getWriter().write(JsonHelper.error("Không tìm thấy chủ đề ID: " + topicId));
+                return;
+            }
+
+            JsonObject body = JsonHelper.parseRequestBody(req);
+            if (body == null || !body.has("topicName") || body.get("topicName").getAsString().trim().isEmpty()) {
+                resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                resp.getWriter().write(JsonHelper.error("Tên chủ đề không được để trống."));
+                return;
+            }
+
+            Topic topic = opt.get();
+            topic.setTopicName(body.get("topicName").getAsString().trim());
+            if (body.has("description")) {
+                topic.setDescription(body.get("description").isJsonNull() ? "" : body.get("description").getAsString().trim());
+            }
+            if (body.has("displayOrder") && !body.get("displayOrder").isJsonNull()) {
+                topic.setDisplayOrder(body.get("displayOrder").getAsInt());
+            }
+
+            boolean ok = topicDAO.update(topic);
+            if (ok) {
+                resp.getWriter().write(JsonHelper.success("Cập nhật thông tin chủ đề thành công", null));
+            } else {
+                resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                resp.getWriter().write(JsonHelper.error("Không thể cập nhật chủ đề vào cơ sở dữ liệu."));
+            }
+        } catch (NumberFormatException e) {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            resp.getWriter().write(JsonHelper.error("ID chủ đề không hợp lệ."));
+        }
+    }
+
+    @Override
+    protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        resp.setContentType("application/json;charset=UTF-8");
+        String pathInfo = req.getPathInfo();
+        if (pathInfo == null || pathInfo.equals("/")) {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            resp.getWriter().write(JsonHelper.error("Thiếu ID chủ đề cần xóa."));
+            return;
+        }
+
+        try {
+            int topicId = Integer.parseInt(pathInfo.substring(1));
+            Optional<Topic> opt = topicDAO.findById(topicId);
+            if (opt.isEmpty()) {
+                resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                resp.getWriter().write(JsonHelper.error("Không tìm thấy chủ đề ID: " + topicId));
+                return;
+            }
+
+            boolean ok = topicDAO.delete(topicId);
+            if (ok) {
+                resp.getWriter().write(JsonHelper.success("Đã xóa chủ đề và dọn dẹp các dữ liệu liên kết thành công", null));
+            } else {
+                resp.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                resp.getWriter().write(JsonHelper.error("Không thể xóa chủ đề khỏi cơ sở dữ liệu."));
+            }
+        } catch (NumberFormatException e) {
+            resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            resp.getWriter().write(JsonHelper.error("ID chủ đề không hợp lệ."));
+        }
+    }
 }
 
 ``
@@ -9029,7 +9190,9 @@ const API = {
     topics: {
         list: () => API.request('/topics/list'),
         get: id => API.request(`/topics/${encodeURIComponent(id)}`),
-        create: data => API.request('/topics', { method: 'POST', body: JSON.stringify(data) })
+        create: data => API.request('/topics', { method: 'POST', body: JSON.stringify(data) }),
+        update: (id, data) => API.request(`/topics/${encodeURIComponent(id)}`, { method: 'PUT', body: JSON.stringify(data) }),
+        delete: id => API.request(`/topics/${encodeURIComponent(id)}`, { method: 'DELETE' })
     },
     questions: {
         list: (topicId=null) => API.request(`/questions${topicId ? `?topicId=${encodeURIComponent(topicId)}` : ''}`),
@@ -11903,7 +12066,7 @@ function setupEventListeners() {
     }
 
     // Nút lưu tất cả câu hỏi vừa sinh vào DB
-    const btnImportAll = document.getElementById('btn-import-all-ai');
+    const btnImportAll = document.getElementById('btn-import-all-ai') || document.getElementById('btn-save-all-generated');
     if (btnImportAll) {
         btnImportAll.addEventListener('click', handleImportAllAiQuestions);
     }
@@ -11993,7 +12156,7 @@ async function loadInitialData() {
 }
 
 /**
- * Tải danh sách Chủ Đề để nạp vào các Dropdown và Datalist gợi ý
+ * Tải danh sách Chủ Đề để nạp vào Dropdowns, Datalist gợi ý và các bảng quản trị
  */
 async function loadTopics() {
     try {
@@ -12002,13 +12165,15 @@ async function loadTopics() {
         topicsMap = {};
 
         const filterSelect = document.getElementById('filter-topic');
-        const modalSelect = document.getElementById('modal-topic-id');
+        const modalSelect = document.getElementById('modal-topic') || document.getElementById('modal-topic-id');
         const topicDatalist = document.getElementById('topic-datalist');
+        const aiTopicDatalist = document.getElementById('ai-topics-datalist');
 
         // Reset options
         if (filterSelect) filterSelect.innerHTML = '<option value="">-- Tất cả chủ đề --</option>';
         if (modalSelect) modalSelect.innerHTML = '<option value="">-- Chọn chủ đề bài học --</option>';
         if (topicDatalist) topicDatalist.innerHTML = '';
+        if (aiTopicDatalist) aiTopicDatalist.innerHTML = '';
 
         allTopics.forEach(t => {
             topicsMap[t.topicId] = t.topicName;
@@ -12016,7 +12181,7 @@ async function loadTopics() {
             if (filterSelect) {
                 const opt1 = document.createElement('option');
                 opt1.value = t.topicId;
-                opt1.textContent = t.topicName;
+                opt1.textContent = `${t.topicName} (${t.questionCount || 0} câu)`;
                 filterSelect.appendChild(opt1);
             }
 
@@ -12032,21 +12197,211 @@ async function loadTopics() {
                 opt3.value = t.topicName;
                 topicDatalist.appendChild(opt3);
             }
+
+            if (aiTopicDatalist) {
+                const opt4 = document.createElement('option');
+                opt4.value = t.topicName;
+                aiTopicDatalist.appendChild(opt4);
+            }
         });
+
+        // Cập nhật số đếm KPI Blueprint
+        const kpiTopics = document.getElementById('kpi-topics');
+        if (kpiTopics) kpiTopics.textContent = allTopics.length;
+
+        // Render bảng quản lý chủ đề trong Modal
+        renderModalTopicsTable(allTopics);
+
+        // Render bảng quản lý môn học trong Admin Hub -> Courses
+        renderAdminCoursesTable(allTopics);
+
     } catch (err) {
         console.error('Lỗi tải danh mục chủ đề:', err);
     }
 }
 
 /**
- * Tạo môn học / chủ đề mới
+ * Render bảng danh sách chủ đề trong Modal quản lý chủ đề
+ */
+function renderModalTopicsTable(topics) {
+    const tbody = document.getElementById('modal-topics-tbody');
+    const countEl = document.getElementById('modal-topics-count');
+    if (countEl) countEl.textContent = topics.length;
+    if (!tbody) return;
+
+    if (topics.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-muted">Chưa có chủ đề nào trong hệ thống.</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = topics.map(t => `
+        <tr>
+            <td class="text-muted small">${t.topicId}</td>
+            <td><strong class="text-white">${escapeHtml(t.topicName)}</strong></td>
+            <td><small class="text-muted">${escapeHtml(t.description || 'Không có mô tả')}</small></td>
+            <td class="text-center">
+                <span class="badge" style="background: rgba(99, 102, 241, 0.2); color: #818cf8;">${t.questionCount || 0} câu</span>
+            </td>
+            <td class="text-end pe-2">
+                <button type="button" class="btn btn-sm btn-outline-info rounded-circle me-1" style="width: 30px; height: 30px; padding: 0;" title="Chỉnh sửa môn học" onclick="startEditTopic(${t.topicId}, '${escapeJs(t.topicName)}', '${escapeJs(t.description || '')}', ${t.displayOrder || 1})">
+                    <i class="fa-solid fa-pen-to-square" style="font-size: 0.75rem;"></i>
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-danger rounded-circle" style="width: 30px; height: 30px; padding: 0;" title="Xóa môn học" onclick="confirmDeleteTopic(${t.topicId}, '${escapeJs(t.topicName)}', ${t.questionCount || 0})">
+                    <i class="fa-solid fa-trash" style="font-size: 0.75rem;"></i>
+                </button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+/**
+ * Render bảng danh mục khóa học / môn học trong Admin Hub -> Courses
+ */
+function renderAdminCoursesTable(topics) {
+    const tbody = document.getElementById('admin-courses-tbody');
+    const countEl = document.getElementById('admin-topics-count');
+    if (countEl) countEl.textContent = topics.length;
+    if (!tbody) return;
+
+    if (topics.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-muted">Chưa có môn học nào được tạo.</td></tr>`;
+        return;
+    }
+
+    tbody.innerHTML = topics.map(t => `
+        <tr>
+            <td class="text-muted small">${t.topicId}</td>
+            <td>
+                <strong class="text-white">${escapeHtml(t.topicName)}</strong>
+                <span class="badge ms-2" style="background: rgba(16, 185, 129, 0.15); color: #34d399; font-size: 0.68rem;">Đang mở</span>
+            </td>
+            <td><small class="text-muted">${escapeHtml(t.description || 'Không có mô tả')}</small></td>
+            <td class="text-center">
+                <span class="badge" style="background: rgba(99, 102, 241, 0.2); color: #818cf8;">${t.questionCount || 0} câu</span>
+            </td>
+            <td class="text-end pe-3">
+                <button type="button" class="btn btn-sm btn-outline-info rounded-circle me-1" style="width: 30px; height: 30px; padding: 0;" title="Chỉnh sửa môn học" onclick="startEditTopic(${t.topicId}, '${escapeJs(t.topicName)}', '${escapeJs(t.description || '')}', ${t.displayOrder || 1})">
+                    <i class="fa-solid fa-pen-to-square" style="font-size: 0.75rem;"></i>
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-danger rounded-circle" style="width: 30px; height: 30px; padding: 0;" title="Xóa môn học" onclick="confirmDeleteTopic(${t.topicId}, '${escapeJs(t.topicName)}', ${t.questionCount || 0})">
+                    <i class="fa-solid fa-trash" style="font-size: 0.75rem;"></i>
+                </button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+/**
+ * Bắt đầu chỉnh sửa thông tin chủ đề
+ */
+function startEditTopic(topicId, topicName, description, displayOrder) {
+    const modalEl = document.getElementById('createTopicModal');
+    if (modalEl) {
+        const modalInstance = bootstrap.Modal.getOrCreateInstance(modalEl);
+        modalInstance.show();
+    }
+
+    const editIdInput = document.getElementById('topic-edit-id');
+    const nameInput = document.getElementById('new-topic-name');
+    const descInput = document.getElementById('new-topic-desc');
+    const orderInput = document.getElementById('new-topic-order');
+    const formHeader = document.getElementById('topic-form-header');
+    const saveBtnText = document.getElementById('btn-save-topic-text');
+    const cancelBtn = document.getElementById('btn-cancel-edit-topic');
+
+    if (editIdInput) editIdInput.value = topicId;
+    if (nameInput) {
+        nameInput.value = topicName;
+        nameInput.focus();
+    }
+    if (descInput) descInput.value = description || '';
+    if (orderInput) orderInput.value = displayOrder || 1;
+
+    if (formHeader) {
+        formHeader.innerHTML = `<i class="fa-solid fa-pen-to-square text-warning"></i><span>Chỉnh Sửa Môn Học: ${escapeHtml(topicName)}</span>`;
+    }
+    if (saveBtnText) saveBtnText.textContent = 'Cập Nhật Chủ Đề';
+    if (cancelBtn) cancelBtn.classList.remove('d-none');
+}
+window.startEditTopic = startEditTopic;
+
+/**
+ * Hủy chế độ chỉnh sửa chủ đề, quay lại form thêm mới
+ */
+function cancelEditTopic() {
+    const editIdInput = document.getElementById('topic-edit-id');
+    const nameInput = document.getElementById('new-topic-name');
+    const descInput = document.getElementById('new-topic-desc');
+    const orderInput = document.getElementById('new-topic-order');
+    const formHeader = document.getElementById('topic-form-header');
+    const saveBtnText = document.getElementById('btn-save-topic-text');
+    const cancelBtn = document.getElementById('btn-cancel-edit-topic');
+
+    if (editIdInput) editIdInput.value = '';
+    if (nameInput) nameInput.value = '';
+    if (descInput) descInput.value = '';
+    if (orderInput) orderInput.value = 1;
+
+    if (formHeader) {
+        formHeader.innerHTML = `<i class="fa-solid fa-square-plus text-primary"></i><span>Thêm Môn Học / Chủ Đề Mới</span>`;
+    }
+    if (saveBtnText) saveBtnText.textContent = 'Lưu Chủ Đề';
+    if (cancelBtn) cancelBtn.classList.add('d-none');
+}
+window.cancelEditTopic = cancelEditTopic;
+
+/**
+ * Xác nhận và xóa một chủ đề khỏi hệ thống
+ */
+function confirmDeleteTopic(topicId, topicName, questionCount) {
+    Swal.fire({
+        title: `Xóa chủ đề "${topicName}"?`,
+        html: `Chủ đề này hiện có <strong class="text-warning">${questionCount} câu hỏi</strong>.<br><br><span class="text-danger small">Cảnh báo: Hành động này sẽ xóa chủ đề và dọn dẹp các câu hỏi liên kết trong ngân hàng đề. Bạn có chắc chắn không?</span>`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#e71d36',
+        confirmButtonText: 'Đồng ý xóa',
+        cancelButtonText: 'Hủy'
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            try {
+                await API.topics.delete(topicId);
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Đã xóa chủ đề!',
+                    text: `Chủ đề "${topicName}" đã được xóa khỏi hệ thống.`,
+                    timer: 1800,
+                    showConfirmButton: false
+                });
+                cancelEditTopic();
+                await Promise.all([
+                    loadTopics(),
+                    loadQuestions(),
+                    loadTeacherStats()
+                ]);
+            } catch (err) {
+                Swal.fire('Lỗi khi xóa chủ đề', err.message || 'Không thể xóa chủ đề này.', 'error');
+            }
+        }
+    });
+}
+window.confirmDeleteTopic = confirmDeleteTopic;
+
+/**
+ * Thêm mới hoặc cập nhật chủ đề
  */
 async function handleCreateTopicSubmit(e) {
     if (e) e.preventDefault();
+    const editIdInput = document.getElementById('topic-edit-id');
     const nameInput = document.getElementById('new-topic-name');
     const descInput = document.getElementById('new-topic-desc');
+    const orderInput = document.getElementById('new-topic-order');
+
+    const isEdit = editIdInput && editIdInput.value.trim() !== '';
+    const editId = isEdit ? editIdInput.value.trim() : null;
     const topicName = nameInput ? nameInput.value.trim() : '';
     const description = descInput ? descInput.value.trim() : '';
+    const displayOrder = orderInput ? parseInt(orderInput.value, 10) || 99 : 99;
 
     if (!topicName) {
         Swal.fire('Lỗi', 'Vui lòng nhập tên môn học hoặc chủ đề.', 'warning');
@@ -12057,26 +12412,30 @@ async function handleCreateTopicSubmit(e) {
     if (btn) btn.disabled = true;
 
     try {
-        await API.topics.create({ topicName, description });
-        const modalEl = document.getElementById('createTopicModal');
-        if (modalEl) {
-            const inst = bootstrap.Modal.getInstance(modalEl);
-            if (inst) inst.hide();
+        if (isEdit) {
+            await API.topics.update(editId, { topicName, description, displayOrder });
+            Swal.fire({
+                icon: 'success',
+                title: 'Cập nhật thành công!',
+                text: `Chủ đề "${topicName}" đã được cập nhật thông tin.`,
+                timer: 1800,
+                showConfirmButton: false
+            });
+        } else {
+            await API.topics.create({ topicName, description, displayOrder });
+            Swal.fire({
+                icon: 'success',
+                title: 'Khởi tạo chủ đề thành công!',
+                text: `Chủ đề "${topicName}" đã sẵn sàng trên hệ thống.`,
+                timer: 1800,
+                showConfirmButton: false
+            });
         }
-        if (nameInput) nameInput.value = '';
-        if (descInput) descInput.value = '';
 
-        Swal.fire({
-            icon: 'success',
-            title: 'Khởi tạo chủ đề thành công!',
-            text: `Chủ đề "${topicName}" đã được lưu vào hệ thống.`,
-            timer: 2000,
-            showConfirmButton: false
-        });
-
+        cancelEditTopic();
         await loadTopics();
     } catch (err) {
-        Swal.fire('Lỗi', err.message || 'Không thể tạo chủ đề mới.', 'error');
+        Swal.fire('Lỗi', err.message || 'Không thể lưu chủ đề.', 'error');
     } finally {
         if (btn) btn.disabled = false;
     }
@@ -12538,6 +12897,12 @@ function escapeHtml(str) {
         .replace(/'/g, '&#039;');
 }
 
+function escapeJs(str) {
+    if (!str) return '';
+    return String(str).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+}
+window.escapeJs = escapeJs;
+
 /**
  * ══════════════════════════════════════════════════════════════
  * AI QUESTION GENERATOR STUDIO & TEACHER CO-PILOT
@@ -12550,7 +12915,7 @@ function escapeHtml(str) {
 async function handleAiGenerateSubmit(e) {
     if (e) e.preventDefault();
 
-    const topicInput = document.getElementById('ai-topic-input');
+    const topicInput = document.getElementById('ai-topic-name') || document.getElementById('ai-topic-input');
     const topicName = topicInput ? topicInput.value.trim() : '';
     if (!topicName) {
         Swal.fire({
@@ -12584,11 +12949,12 @@ async function handleAiGenerateSubmit(e) {
         return;
     }
 
-    const promptHint = document.getElementById('ai-custom-prompt').value.trim();
+    const promptHintInput = document.getElementById('ai-prompt-hint') || document.getElementById('ai-custom-prompt');
+    const promptHint = promptHintInput ? promptHintInput.value.trim() : '';
 
     const submitBtn = document.getElementById('btn-generate-ai');
-    const submitText = document.getElementById('btn-generate-text');
-    const originalText = submitText ? submitText.innerHTML : 'Sinh Bộ Câu Hỏi Bằng AI';
+    const submitText = document.getElementById('btn-generate-text') || submitBtn?.querySelector('span');
+    const originalText = submitText ? submitText.innerHTML : 'Khởi Tạo Câu Hỏi Bằng AI Ngay';
 
     try {
         if (submitBtn) submitBtn.disabled = true;
@@ -12617,7 +12983,7 @@ async function handleAiGenerateSubmit(e) {
 
         renderAiGeneratedCards(currentGeneratedQuestions, topicName);
 
-        const resultsWrapper = document.getElementById('ai-results-wrapper');
+        const resultsWrapper = document.getElementById('ai-generated-container') || document.getElementById('ai-results-wrapper');
         if (resultsWrapper) {
             resultsWrapper.style.display = 'block';
             resultsWrapper.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -12653,7 +13019,7 @@ function renderAiGeneratedCards(questions, topicName) {
     const badgeEl = document.getElementById('ai-target-topic-badge');
     if (badgeEl) badgeEl.textContent = topicName;
 
-    const container = document.getElementById('ai-generated-cards-container');
+    const container = document.getElementById('ai-questions-list') || document.getElementById('ai-generated-cards-container');
     if (!container) return;
 
     if (questions.length === 0) {
@@ -17402,8 +17768,14 @@ const AppUI = (() => {
 
                                     <form id="ai-generator-form">
                                         <div class="mb-3">
-                                            <label class="form-label small fw-semibold text-white">Chủ Đề Hoặc Môn Học <span class="text-danger">*</span></label>
-                                            <input type="text" class="ws-input" id="ai-topic-name" placeholder="Ví dụ: Lập trình Java hướng đối tượng, Cơ sở dữ liệu SQL..." required>
+                                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                                <label class="form-label small fw-semibold text-white mb-0">Chủ Đề Hoặc Môn Học <span class="text-danger">*</span></label>
+                                                <button type="button" class="btn btn-link text-decoration-none small p-0" style="color: #818cf8; font-size: 0.78rem;" onclick="document.getElementById('btn-open-topic-modal').click()">
+                                                    <i class="fa-solid fa-list-check me-1"></i>Xem / Quản lý danh sách môn
+                                                </button>
+                                            </div>
+                                            <input type="text" class="ws-input" id="ai-topic-name" list="ai-topics-datalist" placeholder="Nhập tên môn học (hoặc chọn từ danh sách)..." required autocomplete="off">
+                                            <datalist id="ai-topics-datalist"></datalist>
                                         </div>
 
                                         <div class="row g-2 mb-3">
@@ -17663,32 +18035,32 @@ const AppUI = (() => {
                                 </div>
                             </div>
 
-                            <!-- Sub-tab 3: Courses -->
+                            <!-- Sub-tab 3: Courses (Quản lý môn học) -->
                             <div id="admin-subtab-courses" class="admin-subpane py-2" style="display: none;">
                                 <div class="p-3 rounded-4" style="background: rgba(255,255,255,0.025); border: 1px solid var(--ws-border);">
-                                    <h6 class="text-white fw-bold mb-3"><i class="fa-solid fa-book-bookmark text-primary me-2"></i>Danh mục môn học & khóa đào tạo đang mở</h6>
+                                    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                                        <div>
+                                            <h6 class="text-white fw-bold mb-1"><i class="fa-solid fa-book-bookmark text-primary me-2"></i>Danh mục môn học & khóa đào tạo (<span id="admin-topics-count">0</span>)</h6>
+                                            <small class="text-muted">Quản trị danh mục kiến thức, cấu hình môn học và ngân hàng đề</small>
+                                        </div>
+                                        <button class="btn btn-sm btn-primary rounded-pill px-3" onclick="document.getElementById('btn-open-topic-modal').click()">
+                                            <i class="fa-solid fa-circle-plus me-1"></i>Thêm Môn Học Mới
+                                        </button>
+                                    </div>
                                     <div class="table-responsive">
                                         <table class="table table-ws align-middle mb-0">
                                             <thead>
                                                 <tr>
-                                                    <th>ID</th>
+                                                    <th style="width: 70px;">ID</th>
                                                     <th>MÔN HỌC / CHỦ ĐỀ</th>
-                                                    <th>TRẠNG THÁI</th>
-                                                    <th>AI CO-PILOT</th>
+                                                    <th>MÔ TẢ NỘI DUNG</th>
+                                                    <th style="width: 130px;" class="text-center">SỐ CÂU HỎI</th>
+                                                    <th style="width: 140px;" class="text-end pe-3">THAO TÁC</th>
                                                 </tr>
                                             </thead>
                                             <tbody id="admin-courses-tbody">
                                                 <tr>
-                                                    <td>1</td>
-                                                    <td><strong>Lập trình hướng đối tượng Java (OOP)</strong></td>
-                                                    <td><span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #34d399;">Đang mở</span></td>
-                                                    <td><span class="badge" style="background: rgba(6, 182, 212, 0.2); color: #38bdf8;"><i class="fa-solid fa-bolt me-1"></i>Active</span></td>
-                                                </tr>
-                                                <tr>
-                                                    <td>2</td>
-                                                    <td><strong>Cấu trúc dữ liệu cơ bản</strong></td>
-                                                    <td><span class="badge" style="background: rgba(16, 185, 129, 0.2); color: #34d399;">Đang mở</span></td>
-                                                    <td><span class="badge" style="background: rgba(6, 182, 212, 0.2); color: #38bdf8;"><i class="fa-solid fa-bolt me-1"></i>Active</span></td>
+                                                    <td colspan="5" class="text-center py-4 text-muted">Đang tải danh sách môn học...</td>
                                                 </tr>
                                             </tbody>
                                         </table>
@@ -17836,34 +18208,91 @@ const AppUI = (() => {
     </div>
 
     <!-- ═══════════════════════════════════════════════════════════════════ -->
-    <!-- MODAL THÊM CHỦ ĐỀ / MÔN HỌC MỚI -->
+    <!-- MODAL QUẢN LÝ MÔN HỌC & CHỦ ĐỀ (Xem, Thêm, Sửa, Xóa) -->
     <!-- ═══════════════════════════════════════════════════════════════════ -->
     <div class="modal fade" id="createTopicModal" tabindex="-1" aria-labelledby="createTopicModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
             <div class="modal-content modal-content-ws">
                 <div class="modal-header modal-header-ws">
-                    <h5 class="modal-title fw-bold text-white" id="createTopicModalLabel">
-                        <i class="fa-solid fa-folder-plus me-2 text-primary"></i>Thêm Môn Học / Chủ Đề Mới
-                    </h5>
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="rounded-3 p-2 d-flex align-items-center justify-content-center" style="background: rgba(99, 102, 241, 0.15); color: #818cf8; width: 36px; height: 36px;">
+                            <i class="fa-solid fa-folder-tree"></i>
+                        </div>
+                        <div>
+                            <h5 class="modal-title fw-bold text-white mb-0" id="createTopicModalLabel">
+                                Quản Lý Môn Học & Chủ Đề
+                            </h5>
+                            <small class="text-muted" style="font-size: 0.76rem;">Thêm mới, xem danh sách, chỉnh sửa và xóa chủ đề trong hệ thống</small>
+                        </div>
+                    </div>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-4">
-                    <form id="create-topic-form">
-                        <div class="mb-3">
-                            <label for="new-topic-name" class="form-label small fw-semibold text-muted">Tên Môn Học / Chủ Đề <span class="text-danger">*</span></label>
-                            <input type="text" class="ws-input" id="new-topic-name" placeholder="Ví dụ: Thiết Kế Web, Triết Học Mác-Lênin, Giải Tích 1..." required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="new-topic-desc" class="form-label small fw-semibold text-muted">Mô Tả Tóm Tắt</label>
-                            <textarea class="ws-input" id="new-topic-desc" rows="3" placeholder="Mục tiêu kiến thức, nội dung trọng tâm của chủ đề..."></textarea>
-                        </div>
-                        <div class="d-flex justify-content-end gap-2 pt-2">
-                            <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Hủy</button>
-                            <button type="submit" class="btn btn-primary rounded-pill px-4 fw-semibold" id="btn-save-topic">
-                                <i class="fa-solid fa-check me-1"></i>Khởi Tạo Chủ Đề
+                    <!-- Form Thêm / Chỉnh Sửa Chủ Đề -->
+                    <div class="p-3 rounded-4 mb-4" style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--ws-border);">
+                        <h6 class="text-white fw-bold mb-3 d-flex align-items-center gap-2" id="topic-form-header">
+                            <i class="fa-solid fa-square-plus text-primary"></i>
+                            <span>Thêm Môn Học / Chủ Đề Mới</span>
+                        </h6>
+                        <form id="create-topic-form">
+                            <input type="hidden" id="topic-edit-id" value="">
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-8">
+                                    <label for="new-topic-name" class="form-label small fw-semibold text-muted">Tên Môn Học / Chủ Đề <span class="text-danger">*</span></label>
+                                    <input type="text" class="ws-input" id="new-topic-name" placeholder="Ví dụ: Xử lý tiếng nói, Trí tuệ nhân tạo, Lập trình Java..." required>
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="new-topic-order" class="form-label small fw-semibold text-muted">Thứ tự ưu tiên</label>
+                                    <input type="number" class="ws-input" id="new-topic-order" value="1" min="1">
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="new-topic-desc" class="form-label small fw-semibold text-muted">Mô Tả Tóm Tắt</label>
+                                <input type="text" class="ws-input" id="new-topic-desc" placeholder="Mục tiêu kiến thức, nội dung trọng tâm của chủ đề...">
+                            </div>
+                            <div class="d-flex justify-content-end gap-2">
+                                <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-3 d-none" id="btn-cancel-edit-topic" onclick="cancelEditTopic()">
+                                    <i class="fa-solid fa-xmark me-1"></i>Hủy chỉnh sửa
+                                </button>
+                                <button type="submit" class="btn btn-primary btn-sm rounded-pill px-4 fw-semibold" id="btn-save-topic">
+                                    <i class="fa-solid fa-floppy-disk me-1"></i><span id="btn-save-topic-text">Lưu Chủ Đề</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Bảng Danh Sách Chủ Đề Hiện Có -->
+                    <div>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h6 class="text-white fw-bold mb-0">
+                                <i class="fa-solid fa-layer-group text-info me-2"></i>Danh Sách Các Chủ Đề Hiện Có (<span id="modal-topics-count">0</span>)
+                            </h6>
+                            <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-2.5 py-1 text-muted small" onclick="loadTopics()">
+                                <i class="fa-solid fa-arrows-rotate me-1"></i>Làm mới
                             </button>
                         </div>
-                    </form>
+                        <div class="table-responsive" style="max-height: 280px; overflow-y: auto;">
+                            <table class="table table-ws align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 50px;">ID</th>
+                                        <th>Tên Chủ Đề</th>
+                                        <th>Mô Tả</th>
+                                        <th style="width: 90px;" class="text-center">Số Câu</th>
+                                        <th style="width: 100px;" class="text-end pe-2">Thao Tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="modal-topics-tbody">
+                                    <tr>
+                                        <td colspan="5" class="text-center py-4 text-muted">Đang tải danh sách chủ đề...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer modal-footer-ws py-2">
+                    <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-4" data-bs-dismiss="modal">Đóng</button>
                 </div>
             </div>
         </div>

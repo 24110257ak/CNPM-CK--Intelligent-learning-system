@@ -13,6 +13,8 @@ public class Topic {
     private String description;
     private Integer parentTopicId;   // null nếu là chủ đề gốc
     private int displayOrder;
+    private Integer createdBy;       // null nếu là chủ đề mặc định do hệ thống tạo
+    private String creatorName;      // Tên giảng viên tạo môn học (được JOIN từ users)
     private LocalDateTime createdAt;
 
     // ── Constructors ──────────────────────────────────────────────────────
@@ -23,6 +25,13 @@ public class Topic {
         this.topicName = topicName;
         this.description = description;
         this.displayOrder = displayOrder;
+    }
+
+    public Topic(String topicName, String description, int displayOrder, Integer createdBy) {
+        this.topicName = topicName;
+        this.description = description;
+        this.displayOrder = displayOrder;
+        this.createdBy = createdBy;
     }
 
     // ── Getters & Setters ─────────────────────────────────────────────────
@@ -41,6 +50,12 @@ public class Topic {
 
     public int getDisplayOrder() { return displayOrder; }
     public void setDisplayOrder(int displayOrder) { this.displayOrder = displayOrder; }
+
+    public Integer getCreatedBy() { return createdBy; }
+    public void setCreatedBy(Integer createdBy) { this.createdBy = createdBy; }
+
+    public String getCreatorName() { return creatorName; }
+    public void setCreatorName(String creatorName) { this.creatorName = creatorName; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

@@ -312,6 +312,37 @@ async function loadTopics() {
 /**
  * Render bảng danh sách chủ đề trong Modal quản lý chủ đề
  */
+/**
+ * Trả về badge hiển thị người tạo môn học
+ */
+function getCreatorBadge(t) {
+    const isOwner = (currentUser && t.createdBy && Number(t.createdBy) === Number(currentUser.userId));
+    if (isOwner) {
+        return `<span class="badge" style="background: rgba(99, 102, 241, 0.2); color: #818cf8; font-weight: 500;"><i class="fa-solid fa-user-check me-1"></i>Bạn</span>`;
+    }
+    if (t.creatorName && t.creatorName !== 'Hệ thống') {
+        return `<span class="badge" style="background: rgba(148, 163, 184, 0.15); color: #cbd5e1; font-weight: 400;"><i class="fa-solid fa-chalkboard-user me-1 text-muted"></i>${escapeHtml(t.creatorName)}</span>`;
+    }
+    return `<span class="badge" style="background: rgba(100, 116, 139, 0.12); color: #94a3b8; font-weight: 400;"><i class="fa-solid fa-server me-1"></i>Hệ thống</span>`;
+}
+
+/**
+ * Thông báo khi người dùng click vào nút hành động mà không có quyền sở hữu
+ */
+function notifyNoPermission(action, creatorName) {
+    Swal.fire({
+        icon: 'info',
+        title: 'Quyền hạn bị giới hạn',
+        html: `Bạn có thể <strong>dùng chung môn học này</strong> để giảng dạy, sinh câu hỏi và cho học sinh ôn luyện.<br><br>Tuy nhiên, quyền <strong>${action}</strong> chỉ dành riêng cho <strong>${escapeHtml(creatorName || 'giảng viên đã tạo môn')}</strong> hoặc Quản trị viên hệ thống.`,
+        confirmButtonColor: '#4f46e5',
+        confirmButtonText: 'Đã hiểu'
+    });
+}
+window.notifyNoPermission = notifyNoPermission;
+
+/**
+ * Render bảng danh sách chủ đề trong Modal quản lý chủ đề
+ */
 function renderModalTopicsTable(topics) {
     const tbody = document.getElementById('modal-topics-tbody');
     const countEl = document.getElementById('modal-topics-count');
@@ -319,28 +350,46 @@ function renderModalTopicsTable(topics) {
     if (!tbody) return;
 
     if (topics.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-muted">Chưa có chủ đề nào trong hệ thống.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-muted">Chưa có chủ đề nào trong hệ thống.</td></tr>`;
         return;
     }
 
-    tbody.innerHTML = topics.map(t => `
-        <tr>
-            <td class="text-muted small">${t.topicId}</td>
-            <td><strong class="text-white">${escapeHtml(t.topicName)}</strong></td>
-            <td><small class="text-muted">${escapeHtml(t.description || 'Không có mô tả')}</small></td>
-            <td class="text-center">
-                <span class="badge" style="background: rgba(99, 102, 241, 0.2); color: #818cf8;">${t.questionCount || 0} câu</span>
-            </td>
-            <td class="text-end pe-2">
-                <button type="button" class="btn btn-sm btn-outline-info rounded-circle me-1" style="width: 30px; height: 30px; padding: 0;" title="Chỉnh sửa môn học" onclick="startEditTopic(${t.topicId}, '${escapeJs(t.topicName)}', '${escapeJs(t.description || '')}', ${t.displayOrder || 1})">
-                    <i class="fa-solid fa-pen-to-square" style="font-size: 0.75rem;"></i>
-                </button>
-                <button type="button" class="btn btn-sm btn-outline-danger rounded-circle" style="width: 30px; height: 30px; padding: 0;" title="Xóa môn học" onclick="confirmDeleteTopic(${t.topicId}, '${escapeJs(t.topicName)}', ${t.questionCount || 0})">
-                    <i class="fa-solid fa-trash" style="font-size: 0.75rem;"></i>
-                </button>
-            </td>
-        </tr>
-    `).join('');
+    tbody.innerHTML = topics.map(t => {
+        const canEdit = Boolean(t.canEdit);
+        const canDelete = Boolean(t.canDelete);
+
+        const editBtn = canEdit 
+            ? `<button type="button" class="btn btn-sm btn-outline-info rounded-circle me-1" style="width: 30px; height: 30px; padding: 0;" title="Chỉnh sửa môn học" onclick="startEditTopic(${t.topicId}, '${escapeJs(t.topicName)}', '${escapeJs(t.description || '')}', ${t.displayOrder || 1})">
+                <i class="fa-solid fa-pen-to-square" style="font-size: 0.75rem;"></i>
+               </button>`
+            : `<button type="button" class="btn btn-sm btn-outline-secondary rounded-circle me-1" style="width: 30px; height: 30px; padding: 0; opacity: 0.35;" title="Chỉ người tạo (${escapeJs(t.creatorName || '')}) mới có quyền sửa" onclick="notifyNoPermission('chỉnh sửa', '${escapeJs(t.creatorName || '')}')">
+                <i class="fa-solid fa-pen-to-square" style="font-size: 0.75rem;"></i>
+               </button>`;
+
+        const deleteBtn = canDelete
+            ? `<button type="button" class="btn btn-sm btn-outline-danger rounded-circle" style="width: 30px; height: 30px; padding: 0;" title="Xóa môn học" onclick="confirmDeleteTopic(${t.topicId}, '${escapeJs(t.topicName)}', ${t.questionCount || 0})">
+                <i class="fa-solid fa-trash" style="font-size: 0.75rem;"></i>
+               </button>`
+            : `<button type="button" class="btn btn-sm btn-outline-secondary rounded-circle" style="width: 30px; height: 30px; padding: 0; opacity: 0.35;" title="Chỉ người tạo (${escapeJs(t.creatorName || '')}) mới có quyền xóa" onclick="notifyNoPermission('xóa bỏ', '${escapeJs(t.creatorName || '')}')">
+                <i class="fa-solid fa-trash" style="font-size: 0.75rem;"></i>
+               </button>`;
+
+        return `
+            <tr>
+                <td class="text-muted small">${t.topicId}</td>
+                <td><strong class="text-white">${escapeHtml(t.topicName)}</strong></td>
+                <td><small class="text-muted">${escapeHtml(t.description || 'Không có mô tả')}</small></td>
+                <td>${getCreatorBadge(t)}</td>
+                <td class="text-center">
+                    <span class="badge" style="background: rgba(99, 102, 241, 0.2); color: #818cf8;">${t.questionCount || 0} câu</span>
+                </td>
+                <td class="text-end pe-2">
+                    ${editBtn}
+                    ${deleteBtn}
+                </td>
+            </tr>
+        `;
+    }).join('');
 }
 
 /**
@@ -353,31 +402,49 @@ function renderAdminCoursesTable(topics) {
     if (!tbody) return;
 
     if (topics.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-muted">Chưa có môn học nào được tạo.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-muted">Chưa có môn học nào được tạo.</td></tr>`;
         return;
     }
 
-    tbody.innerHTML = topics.map(t => `
-        <tr>
-            <td class="text-muted small">${t.topicId}</td>
-            <td>
-                <strong class="text-white">${escapeHtml(t.topicName)}</strong>
-                <span class="badge ms-2" style="background: rgba(16, 185, 129, 0.15); color: #34d399; font-size: 0.68rem;">Đang mở</span>
-            </td>
-            <td><small class="text-muted">${escapeHtml(t.description || 'Không có mô tả')}</small></td>
-            <td class="text-center">
-                <span class="badge" style="background: rgba(99, 102, 241, 0.2); color: #818cf8;">${t.questionCount || 0} câu</span>
-            </td>
-            <td class="text-end pe-3">
-                <button type="button" class="btn btn-sm btn-outline-info rounded-circle me-1" style="width: 30px; height: 30px; padding: 0;" title="Chỉnh sửa môn học" onclick="startEditTopic(${t.topicId}, '${escapeJs(t.topicName)}', '${escapeJs(t.description || '')}', ${t.displayOrder || 1})">
-                    <i class="fa-solid fa-pen-to-square" style="font-size: 0.75rem;"></i>
-                </button>
-                <button type="button" class="btn btn-sm btn-outline-danger rounded-circle" style="width: 30px; height: 30px; padding: 0;" title="Xóa môn học" onclick="confirmDeleteTopic(${t.topicId}, '${escapeJs(t.topicName)}', ${t.questionCount || 0})">
-                    <i class="fa-solid fa-trash" style="font-size: 0.75rem;"></i>
-                </button>
-            </td>
-        </tr>
-    `).join('');
+    tbody.innerHTML = topics.map(t => {
+        const canEdit = Boolean(t.canEdit);
+        const canDelete = Boolean(t.canDelete);
+
+        const editBtn = canEdit 
+            ? `<button type="button" class="btn btn-sm btn-outline-info rounded-circle me-1" style="width: 30px; height: 30px; padding: 0;" title="Chỉnh sửa môn học" onclick="startEditTopic(${t.topicId}, '${escapeJs(t.topicName)}', '${escapeJs(t.description || '')}', ${t.displayOrder || 1})">
+                <i class="fa-solid fa-pen-to-square" style="font-size: 0.75rem;"></i>
+               </button>`
+            : `<button type="button" class="btn btn-sm btn-outline-secondary rounded-circle me-1" style="width: 30px; height: 30px; padding: 0; opacity: 0.35;" title="Chỉ người tạo (${escapeJs(t.creatorName || '')}) mới có quyền sửa" onclick="notifyNoPermission('chỉnh sửa', '${escapeJs(t.creatorName || '')}')">
+                <i class="fa-solid fa-pen-to-square" style="font-size: 0.75rem;"></i>
+               </button>`;
+
+        const deleteBtn = canDelete
+            ? `<button type="button" class="btn btn-sm btn-outline-danger rounded-circle" style="width: 30px; height: 30px; padding: 0;" title="Xóa môn học" onclick="confirmDeleteTopic(${t.topicId}, '${escapeJs(t.topicName)}', ${t.questionCount || 0})">
+                <i class="fa-solid fa-trash" style="font-size: 0.75rem;"></i>
+               </button>`
+            : `<button type="button" class="btn btn-sm btn-outline-secondary rounded-circle" style="width: 30px; height: 30px; padding: 0; opacity: 0.35;" title="Chỉ người tạo (${escapeJs(t.creatorName || '')}) mới có quyền xóa" onclick="notifyNoPermission('xóa bỏ', '${escapeJs(t.creatorName || '')}')">
+                <i class="fa-solid fa-trash" style="font-size: 0.75rem;"></i>
+               </button>`;
+
+        return `
+            <tr>
+                <td class="text-muted small">${t.topicId}</td>
+                <td>
+                    <strong class="text-white">${escapeHtml(t.topicName)}</strong>
+                    <span class="badge ms-2" style="background: rgba(16, 185, 129, 0.15); color: #34d399; font-size: 0.68rem;">Đang mở</span>
+                </td>
+                <td><small class="text-muted">${escapeHtml(t.description || 'Không có mô tả')}</small></td>
+                <td>${getCreatorBadge(t)}</td>
+                <td class="text-center">
+                    <span class="badge" style="background: rgba(99, 102, 241, 0.2); color: #818cf8;">${t.questionCount || 0} câu</span>
+                </td>
+                <td class="text-end pe-3">
+                    ${editBtn}
+                    ${deleteBtn}
+                </td>
+            </tr>
+        `;
+    }).join('');
 }
 
 /**

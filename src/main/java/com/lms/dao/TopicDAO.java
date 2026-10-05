@@ -18,7 +18,10 @@ public class TopicDAO {
      */
     public List<Topic> findAll() {
         List<Topic> topics = new ArrayList<>();
-        String sql = "SELECT * FROM topics ORDER BY display_order ASC";
+        String sql = "SELECT t.*, u.full_name AS creator_name "
+                   + "FROM topics t "
+                   + "LEFT JOIN users u ON t.created_by = u.user_id "
+                   + "ORDER BY t.display_order ASC, t.topic_id ASC";
         try (Connection conn = DatabaseUtil.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
@@ -35,7 +38,10 @@ public class TopicDAO {
      * Tìm chủ đề theo ID.
      */
     public Optional<Topic> findById(int topicId) {
-        String sql = "SELECT * FROM topics WHERE topic_id = ?";
+        String sql = "SELECT t.*, u.full_name AS creator_name "
+                   + "FROM topics t "
+                   + "LEFT JOIN users u ON t.created_by = u.user_id "
+                   + "WHERE t.topic_id = ?";
         try (Connection conn = DatabaseUtil.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, topicId);
@@ -55,7 +61,10 @@ public class TopicDAO {
      */
     public Optional<Topic> findByName(String topicName) {
         if (topicName == null || topicName.isBlank()) return Optional.empty();
-        String sql = "SELECT * FROM topics WHERE LOWER(topic_name) = LOWER(?) LIMIT 1";
+        String sql = "SELECT t.*, u.full_name AS creator_name "
+                   + "FROM topics t "
+                   + "LEFT JOIN users u ON t.created_by = u.user_id "
+                   + "WHERE LOWER(t.topic_name) = LOWER(?) LIMIT 1";
         try (Connection conn = DatabaseUtil.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, topicName.trim());
@@ -71,11 +80,11 @@ public class TopicDAO {
     }
 
     /**
-     * Tạo chủ đề / môn học mới.
+     * Tạo chủ đề / môn học mới có lưu thông tin người tạo (giảng viên).
      */
     public Topic create(Topic topic) {
-        String sql = "INSERT INTO topics (topic_name, description, parent_topic_id, display_order) "
-                   + "VALUES (?, ?, ?, ?) RETURNING topic_id, created_at";
+        String sql = "INSERT INTO topics (topic_name, description, parent_topic_id, display_order, created_by) "
+                   + "VALUES (?, ?, ?, ?, ?) RETURNING topic_id, created_at";
         try (Connection conn = DatabaseUtil.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, topic.getTopicName().trim());
@@ -86,6 +95,12 @@ public class TopicDAO {
                 ps.setNull(3, Types.INTEGER);
             }
             ps.setInt(4, topic.getDisplayOrder() > 0 ? topic.getDisplayOrder() : 99);
+            if (topic.getCreatedBy() != null) {
+                ps.setInt(5, topic.getCreatedBy());
+            } else {
+                ps.setNull(5, Types.INTEGER);
+            }
+
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     topic.setTopicId(rs.getInt("topic_id"));
@@ -101,9 +116,9 @@ public class TopicDAO {
     }
 
     /**
-     * Tìm chủ đề theo tên hoặc tự động tạo mới nếu chưa tồn tại.
+     * Tìm chủ đề theo tên hoặc tự động tạo mới nếu chưa tồn tại (kèm createdBy).
      */
-    public Topic findOrCreate(String topicName, String description) {
+    public Topic findOrCreate(String topicName, String description, Integer createdBy) {
         Optional<Topic> existing = findByName(topicName);
         if (existing.isPresent()) {
             return existing.get();
@@ -112,7 +127,12 @@ public class TopicDAO {
         newTopic.setTopicName(topicName.trim());
         newTopic.setDescription(description != null ? description : "Chủ đề do người dùng khởi tạo");
         newTopic.setDisplayOrder(99);
+        newTopic.setCreatedBy(createdBy);
         return create(newTopic);
+    }
+
+    public Topic findOrCreate(String topicName, String description) {
+        return findOrCreate(topicName, description, null);
     }
 
     /**
@@ -227,6 +247,16 @@ public class TopicDAO {
         t.setDisplayOrder(rs.getInt("display_order"));
         Timestamp createdAt = rs.getTimestamp("created_at");
         t.setCreatedAt(createdAt != null ? createdAt.toLocalDateTime() : null);
+
+        try {
+            int cb = rs.getInt("created_by");
+            t.setCreatedBy(rs.wasNull() ? null : cb);
+        } catch (SQLException ignored) {}
+
+        try {
+            t.setCreatorName(rs.getString("creator_name"));
+        } catch (SQLException ignored) {}
+
         return t;
     }
 }

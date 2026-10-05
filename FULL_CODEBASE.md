@@ -1,6 +1,6 @@
 ﻿# TOAN BO MA NGUON DU AN - HE THONG HOC TAP THONG MINH (INTELLIGENT LMS)
 
-> **Thoi gian tao file:** 2026-10-05 10:29:39
+> **Thoi gian tao file:** 2026-10-05 10:42:27
 > **Tong so file:** 58
 > **Muc dich:** Gom toan bo source code thanh 1 file duy nhat de gui cho ben thu ba xem xet, danh gia va gop y.
 
@@ -872,6 +872,7 @@ CREATE TABLE IF NOT EXISTS topics (
     description     TEXT          NULL,
     parent_topic_id INT           NULL REFERENCES topics(topic_id),
     display_order   INT           NOT NULL DEFAULT 0,
+    created_by      INT           NULL REFERENCES users(user_id) ON DELETE SET NULL,
     created_at      TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -1805,6 +1806,8 @@ public class Topic {
     private String description;
     private Integer parentTopicId;   // null nếu là chủ đề gốc
     private int displayOrder;
+    private Integer createdBy;       // null nếu là chủ đề mặc định do hệ thống tạo
+    private String creatorName;      // Tên giảng viên tạo môn học (được JOIN từ users)
     private LocalDateTime createdAt;
 
     // ── Constructors ──────────────────────────────────────────────────────
@@ -1815,6 +1818,13 @@ public class Topic {
         this.topicName = topicName;
         this.description = description;
         this.displayOrder = displayOrder;
+    }
+
+    public Topic(String topicName, String description, int displayOrder, Integer createdBy) {
+        this.topicName = topicName;
+        this.description = description;
+        this.displayOrder = displayOrder;
+        this.createdBy = createdBy;
     }
 
     // ── Getters & Setters ─────────────────────────────────────────────────
@@ -1833,6 +1843,12 @@ public class Topic {
 
     public int getDisplayOrder() { return displayOrder; }
     public void setDisplayOrder(int displayOrder) { this.displayOrder = displayOrder; }
+
+    public Integer getCreatedBy() { return createdBy; }
+    public void setCreatedBy(Integer createdBy) { this.createdBy = createdBy; }
+
+    public String getCreatorName() { return creatorName; }
+    public void setCreatorName(String creatorName) { this.creatorName = creatorName; }
 
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
@@ -2857,6 +2873,22 @@ public class DatabaseUtil {
                     stmt.execute(pgSeedTagsSql);
                 } catch (Exception ignored) {}
 
+                // PostgreSQL: Bổ sung cột created_by cho bảng topics để phân quyền người tạo môn học
+                String pgTopicCreatedBy = "DO $$ "
+                        + "BEGIN "
+                        + "    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name='topics') THEN "
+                        + "        IF NOT EXISTS ( "
+                        + "            SELECT 1 FROM information_schema.columns "
+                        + "            WHERE table_name='topics' AND column_name='created_by' "
+                        + "        ) THEN "
+                        + "            ALTER TABLE topics ADD COLUMN created_by INT NULL REFERENCES users(user_id) ON DELETE SET NULL; "
+                        + "        END IF; "
+                        + "    END IF; "
+                        + "END $$;";
+                try {
+                    stmt.execute(pgTopicCreatedBy);
+                } catch (Exception ignored) {}
+
                 // PostgreSQL: Bảng thảo luận & bình luận câu hỏi (Forum)
                 stmt.execute("CREATE TABLE IF NOT EXISTS question_comments ("
                         + "comment_id SERIAL PRIMARY KEY, "
@@ -2980,7 +3012,19 @@ public class DatabaseUtil {
                 try {
                     stmt.execute(sqlServerDiscussionTables);
                 } catch (Exception ignored) {}
-                System.out.println("[DatabaseUtil] ✅ SQL Server Auto-Migration: Cột [misconception_tag] và bảng [question_comments, question_ratings] đã sẵn sàng!");
+
+                String sqlServerTopicCreatedBy = "IF NOT EXISTS (\n"
+                        + "    SELECT * FROM sys.columns \n"
+                        + "    WHERE object_id = OBJECT_ID('topics') AND name = 'created_by'\n"
+                        + ")\n"
+                        + "BEGIN\n"
+                        + "    ALTER TABLE topics ADD created_by INT NULL FOREIGN KEY REFERENCES users(user_id) ON DELETE SET NULL;\n"
+                        + "END";
+                try {
+                    stmt.execute(sqlServerTopicCreatedBy);
+                } catch (Exception ignored) {}
+
+                System.out.println("[DatabaseUtil] ✅ SQL Server Auto-Migration: Cột [misconception_tag, created_by] và bảng [question_comments, question_ratings] đã sẵn sàng!");
             }
         } catch (Exception e) {
             System.err.println("[DatabaseUtil] ⚠️ Cảnh báo Auto-Migration: " + e.getMessage());
@@ -4153,7 +4197,10 @@ public class TopicDAO {
      */
     public List<Topic> findAll() {
         List<Topic> topics = new ArrayList<>();
-        String sql = "SELECT * FROM topics ORDER BY display_order ASC";
+        String sql = "SELECT t.*, u.full_name AS creator_name "
+                   + "FROM topics t "
+                   + "LEFT JOIN users u ON t.created_by = u.user_id "
+                   + "ORDER BY t.display_order ASC, t.topic_id ASC";
         try (Connection conn = DatabaseUtil.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
@@ -4170,7 +4217,10 @@ public class TopicDAO {
      * Tìm chủ đề theo ID.
      */
     public Optional<Topic> findById(int topicId) {
-        String sql = "SELECT * FROM topics WHERE topic_id = ?";
+        String sql = "SELECT t.*, u.full_name AS creator_name "
+                   + "FROM topics t "
+                   + "LEFT JOIN users u ON t.created_by = u.user_id "
+                   + "WHERE t.topic_id = ?";
         try (Connection conn = DatabaseUtil.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, topicId);
@@ -4190,7 +4240,10 @@ public class TopicDAO {
      */
     public Optional<Topic> findByName(String topicName) {
         if (topicName == null || topicName.isBlank()) return Optional.empty();
-        String sql = "SELECT * FROM topics WHERE LOWER(topic_name) = LOWER(?) LIMIT 1";
+        String sql = "SELECT t.*, u.full_name AS creator_name "
+                   + "FROM topics t "
+                   + "LEFT JOIN users u ON t.created_by = u.user_id "
+                   + "WHERE LOWER(t.topic_name) = LOWER(?) LIMIT 1";
         try (Connection conn = DatabaseUtil.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, topicName.trim());
@@ -4206,11 +4259,11 @@ public class TopicDAO {
     }
 
     /**
-     * Tạo chủ đề / môn học mới.
+     * Tạo chủ đề / môn học mới có lưu thông tin người tạo (giảng viên).
      */
     public Topic create(Topic topic) {
-        String sql = "INSERT INTO topics (topic_name, description, parent_topic_id, display_order) "
-                   + "VALUES (?, ?, ?, ?) RETURNING topic_id, created_at";
+        String sql = "INSERT INTO topics (topic_name, description, parent_topic_id, display_order, created_by) "
+                   + "VALUES (?, ?, ?, ?, ?) RETURNING topic_id, created_at";
         try (Connection conn = DatabaseUtil.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, topic.getTopicName().trim());
@@ -4221,6 +4274,12 @@ public class TopicDAO {
                 ps.setNull(3, Types.INTEGER);
             }
             ps.setInt(4, topic.getDisplayOrder() > 0 ? topic.getDisplayOrder() : 99);
+            if (topic.getCreatedBy() != null) {
+                ps.setInt(5, topic.getCreatedBy());
+            } else {
+                ps.setNull(5, Types.INTEGER);
+            }
+
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
                     topic.setTopicId(rs.getInt("topic_id"));
@@ -4236,9 +4295,9 @@ public class TopicDAO {
     }
 
     /**
-     * Tìm chủ đề theo tên hoặc tự động tạo mới nếu chưa tồn tại.
+     * Tìm chủ đề theo tên hoặc tự động tạo mới nếu chưa tồn tại (kèm createdBy).
      */
-    public Topic findOrCreate(String topicName, String description) {
+    public Topic findOrCreate(String topicName, String description, Integer createdBy) {
         Optional<Topic> existing = findByName(topicName);
         if (existing.isPresent()) {
             return existing.get();
@@ -4247,7 +4306,12 @@ public class TopicDAO {
         newTopic.setTopicName(topicName.trim());
         newTopic.setDescription(description != null ? description : "Chủ đề do người dùng khởi tạo");
         newTopic.setDisplayOrder(99);
+        newTopic.setCreatedBy(createdBy);
         return create(newTopic);
+    }
+
+    public Topic findOrCreate(String topicName, String description) {
+        return findOrCreate(topicName, description, null);
     }
 
     /**
@@ -4362,6 +4426,16 @@ public class TopicDAO {
         t.setDisplayOrder(rs.getInt("display_order"));
         Timestamp createdAt = rs.getTimestamp("created_at");
         t.setCreatedAt(createdAt != null ? createdAt.toLocalDateTime() : null);
+
+        try {
+            int cb = rs.getInt("created_by");
+            t.setCreatedBy(rs.wasNull() ? null : cb);
+        } catch (SQLException ignored) {}
+
+        try {
+            t.setCreatorName(rs.getString("creator_name"));
+        } catch (SQLException ignored) {}
+
         return t;
     }
 }
@@ -7579,24 +7653,29 @@ package com.lms.servlet;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.lms.dao.TopicDAO;
+import com.lms.dao.UserDAO;
 import com.lms.model.Topic;
+import com.lms.model.User;
 import com.lms.util.JsonHelper;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
 /**
- * Controller cung cấp danh sách chủ đề học tập và chi tiết chủ đề.
+ * Controller cung cấp danh sách chủ đề học tập, chi tiết chủ đề
+ * và quản lý phân quyền (chỉ người tạo môn hoặc Admin mới có quyền xóa/sửa).
  */
 @WebServlet(name = "TopicServlet", urlPatterns = {"/api/topics", "/api/topics/*"})
 public class TopicServlet extends HttpServlet {
 
     private final TopicDAO topicDAO = new TopicDAO();
+    private final UserDAO userDAO = new UserDAO();
 
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
@@ -7604,15 +7683,22 @@ public class TopicServlet extends HttpServlet {
         String pathInfo = req.getPathInfo();
 
         if (pathInfo == null || "/".equals(pathInfo) || "/list".equals(pathInfo)) {
-            handleListTopics(resp);
+            handleListTopics(req, resp);
         } else {
-            handleGetTopicDetail(pathInfo.substring(1), resp);
+            handleGetTopicDetail(req, pathInfo.substring(1), resp);
         }
     }
 
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         resp.setContentType("application/json;charset=UTF-8");
+        User currentUser = getAuthenticatedUser(req);
+        if (currentUser == null) {
+            resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            resp.getWriter().write(JsonHelper.error("Vui lòng đăng nhập để thêm môn học / chủ đề mới."));
+            return;
+        }
+
         JsonObject body = JsonHelper.parseRequestBody(req);
         if (body == null || !body.has("topicName") || body.get("topicName").getAsString().trim().isEmpty()) {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
@@ -7624,18 +7710,26 @@ public class TopicServlet extends HttpServlet {
         String description = body.has("description") && !body.get("description").isJsonNull()
                 ? body.get("description").getAsString().trim() : "";
 
-        Topic created = topicDAO.findOrCreate(topicName, description);
+        Integer createdBy = currentUser.getUserId();
+        Topic created = topicDAO.findOrCreate(topicName, description, createdBy);
+
         JsonObject data = new JsonObject();
         data.addProperty("topicId", created.getTopicId());
         data.addProperty("topicName", created.getTopicName());
         data.addProperty("description", created.getDescription());
         data.addProperty("displayOrder", created.getDisplayOrder());
+        data.addProperty("createdBy", created.getCreatedBy());
+        data.addProperty("creatorName", currentUser.getFullName() != null ? currentUser.getFullName() : currentUser.getUsername());
+        data.addProperty("canEdit", true);
+        data.addProperty("canDelete", true);
 
         resp.setStatus(HttpServletResponse.SC_CREATED);
         resp.getWriter().write(JsonHelper.success("Chủ đề đã sẵn sàng", data));
     }
 
-    private void handleListTopics(HttpServletResponse resp) throws IOException {
+    private void handleListTopics(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+        User currentUser = getAuthenticatedUser(req);
+        boolean isAdmin = currentUser != null && "admin".equalsIgnoreCase(currentUser.getRole());
         List<Topic> topics = topicDAO.findAll();
         JsonArray array = new JsonArray();
 
@@ -7647,19 +7741,29 @@ public class TopicServlet extends HttpServlet {
             obj.addProperty("parentTopicId", t.getParentTopicId());
             obj.addProperty("displayOrder", t.getDisplayOrder());
             obj.addProperty("questionCount", topicDAO.countQuestions(t.getTopicId()));
+            obj.addProperty("createdBy", t.getCreatedBy());
+            obj.addProperty("creatorName", t.getCreatorName() != null ? t.getCreatorName() : "Hệ thống");
+
+            boolean isOwner = currentUser != null && t.getCreatedBy() != null && t.getCreatedBy().equals(currentUser.getUserId());
+            obj.addProperty("canEdit", isAdmin || isOwner);
+            obj.addProperty("canDelete", isAdmin || isOwner);
             array.add(obj);
         }
 
         resp.getWriter().write(JsonHelper.success("Lấy danh sách chủ đề thành công", array));
     }
 
-    private void handleGetTopicDetail(String topicIdStr, HttpServletResponse resp) throws IOException {
+    private void handleGetTopicDetail(HttpServletRequest req, String topicIdStr, HttpServletResponse resp) throws IOException {
         try {
             int topicId = Integer.parseInt(topicIdStr);
             Optional<Topic> topicOpt = topicDAO.findById(topicId);
 
             if (topicOpt.isPresent()) {
                 Topic t = topicOpt.get();
+                User currentUser = getAuthenticatedUser(req);
+                boolean isAdmin = currentUser != null && "admin".equalsIgnoreCase(currentUser.getRole());
+                boolean isOwner = currentUser != null && t.getCreatedBy() != null && t.getCreatedBy().equals(currentUser.getUserId());
+
                 JsonObject obj = new JsonObject();
                 obj.addProperty("topicId", t.getTopicId());
                 obj.addProperty("topicName", t.getTopicName());
@@ -7667,6 +7771,10 @@ public class TopicServlet extends HttpServlet {
                 obj.addProperty("parentTopicId", t.getParentTopicId());
                 obj.addProperty("displayOrder", t.getDisplayOrder());
                 obj.addProperty("questionCount", topicDAO.countQuestions(t.getTopicId()));
+                obj.addProperty("createdBy", t.getCreatedBy());
+                obj.addProperty("creatorName", t.getCreatorName() != null ? t.getCreatorName() : "Hệ thống");
+                obj.addProperty("canEdit", isAdmin || isOwner);
+                obj.addProperty("canDelete", isAdmin || isOwner);
 
                 resp.getWriter().write(JsonHelper.success("Chi tiết chủ đề", obj));
             } else {
@@ -7682,6 +7790,13 @@ public class TopicServlet extends HttpServlet {
     @Override
     protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         resp.setContentType("application/json;charset=UTF-8");
+        User currentUser = getAuthenticatedUser(req);
+        if (currentUser == null) {
+            resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            resp.getWriter().write(JsonHelper.error("Vui lòng đăng nhập để cập nhật môn học."));
+            return;
+        }
+
         String pathInfo = req.getPathInfo();
         if (pathInfo == null || pathInfo.equals("/")) {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
@@ -7698,6 +7813,17 @@ public class TopicServlet extends HttpServlet {
                 return;
             }
 
+            Topic topic = opt.get();
+            boolean isAdmin = "admin".equalsIgnoreCase(currentUser.getRole());
+            boolean isOwner = topic.getCreatedBy() != null && topic.getCreatedBy().equals(currentUser.getUserId());
+
+            if (!isAdmin && !isOwner) {
+                resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                String creatorMsg = topic.getCreatorName() != null ? topic.getCreatorName() : "giảng viên đã tạo";
+                resp.getWriter().write(JsonHelper.error("Từ chối quyền: Bạn không thể sửa môn học này. Chỉ " + creatorMsg + " (người tạo) hoặc Quản trị viên mới có quyền sửa."));
+                return;
+            }
+
             JsonObject body = JsonHelper.parseRequestBody(req);
             if (body == null || !body.has("topicName") || body.get("topicName").getAsString().trim().isEmpty()) {
                 resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
@@ -7705,7 +7831,6 @@ public class TopicServlet extends HttpServlet {
                 return;
             }
 
-            Topic topic = opt.get();
             topic.setTopicName(body.get("topicName").getAsString().trim());
             if (body.has("description")) {
                 topic.setDescription(body.get("description").isJsonNull() ? "" : body.get("description").getAsString().trim());
@@ -7730,6 +7855,13 @@ public class TopicServlet extends HttpServlet {
     @Override
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         resp.setContentType("application/json;charset=UTF-8");
+        User currentUser = getAuthenticatedUser(req);
+        if (currentUser == null) {
+            resp.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            resp.getWriter().write(JsonHelper.error("Vui lòng đăng nhập để thực hiện xóa môn học."));
+            return;
+        }
+
         String pathInfo = req.getPathInfo();
         if (pathInfo == null || pathInfo.equals("/")) {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
@@ -7746,6 +7878,17 @@ public class TopicServlet extends HttpServlet {
                 return;
             }
 
+            Topic topic = opt.get();
+            boolean isAdmin = "admin".equalsIgnoreCase(currentUser.getRole());
+            boolean isOwner = topic.getCreatedBy() != null && topic.getCreatedBy().equals(currentUser.getUserId());
+
+            if (!isAdmin && !isOwner) {
+                resp.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                String creatorMsg = topic.getCreatorName() != null ? topic.getCreatorName() : "giảng viên đã tạo";
+                resp.getWriter().write(JsonHelper.error("Từ chối thao tác: Mọi người đều có thể dùng chung môn học này, nhưng chỉ " + creatorMsg + " (người tạo) mới có quyền xóa!"));
+                return;
+            }
+
             boolean ok = topicDAO.delete(topicId);
             if (ok) {
                 resp.getWriter().write(JsonHelper.success("Đã xóa chủ đề và dọn dẹp các dữ liệu liên kết thành công", null));
@@ -7757,6 +7900,21 @@ public class TopicServlet extends HttpServlet {
             resp.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             resp.getWriter().write(JsonHelper.error("ID chủ đề không hợp lệ."));
         }
+    }
+
+    private User getAuthenticatedUser(HttpServletRequest req) {
+        HttpSession session = req.getSession(false);
+        if (session != null && session.getAttribute("user") != null) {
+            return (User) session.getAttribute("user");
+        }
+        String headerUserId = req.getHeader("X-User-Id");
+        if (headerUserId != null && !headerUserId.trim().isEmpty()) {
+            try {
+                int uid = Integer.parseInt(headerUserId.trim());
+                return userDAO.findById(uid).orElse(null);
+            } catch (Exception ignored) {}
+        }
+        return null;
     }
 }
 
@@ -9120,9 +9278,15 @@ const API = {
             const abortFromOutside = () => controller.abort('external');
             externalSignal?.addEventListener('abort', abortFromOutside, { once: true });
 
+            const user = API.auth?.getUser?.();
+            const headers = { 'Accept': 'application/json', ...fetchOptions.headers };
+            if (user && user.userId && !headers['X-User-Id']) {
+                headers['X-User-Id'] = String(user.userId);
+            }
+
             const config = {
                 credentials: 'same-origin',
-                headers: { 'Accept': 'application/json', ...fetchOptions.headers },
+                headers,
                 ...fetchOptions,
                 signal: controller.signal
             };
@@ -12223,6 +12387,37 @@ async function loadTopics() {
 /**
  * Render bảng danh sách chủ đề trong Modal quản lý chủ đề
  */
+/**
+ * Trả về badge hiển thị người tạo môn học
+ */
+function getCreatorBadge(t) {
+    const isOwner = (currentUser && t.createdBy && Number(t.createdBy) === Number(currentUser.userId));
+    if (isOwner) {
+        return `<span class="badge" style="background: rgba(99, 102, 241, 0.2); color: #818cf8; font-weight: 500;"><i class="fa-solid fa-user-check me-1"></i>Bạn</span>`;
+    }
+    if (t.creatorName && t.creatorName !== 'Hệ thống') {
+        return `<span class="badge" style="background: rgba(148, 163, 184, 0.15); color: #cbd5e1; font-weight: 400;"><i class="fa-solid fa-chalkboard-user me-1 text-muted"></i>${escapeHtml(t.creatorName)}</span>`;
+    }
+    return `<span class="badge" style="background: rgba(100, 116, 139, 0.12); color: #94a3b8; font-weight: 400;"><i class="fa-solid fa-server me-1"></i>Hệ thống</span>`;
+}
+
+/**
+ * Thông báo khi người dùng click vào nút hành động mà không có quyền sở hữu
+ */
+function notifyNoPermission(action, creatorName) {
+    Swal.fire({
+        icon: 'info',
+        title: 'Quyền hạn bị giới hạn',
+        html: `Bạn có thể <strong>dùng chung môn học này</strong> để giảng dạy, sinh câu hỏi và cho học sinh ôn luyện.<br><br>Tuy nhiên, quyền <strong>${action}</strong> chỉ dành riêng cho <strong>${escapeHtml(creatorName || 'giảng viên đã tạo môn')}</strong> hoặc Quản trị viên hệ thống.`,
+        confirmButtonColor: '#4f46e5',
+        confirmButtonText: 'Đã hiểu'
+    });
+}
+window.notifyNoPermission = notifyNoPermission;
+
+/**
+ * Render bảng danh sách chủ đề trong Modal quản lý chủ đề
+ */
 function renderModalTopicsTable(topics) {
     const tbody = document.getElementById('modal-topics-tbody');
     const countEl = document.getElementById('modal-topics-count');
@@ -12230,28 +12425,46 @@ function renderModalTopicsTable(topics) {
     if (!tbody) return;
 
     if (topics.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-muted">Chưa có chủ đề nào trong hệ thống.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-muted">Chưa có chủ đề nào trong hệ thống.</td></tr>`;
         return;
     }
 
-    tbody.innerHTML = topics.map(t => `
-        <tr>
-            <td class="text-muted small">${t.topicId}</td>
-            <td><strong class="text-white">${escapeHtml(t.topicName)}</strong></td>
-            <td><small class="text-muted">${escapeHtml(t.description || 'Không có mô tả')}</small></td>
-            <td class="text-center">
-                <span class="badge" style="background: rgba(99, 102, 241, 0.2); color: #818cf8;">${t.questionCount || 0} câu</span>
-            </td>
-            <td class="text-end pe-2">
-                <button type="button" class="btn btn-sm btn-outline-info rounded-circle me-1" style="width: 30px; height: 30px; padding: 0;" title="Chỉnh sửa môn học" onclick="startEditTopic(${t.topicId}, '${escapeJs(t.topicName)}', '${escapeJs(t.description || '')}', ${t.displayOrder || 1})">
-                    <i class="fa-solid fa-pen-to-square" style="font-size: 0.75rem;"></i>
-                </button>
-                <button type="button" class="btn btn-sm btn-outline-danger rounded-circle" style="width: 30px; height: 30px; padding: 0;" title="Xóa môn học" onclick="confirmDeleteTopic(${t.topicId}, '${escapeJs(t.topicName)}', ${t.questionCount || 0})">
-                    <i class="fa-solid fa-trash" style="font-size: 0.75rem;"></i>
-                </button>
-            </td>
-        </tr>
-    `).join('');
+    tbody.innerHTML = topics.map(t => {
+        const canEdit = Boolean(t.canEdit);
+        const canDelete = Boolean(t.canDelete);
+
+        const editBtn = canEdit 
+            ? `<button type="button" class="btn btn-sm btn-outline-info rounded-circle me-1" style="width: 30px; height: 30px; padding: 0;" title="Chỉnh sửa môn học" onclick="startEditTopic(${t.topicId}, '${escapeJs(t.topicName)}', '${escapeJs(t.description || '')}', ${t.displayOrder || 1})">
+                <i class="fa-solid fa-pen-to-square" style="font-size: 0.75rem;"></i>
+               </button>`
+            : `<button type="button" class="btn btn-sm btn-outline-secondary rounded-circle me-1" style="width: 30px; height: 30px; padding: 0; opacity: 0.35;" title="Chỉ người tạo (${escapeJs(t.creatorName || '')}) mới có quyền sửa" onclick="notifyNoPermission('chỉnh sửa', '${escapeJs(t.creatorName || '')}')">
+                <i class="fa-solid fa-pen-to-square" style="font-size: 0.75rem;"></i>
+               </button>`;
+
+        const deleteBtn = canDelete
+            ? `<button type="button" class="btn btn-sm btn-outline-danger rounded-circle" style="width: 30px; height: 30px; padding: 0;" title="Xóa môn học" onclick="confirmDeleteTopic(${t.topicId}, '${escapeJs(t.topicName)}', ${t.questionCount || 0})">
+                <i class="fa-solid fa-trash" style="font-size: 0.75rem;"></i>
+               </button>`
+            : `<button type="button" class="btn btn-sm btn-outline-secondary rounded-circle" style="width: 30px; height: 30px; padding: 0; opacity: 0.35;" title="Chỉ người tạo (${escapeJs(t.creatorName || '')}) mới có quyền xóa" onclick="notifyNoPermission('xóa bỏ', '${escapeJs(t.creatorName || '')}')">
+                <i class="fa-solid fa-trash" style="font-size: 0.75rem;"></i>
+               </button>`;
+
+        return `
+            <tr>
+                <td class="text-muted small">${t.topicId}</td>
+                <td><strong class="text-white">${escapeHtml(t.topicName)}</strong></td>
+                <td><small class="text-muted">${escapeHtml(t.description || 'Không có mô tả')}</small></td>
+                <td>${getCreatorBadge(t)}</td>
+                <td class="text-center">
+                    <span class="badge" style="background: rgba(99, 102, 241, 0.2); color: #818cf8;">${t.questionCount || 0} câu</span>
+                </td>
+                <td class="text-end pe-2">
+                    ${editBtn}
+                    ${deleteBtn}
+                </td>
+            </tr>
+        `;
+    }).join('');
 }
 
 /**
@@ -12264,31 +12477,49 @@ function renderAdminCoursesTable(topics) {
     if (!tbody) return;
 
     if (topics.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-muted">Chưa có môn học nào được tạo.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-muted">Chưa có môn học nào được tạo.</td></tr>`;
         return;
     }
 
-    tbody.innerHTML = topics.map(t => `
-        <tr>
-            <td class="text-muted small">${t.topicId}</td>
-            <td>
-                <strong class="text-white">${escapeHtml(t.topicName)}</strong>
-                <span class="badge ms-2" style="background: rgba(16, 185, 129, 0.15); color: #34d399; font-size: 0.68rem;">Đang mở</span>
-            </td>
-            <td><small class="text-muted">${escapeHtml(t.description || 'Không có mô tả')}</small></td>
-            <td class="text-center">
-                <span class="badge" style="background: rgba(99, 102, 241, 0.2); color: #818cf8;">${t.questionCount || 0} câu</span>
-            </td>
-            <td class="text-end pe-3">
-                <button type="button" class="btn btn-sm btn-outline-info rounded-circle me-1" style="width: 30px; height: 30px; padding: 0;" title="Chỉnh sửa môn học" onclick="startEditTopic(${t.topicId}, '${escapeJs(t.topicName)}', '${escapeJs(t.description || '')}', ${t.displayOrder || 1})">
-                    <i class="fa-solid fa-pen-to-square" style="font-size: 0.75rem;"></i>
-                </button>
-                <button type="button" class="btn btn-sm btn-outline-danger rounded-circle" style="width: 30px; height: 30px; padding: 0;" title="Xóa môn học" onclick="confirmDeleteTopic(${t.topicId}, '${escapeJs(t.topicName)}', ${t.questionCount || 0})">
-                    <i class="fa-solid fa-trash" style="font-size: 0.75rem;"></i>
-                </button>
-            </td>
-        </tr>
-    `).join('');
+    tbody.innerHTML = topics.map(t => {
+        const canEdit = Boolean(t.canEdit);
+        const canDelete = Boolean(t.canDelete);
+
+        const editBtn = canEdit 
+            ? `<button type="button" class="btn btn-sm btn-outline-info rounded-circle me-1" style="width: 30px; height: 30px; padding: 0;" title="Chỉnh sửa môn học" onclick="startEditTopic(${t.topicId}, '${escapeJs(t.topicName)}', '${escapeJs(t.description || '')}', ${t.displayOrder || 1})">
+                <i class="fa-solid fa-pen-to-square" style="font-size: 0.75rem;"></i>
+               </button>`
+            : `<button type="button" class="btn btn-sm btn-outline-secondary rounded-circle me-1" style="width: 30px; height: 30px; padding: 0; opacity: 0.35;" title="Chỉ người tạo (${escapeJs(t.creatorName || '')}) mới có quyền sửa" onclick="notifyNoPermission('chỉnh sửa', '${escapeJs(t.creatorName || '')}')">
+                <i class="fa-solid fa-pen-to-square" style="font-size: 0.75rem;"></i>
+               </button>`;
+
+        const deleteBtn = canDelete
+            ? `<button type="button" class="btn btn-sm btn-outline-danger rounded-circle" style="width: 30px; height: 30px; padding: 0;" title="Xóa môn học" onclick="confirmDeleteTopic(${t.topicId}, '${escapeJs(t.topicName)}', ${t.questionCount || 0})">
+                <i class="fa-solid fa-trash" style="font-size: 0.75rem;"></i>
+               </button>`
+            : `<button type="button" class="btn btn-sm btn-outline-secondary rounded-circle" style="width: 30px; height: 30px; padding: 0; opacity: 0.35;" title="Chỉ người tạo (${escapeJs(t.creatorName || '')}) mới có quyền xóa" onclick="notifyNoPermission('xóa bỏ', '${escapeJs(t.creatorName || '')}')">
+                <i class="fa-solid fa-trash" style="font-size: 0.75rem;"></i>
+               </button>`;
+
+        return `
+            <tr>
+                <td class="text-muted small">${t.topicId}</td>
+                <td>
+                    <strong class="text-white">${escapeHtml(t.topicName)}</strong>
+                    <span class="badge ms-2" style="background: rgba(16, 185, 129, 0.15); color: #34d399; font-size: 0.68rem;">Đang mở</span>
+                </td>
+                <td><small class="text-muted">${escapeHtml(t.description || 'Không có mô tả')}</small></td>
+                <td>${getCreatorBadge(t)}</td>
+                <td class="text-center">
+                    <span class="badge" style="background: rgba(99, 102, 241, 0.2); color: #818cf8;">${t.questionCount || 0} câu</span>
+                </td>
+                <td class="text-end pe-3">
+                    ${editBtn}
+                    ${deleteBtn}
+                </td>
+            </tr>
+        `;
+    }).join('');
 }
 
 /**
@@ -18051,16 +18282,17 @@ const AppUI = (() => {
                                         <table class="table table-ws align-middle mb-0">
                                             <thead>
                                                 <tr>
-                                                    <th style="width: 70px;">ID</th>
+                                                    <th style="width: 60px;">ID</th>
                                                     <th>MÔN HỌC / CHỦ ĐỀ</th>
                                                     <th>MÔ TẢ NỘI DUNG</th>
-                                                    <th style="width: 130px;" class="text-center">SỐ CÂU HỎI</th>
-                                                    <th style="width: 140px;" class="text-end pe-3">THAO TÁC</th>
+                                                    <th style="width: 130px;">NGƯỜI TẠO</th>
+                                                    <th style="width: 110px;" class="text-center">SỐ CÂU HỎI</th>
+                                                    <th style="width: 120px;" class="text-end pe-3">THAO TÁC</th>
                                                 </tr>
                                             </thead>
                                             <tbody id="admin-courses-tbody">
                                                 <tr>
-                                                    <td colspan="5" class="text-center py-4 text-muted">Đang tải danh sách môn học...</td>
+                                                    <td colspan="6" class="text-center py-4 text-muted">Đang tải danh sách môn học...</td>
                                                 </tr>
                                             </tbody>
                                         </table>
@@ -18278,13 +18510,14 @@ const AppUI = (() => {
                                         <th style="width: 50px;">ID</th>
                                         <th>Tên Chủ Đề</th>
                                         <th>Mô Tả</th>
-                                        <th style="width: 90px;" class="text-center">Số Câu</th>
-                                        <th style="width: 100px;" class="text-end pe-2">Thao Tác</th>
+                                        <th style="width: 110px;">Người Tạo</th>
+                                        <th style="width: 85px;" class="text-center">Số Câu</th>
+                                        <th style="width: 95px;" class="text-end pe-2">Thao Tác</th>
                                     </tr>
                                 </thead>
                                 <tbody id="modal-topics-tbody">
                                     <tr>
-                                        <td colspan="5" class="text-center py-4 text-muted">Đang tải danh sách chủ đề...</td>
+                                        <td colspan="6" class="text-center py-4 text-muted">Đang tải danh sách chủ đề...</td>
                                     </tr>
                                 </tbody>
                             </table>

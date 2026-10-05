@@ -42,9 +42,15 @@ const API = {
             const abortFromOutside = () => controller.abort('external');
             externalSignal?.addEventListener('abort', abortFromOutside, { once: true });
 
+            const user = API.auth?.getUser?.();
+            const headers = { 'Accept': 'application/json', ...fetchOptions.headers };
+            if (user && user.userId && !headers['X-User-Id']) {
+                headers['X-User-Id'] = String(user.userId);
+            }
+
             const config = {
                 credentials: 'same-origin',
-                headers: { 'Accept': 'application/json', ...fetchOptions.headers },
+                headers,
                 ...fetchOptions,
                 signal: controller.signal
             };

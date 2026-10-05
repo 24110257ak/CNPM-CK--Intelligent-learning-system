@@ -147,6 +147,22 @@ public class DatabaseUtil {
                     stmt.execute(pgSeedTagsSql);
                 } catch (Exception ignored) {}
 
+                // PostgreSQL: Bổ sung cột created_by cho bảng topics để phân quyền người tạo môn học
+                String pgTopicCreatedBy = "DO $$ "
+                        + "BEGIN "
+                        + "    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name='topics') THEN "
+                        + "        IF NOT EXISTS ( "
+                        + "            SELECT 1 FROM information_schema.columns "
+                        + "            WHERE table_name='topics' AND column_name='created_by' "
+                        + "        ) THEN "
+                        + "            ALTER TABLE topics ADD COLUMN created_by INT NULL REFERENCES users(user_id) ON DELETE SET NULL; "
+                        + "        END IF; "
+                        + "    END IF; "
+                        + "END $$;";
+                try {
+                    stmt.execute(pgTopicCreatedBy);
+                } catch (Exception ignored) {}
+
                 // PostgreSQL: Bảng thảo luận & bình luận câu hỏi (Forum)
                 stmt.execute("CREATE TABLE IF NOT EXISTS question_comments ("
                         + "comment_id SERIAL PRIMARY KEY, "
@@ -270,7 +286,19 @@ public class DatabaseUtil {
                 try {
                     stmt.execute(sqlServerDiscussionTables);
                 } catch (Exception ignored) {}
-                System.out.println("[DatabaseUtil] ✅ SQL Server Auto-Migration: Cột [misconception_tag] và bảng [question_comments, question_ratings] đã sẵn sàng!");
+
+                String sqlServerTopicCreatedBy = "IF NOT EXISTS (\n"
+                        + "    SELECT * FROM sys.columns \n"
+                        + "    WHERE object_id = OBJECT_ID('topics') AND name = 'created_by'\n"
+                        + ")\n"
+                        + "BEGIN\n"
+                        + "    ALTER TABLE topics ADD created_by INT NULL FOREIGN KEY REFERENCES users(user_id) ON DELETE SET NULL;\n"
+                        + "END";
+                try {
+                    stmt.execute(sqlServerTopicCreatedBy);
+                } catch (Exception ignored) {}
+
+                System.out.println("[DatabaseUtil] ✅ SQL Server Auto-Migration: Cột [misconception_tag, created_by] và bảng [question_comments, question_ratings] đã sẵn sàng!");
             }
         } catch (Exception e) {
             System.err.println("[DatabaseUtil] ⚠️ Cảnh báo Auto-Migration: " + e.getMessage());

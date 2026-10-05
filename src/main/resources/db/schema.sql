@@ -28,6 +28,7 @@ CREATE TABLE IF NOT EXISTS topics (
     description     TEXT          NULL,
     parent_topic_id INT           NULL REFERENCES topics(topic_id),
     display_order   INT           NOT NULL DEFAULT 0,
+    created_by      INT           NULL REFERENCES users(user_id) ON DELETE SET NULL,
     created_at      TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
